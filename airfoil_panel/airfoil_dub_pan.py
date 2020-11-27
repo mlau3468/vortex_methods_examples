@@ -40,7 +40,6 @@ class Plotter:
                 for i in item:
                     plt.plot(i.x, i.y, 'ro', markersize=1)
 
-
     def show_plot(self, title=None):
         plt.gca().set_aspect('equal', adjustable='box')
         if title is not None:
@@ -169,10 +168,9 @@ def proc_panels(pts, debug=False):
     tans = np.transpose(np.array([c_theta, -s_theta]))
 
     #tangent vector but aligned with free stream
-    orients = [math.atan2((pts[i,1]-pts[i+1,1])  ,  (pts[i+1, 0]-pts[i, 0]))   for i in range(pts.shape[0]-1)]
+    orients = [math.atan2( (pts[i,1]-pts[i+1,1])  ,  (pts[i+1, 0]-pts[i, 0]))   for i in range(pts.shape[0]-1)]
     tan_fs = [np.array([math.cos(a), -math.sin(a)]) for a in orients]
     tan_fs = np.array(tan_fs)
-
     lens = np.sqrt(dx**2 + dz**2)
     if debug:
         # DEBUG: show normals and tangents
@@ -185,7 +183,7 @@ def proc_panels(pts, debug=False):
         plt.gca().set_aspect('equal', adjustable='box')
         plt.show()
 
-    return co_pts, norms, tans, tan_fs
+    return co_pts, norms, tans, tan_fs, lens
 
 def pt_dist(pt1, pt2):
     return math.sqrt( (pt2[0] - pt1[0])**2 + (pt2[1] - pt1[1])**2)
@@ -240,9 +238,9 @@ alfa = 5
 alfa = math.radians(alfa)
 u_vec = U * np.array([math.cos(alfa), math.sin(alfa)])
 roh = 1.225
-pts = read_dat('airfoil2.dat')
-pts = repanel(pts, 50, chord_dist = 'cosine', cos_wgt=1.0, show=True)
-co_pts, norms, tans,  tan_fs = proc_panels(pts)
+pts = read_dat('airfoil.dat')
+#pts = repanel(pts, 50, chord_dist = 'cosine', cos_wgt=1.0, show=True)
+co_pts, norms, tans,  tan_fs, lens = proc_panels(pts, debug=False)
 
 # Initialize matrices
 num_pan = len(pts) - 1
@@ -255,7 +253,6 @@ a[-1,0] = 1
 a[-1, -2] = -1
 a[-1, -1] = 1
 rhs[-1] = 0
-
 for i in range(num_pan):
     rhs[i] = - np.matmul(u_vec, norms[i])
     for j in range(num_pan + 1):
@@ -265,7 +262,6 @@ for i in range(num_pan):
            uw = dub2D(1, pts[j], pts[j+1], co_pts[i])
         a[i,j] = np.matmul ( np.transpose(uw), norms[i])
         b[i,j] = np.matmul(np.transpose(uw), tans[i])
-
 # Remove one panel
 
 rem_idx = int(num_pan/2 - 4)
@@ -279,6 +275,7 @@ tans = np.delete(tans, rem_idx, 0)
 tan_fs = np.delete(tan_fs, rem_idx, 0)
 pts = np.delete(pts, rem_idx, 0)
 co_pts = np.delete(co_pts, rem_idx, 0)
+lens = np.delete(lens, rem_idx, 0)
 
 num_pan = num_pan - 1
 
@@ -290,17 +287,28 @@ q_ti = q_ti[:-1]  # dump q_ti of wake
 # At each local tangent velocity, add freestream contribution and panel contribution on itself
 #11.38
 for i in range(num_pan):
+    
     if i == 0:  # First panel
         v_pan = 0.5*(mu[i+1]-mu[i])/pt_dist(co_pts[i], co_pts[i+1])
     elif i == num_pan - 1:  # last panel
         v_pan = 0.5*(mu[i]-mu[i-1])/pt_dist(co_pts[i-1], co_pts[i])
     else:
          v_pan = 0.5*(mu[i+1]-mu[i-1])/pt_dist(co_pts[i-1], co_pts[i+1])
+    
+    '''
+    if i == 0:  # First panel
+        v_pan = 0.5*(mu[i+1]-mu[i])/lens[i]
+    elif i == num_pan - 1:  # last panel
+        v_pan = 0.5*(mu[i]-mu[i-1])/lens[i]
+    else:
+         v_pan = 0.5*(mu[i+1]-mu[i-1])/lens[i]
+    '''
     q_ti[i] = q_ti[i] + v_pan + np.dot(u_vec, tan_fs[i])
-
+    
+    #q_ti[i] = q_ti[i] + np.dot(u_vec, tan_fs[i])
 # calculate Cps
+print(q_ti)
 cp = 1 - q_ti**2/U**2
-
 # Use kutta joukowski and kelvin's circulation to get lift:
 #L = -roh*U*mu[-1]
 cl = roh*mu[-1]/chord
