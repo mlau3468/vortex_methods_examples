@@ -1,6 +1,7 @@
 include("airfoil_util.jl")
 
-function linVort(mu, p1, p2, p)
+function linVort(mu1, mu2, p1, p2, p)
+    
 end
 
 pan_pts = readAF("airfoil.csv", true)
