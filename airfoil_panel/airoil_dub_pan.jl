@@ -43,6 +43,8 @@ pan_pts = readAF("airfoil.csv", true)
 writeAF(pan_pts, "airfoil.dat")
 pan_pts = repanel(pan_pts, 50, 1, true)
 pan_pts, c_pts, thetas, norms, dists = procPanels(pan_pts)
+# append a panel for the wake
+pan_pts = [pan_pts; [pan_pts[end,3], pan_pts[end,4], NaN, NaN]']
 
 # conditions
 U = 1
@@ -54,8 +56,8 @@ rho = 1.225
 num_pan = size(pan_pts,1) -1
 A = zeros(num_pan+1, num_pan+1)
 RHS = zeros(num_pan+1)
-
 u_vec = U .* [cosd(alpha), sind(alpha)]
+
 # Influence Matrix
 for i in 1:num_pan
     RHS[i] =- u_vec'norms[i, :]

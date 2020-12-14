@@ -19,14 +19,9 @@ function readAF(filename, show=false)
         display(im)
     end
     num_pan = size(pts,1) -1
-    pan_pts = zeros(num_pan + 1, 4)
-    for i in 1:num_pan + 1
-        if i == num_pan + 1
-            pan_pts[i, :] = [pts[i, :]; NaN; NaN]
-        else
-            pan_pts[i, :] = [pts[i, :]; pts[i+1,:]]
-        end
-    end
+    pan_pts = zeros(num_pan, 4)
+    pan_pts[1:num_pan, 1:2] = pts[1:num_pan,:]
+    pan_pts[1:num_pan, 3:4] = pts[2:num_pan+1,:]
     return pan_pts
 end
 
@@ -37,7 +32,7 @@ function writeAF(pan_pts, filename)
 end
 
 function procPanels(pan_pts)
-    pts = pan_pts[:, 1:2]
+    pts = [pan_pts[:, 1:2];pan_pts[1, 1:2]']
     # collocation pts
     c_pts = (pts[1:end-1, :] + pts[2:end, :])./2;
     # normal vectors
@@ -53,7 +48,8 @@ function procPanels(pan_pts)
 end
 
 function repanel(pan_pts, num_pan, wgt=0.5, show=false)
-    pts = pan_pts[:, 1:2]
+    pts = [pan_pts[:, 1:2];pan_pts[1, 1:2]']
+    #pts = pan_pts[:, 1:2]
     dists = zeros(size(pts, 1)-1)
     for i in 1:size(pts,1)-1
         dists[i] = ptDist(pts[i,:], pts[i+1,:])
@@ -96,14 +92,9 @@ function repanel(pan_pts, num_pan, wgt=0.5, show=false)
     end
 
     num_pan = size(pts,1) -1
-    pan_pts = zeros(num_pan + 1, 4)
-    for i in 1:num_pan + 1
-        if i == num_pan + 1
-            pan_pts[i, :] = [pts[i, :]; NaN; NaN]
-        else
-            pan_pts[i, :] = [pts[i, :]; pts[i+1,:]]
-        end
-    end
+    pan_pts = zeros(num_pan, 4)
+    pan_pts[1:num_pan, 1:2] = pts[1:num_pan,:]
+    pan_pts[1:num_pan, 3:4] = pts[2:num_pan+1,:]
     return pan_pts
 
 end
