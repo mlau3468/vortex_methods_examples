@@ -26,6 +26,13 @@ function linVort(mu1, mu2, p1, p2, p)
     vel_b = coordRot2D([up_b, wp_b], -theta, [0,0])
 
     vel = vel_a .+ vel_b
+    if isnan(vel[1]) || isnan(vel[2])
+        println()
+        println(p1)
+        println(p2)
+        println(p)
+        println("----")
+    end
     
     return [vel'; vel_a'; vel_b']
 
@@ -33,9 +40,8 @@ end
 
 pan_pts = readAF("airfoil.csv", true)
 writeAF(pan_pts, "airfoil.dat")
-pan_pts = repanel(pan_pts, 50, 1.0, true)
+#pan_pts = repanel(pan_pts, 50, 1.0, true)
 pan_pts, c_pts, thetas, norms, tangents, dists = procPanels(pan_pts)
-display(thetas.*180/pi)
 # conditions
 U = 1
 chord = 1
@@ -75,6 +81,7 @@ A[end, 1] = 1
 A[end, end] = 1
 RHS[end] = 0
 
+display(A)
 #=
 # remove one panel
 remIdx = 30

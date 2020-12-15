@@ -41,7 +41,7 @@ end
 
 pan_pts = readAF("airfoil.csv", true)
 writeAF(pan_pts, "airfoil.dat")
-pan_pts = repanel(pan_pts, 50, 1, true)
+#pan_pts = repanel(pan_pts, 50, 1, true)
 pan_pts, c_pts, thetas, norms, tangents, dists = procPanels(pan_pts)
 # append a panel for the wake
 pan_pts = [pan_pts; [pan_pts[end,3], pan_pts[end,4], NaN, NaN]']
@@ -126,3 +126,5 @@ ps = cp.*0.5.*rho.*U.^2
 fs = ps.*dists.*(-1).*norms[:,2]
 cl = sum(fs)./0.5./chord./rho./U.^2
 println("CL: $cl")
+
+println(rho*U^2*mu[end])
