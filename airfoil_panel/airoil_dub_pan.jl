@@ -42,7 +42,7 @@ end
 pan_pts = readAF("airfoil.csv", true)
 writeAF(pan_pts, "airfoil.dat")
 pan_pts = repanel(pan_pts, 50, 1, true)
-pan_pts, c_pts, thetas, norms, dists = procPanels(pan_pts)
+pan_pts, c_pts, thetas, norms, tangents, dists = procPanels(pan_pts)
 # append a panel for the wake
 pan_pts = [pan_pts; [pan_pts[end,3], pan_pts[end,4], NaN, NaN]']
 
@@ -86,6 +86,7 @@ RHS = RHS[keep_idx]
 A = A[keep_idx, keep_idx]
 c_pts = c_pts[keep_idx[1:end-1], :]
 norms = norms[keep_idx[1:end-1],:]
+tangents = tangents[keep_idx[1:end-1],:]
 thetas = thetas[keep_idx[1:end-1]]
 pan_pts = pan_pts[keep_idx, :]
 dists = dists[keep_idx[1:end-1]]
@@ -96,6 +97,7 @@ pan_vels = zeros(num_pan, 2)
 # velocities at each panel
 for i in 1:num_pan
     pan_vels[i,:] = u_vec
+    # perterbation velocity of panel on itself
     if i == 1  # First panel
         v_pan = 0.5*(mu[i+1]-mu[i])/ptDist(c_pts[i,:], c_pts[i+1,:])
     elseif i == num_pan  # last panel
@@ -105,6 +107,7 @@ for i in 1:num_pan
     end
     pan_vels[i, :] = pan_vels[i,:] +  coordRot2D([v_pan, 0], thetas[i], [0,0])
     
+    # influence of other panels
     for j in 1:num_pan+1
         if j == num_pan+1 # wake, last panel
             uw = dub2D(mu[j], pan_pts[j,1:2], nothing, c_pts[i,:])
@@ -116,8 +119,10 @@ for i in 1:num_pan
 end
 
 cp = 1 .- (pan_vels[:,1].^2 + pan_vels[:,2].^2) ./ U.^2
+im = plot(c_pts[:,1], cp, yflip=true)
+display(im)
+
 ps = cp.*0.5.*rho.*U.^2
 fs = ps.*dists.*(-1).*norms[:,2]
-fs = sum(fs)./0.5./chord./rho./U.^2
-println("CL: $fs")
-plot(c_pts[:,1], cp, yflip=true)
+cl = sum(fs)./0.5./chord./rho./U.^2
+println("CL: $cl")

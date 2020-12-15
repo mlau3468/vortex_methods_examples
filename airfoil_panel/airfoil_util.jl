@@ -37,13 +37,14 @@ function procPanels(pan_pts)
     c_pts = (pts[1:end-1, :] + pts[2:end, :])./2;
     # normal vectors
     thetas = atan.(pts[2:end, 2] - pts[1:end-1, 2], pts[2:end, 1] - pts[1:end-1, 1])
-    norms = [-sin.(thetas)'; cos.(thetas)']';
+    norms = [-sin.(thetas)'; cos.(thetas)']'
+    tangents = [cos.(thetas)'; -sin.(thetas)']'
     #panel lengths
     dists = zeros(size(c_pts, 1))
     for i in 1:size(c_pts,1)
         dists[i] = ptDist(pts[i,:], pts[i+1,:])
     end
-    return [pan_pts, c_pts, thetas, norms, dists]
+    return [pan_pts, c_pts, thetas, norms, tangents, dists]
 
 end
 
