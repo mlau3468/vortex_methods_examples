@@ -77,7 +77,9 @@ RHS[end] = 0
 
 mu = A\RHS
 
-
+#mu = readdlm("G.txt", ',')
+#mu = mu[:,1]
+#display(mu)
 # lift by kutta jokowski
 ls = zeros(num_pan)
 for i = 1:num_pan
@@ -87,8 +89,6 @@ lift = sum(ls)
 cl = lift/0.5/rho/U^2/chord
 println("CL: $cl")
 
-display(pan_vels[1,:]'norms[1,:])
-#=
 # velocities
 pan_vels = zeros(num_pan,2)
 for i = 1:num_pan
@@ -121,26 +121,25 @@ for i = 1:num_pan
     =#
 end
 cp = 1 .- (pan_vels[:,1].^2 + pan_vels[:,2].^2) ./ U.^2
-=#
+im = plot(c_pts[:,1], cp, yflip=true)
+display(im)
 
-# velocities
-ut = zeros(num_pan)
-for i = 1:num_pan
-    ut[i] = u_vec'tangents[i,:]+(mu[i]+mu[i+1])/4
-end
-cp = 1 .- ut.^2/U.^2
 
-# velocities 2
+writedlm("cp.csv", cp, ',')
+writedlm("A.csv", A, ',')
+writedlm("G.csv", mu, ',')
+writedlm("RHS.csv", RHS, ',')
+writedlm("thetas.csv", thetas, ',')
+
+
+
+# fortran implementation
 vs = zeros(num_pan)
 cp = zeros(num_pan)
 for i = 1:num_pan
     vs[i] = B[i,:]'mu + u_vec'tangents[i,:]
     cp[i] = 1-vs[i]^2/U^2
 end
-
-writedlm("cp.csv", cp, ',')
-im = plot(c_pts[:,1], cp, yflip=true)
-display(im)
 
 # fortran implementation
 Cl=0
@@ -154,7 +153,9 @@ for I = 1:num_pan
     global Cl=Cl+V*dists[I]
     CP=1-V^2
     cp[I] = CP
+    println(CP)
 end
+writedlm("cp.csv", cp, ',')
 im = plot(c_pts[:,1], cp, yflip=true)
 display(im)
 println("CL: $Cl")
