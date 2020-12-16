@@ -66,6 +66,7 @@ for i = 1:num_pan
 
             uw_b = linVort(1,1,pan_pts[j-1,1:2], pan_pts[j-1,3:4], c_pts[i,:])
             uw_b = uw_b[3,:]
+            
         end
         uw = uw_a .+ uw_b
         A[i,j] = uw'norms[i,:]
@@ -102,6 +103,66 @@ for i = 1:num_pan
     end
 end
 
+# fix b
+#=
+for i = 1:num_pan
+    for j = 1:num_pan
+        mu1 = 1
+        mu2 = 1
+        p = c_pts[i,:]
+        p1 = pan_pts[j,1:2]
+        p2 = pan_pts[j,3:4]
+        r1 = ptDist(p1, p)
+        r2 = ptDist(p2, p)
+        theta = -atan(p2[2]-p1[2], p2[1]-p1[1])
+        p_new = coordRot2D(p, theta, p1)
+    
+        x1 = 0
+        x2 = ptDist(p1, p2)
+    
+        
+        x = p_new[1]
+        z = p_new[2]
+
+        if i == j
+            up_a=-0.5*(x-x2)/(x2)
+            up_b=0.5*(x)/(x2)
+            wp_a=-0.15916
+            wp_b=0.15916
+
+            
+            vel_a = coordRot2D([up_a, wp_a], -theta, [0,0])
+            vel_b = coordRot2D([up_b, wp_b], -theta, [0,0])
+        else
+            theta1 = atan(z,x)
+            theta2 = atan(z, x-x2)
+            # first panel point
+            up_a = z/2/pi*(-mu1)/(x2-x1)*log(r2/r1) + (mu1*(x2-x1)-mu1*(x-x1)) /2/pi/(x2-x1) * (theta2-theta1)
+            wp_a = -(mu1*(x2-x1)-mu1*(x-x1)) /2/pi/(x2-x1) * log(r1/r2) + z/2/pi*(-mu1)/(x2-x1) * ((x2-x1)/z-(theta2-theta1))
+            # katz plotkin pg 303. note error in wp term. a + is actually a -
+            # second panel point
+            up_b = z/2/pi*(mu2)/(x2-x1)*log(r2/r1) + mu2*(x-x1)/2/pi/(x2-x1) * (theta2-theta1)
+            wp_b = -(mu2*(x-x1))/2/pi/(x2-x1)*log(r1/r2) + z/2/pi*(mu2)/(x2-x1) * ((x2-x1)/z-(theta2-theta1))
+        
+            vel_a = coordRot2D([up_a, wp_a], -theta, [0,0])
+            vel_b = coordRot2D([up_b, wp_b], -theta, [0,0])
+        end
+
+        if j == 1
+            #B[i,1] = vel_a'tangents[i,:]
+            global holdb = vel_b'tangents[i,:]
+        elseif j == num_pan
+            B[i,num_pan] = vel_a'tangents[i,:]+holdb
+            #B[i,num_pan+1] = vel_b'tangents[i,:]
+        else
+            if i == j || i == j-1
+            B[i,j] = vel_a'tangents[i,:]+holdb
+            end
+            global holdb=vel_b'tangents[i,:]
+        end
+    end
+end
+=#
 # Kutta condition
 A[end, 1] = 1
 A[end, end] = 1
