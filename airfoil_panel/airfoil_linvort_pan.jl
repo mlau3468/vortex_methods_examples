@@ -217,8 +217,6 @@ writedlm("G.csv", mu, ',')
 writedlm("RHS.csv", RHS, ',')
 writedlm("thetas.csv", thetas, ',')
 
-
-#B = readdlm("B.txt")
 # fortran implementation
 vs = zeros(num_pan)
 cp = zeros(num_pan)
@@ -226,21 +224,6 @@ for i = 1:num_pan
     vs[i] = B[i,:]'mu + u_vec'tangents[i,:]
     cp[i] = 1-vs[i]^2/U^2
 end
-
-# fortran implementation
-Cl=0
-cp = zeros(num_pan)
-for I = 1:num_pan
-    VEL=0
-    for J=1:num_pan + 1
-    VEL=VEL+B[I,J]*mu[J]
-    end
-    V=VEL+cosd(alpha)*cos(thetas[I])+sind(alpha)*sin(thetas[I])
-    global Cl=Cl+V*dists[I]
-    CP=1-V^2
-    cp[I] = CP
-end
 writedlm("cp.csv", cp, ',')
 im = plot(c_pts[:,1], cp, yflip=true)
 display(im)
-println("CL: $Cl")
