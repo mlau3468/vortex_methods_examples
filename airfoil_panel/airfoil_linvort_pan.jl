@@ -54,19 +54,20 @@ for i = 1:num_pan
     for j = 1:num_pan + 1
         if j == 1
             uw = linVort(1,1,pan_pts[j,1:2],pan_pts[j,3:4],c_pts[i,:])
-            uw = uw[2,:]
+            uw_a = uw[2,:]
+            uw_b = uw[3,:]
         elseif j == num_pan + 1
             uw = linVort(1,1,pan_pts[num_pan,1:2],pan_pts[num_pan,3:4],c_pts[i,:])
-            uw = uw[3,:]
+            uw_a = uw[2,:]
+            uw_b = uw[3,:]
         else
             uw_b = linVort(1,1,pan_pts[j-1,1:2], pan_pts[j-1,3:4], c_pts[i,:])
             uw_b = uw_b[3,:]
 
             uw_a = linVort(1,1,pan_pts[j,1:2], pan_pts[j,3:4], c_pts[i,:])
             uw_a = uw_a[2,:]
-
-            uw = uw_a .+ uw_b
         end
+        uw = uw_a .+ uw_b
         A[i,j] = uw'norms[i,:]
         B[i,j] = uw'tangents[i,:]
     end
