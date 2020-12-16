@@ -159,9 +159,6 @@ RHS[end] = 0
 
 mu = A\RHS
 
-#mu = readdlm("G.txt", ',')
-#mu = mu[:,1]
-#display(mu)
 # lift by kutta jokowski
 ls = zeros(num_pan)
 for i = 1:num_pan
@@ -183,39 +180,12 @@ for i = 1:num_pan
         res = linVort(mu[j], mu[j+1], pan_pts[j,1:2], pan_pts[j,3:4], c_pts[i,:])
         pan_vels[i,:] = pan_vels[i,:] + res[1,:]
     end
-    
-    #=
-    for j = 1:num_pan + 1
-        if j == 1
-            uw = linVort(mu[j],mu[j],pan_pts[j,1:2],pan_pts[j,3:4],c_pts[i,:])
-            uw = uw[2,:]
-        elseif j == num_pan + 1
-            uw = linVort(mu[j],mu[j],pan_pts[num_pan,1:2],pan_pts[num_pan,3:4],c_pts[i,:])
-            uw = uw[3,:]
-        else
-            uw_b = linVort(mu[j],mu[j],pan_pts[j-1,1:2], pan_pts[j-1,3:4], c_pts[i,:])
-            uw_b = uw_b[3,:]
-
-            uw_a = linVort(mu[j],mu[j],pan_pts[j,1:2], pan_pts[j,3:4], c_pts[i,:])
-            uw_a = uw_a[2,:]
-
-            uw = uw_a .+ uw_b
-        end
-        pan_vels[i,:] = pan_vels[i,:] + uw
-    end
-    =#
 end
 cp = 1 .- (pan_vels[:,1].^2 + pan_vels[:,2].^2) ./ U.^2
 im = plot(c_pts[:,1], cp, yflip=true)
 display(im)
 
-
-writedlm("cp.csv", cp, ',')
-writedlm("A.csv", A, ',')
 writedlm("B.csv", B, ',')
-writedlm("G.csv", mu, ',')
-writedlm("RHS.csv", RHS, ',')
-writedlm("thetas.csv", thetas, ',')
 
 # fortran implementation
 vs = zeros(num_pan)
@@ -224,6 +194,5 @@ for i = 1:num_pan
     vs[i] = B[i,:]'mu + u_vec'tangents[i,:]
     cp[i] = 1-vs[i]^2/U^2
 end
-writedlm("cp.csv", cp, ',')
 im = plot(c_pts[:,1], cp, yflip=true)
 display(im)
