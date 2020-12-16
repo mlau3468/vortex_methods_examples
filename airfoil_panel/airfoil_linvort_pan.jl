@@ -56,6 +56,7 @@ for i = 1:num_pan
             uw = linVort(1,1,pan_pts[j,1:2],pan_pts[j,3:4],c_pts[i,:])
             uw_a = uw[2,:]
             uw_b = uw[3,:]
+            global holdb = uw_b'tangents[i,:]
         elseif j == num_pan + 1
             uw = linVort(1,1,pan_pts[num_pan,1:2],pan_pts[num_pan,3:4],c_pts[i,:])
             uw_a = uw[2,:]
@@ -66,6 +67,7 @@ for i = 1:num_pan
 
             uw_b = linVort(1,1,pan_pts[j-1,1:2], pan_pts[j-1,3:4], c_pts[i,:])
             uw_b = uw_b[3,:]
+            
         end
         uw = uw_a .+ uw_b
         A[i,j] = uw'norms[i,:]
@@ -97,8 +99,8 @@ for i = 1:num_pan
         end
         if i == j || i == j-1
             B[i,j] = uw_a'tangents[i,:]+holdb
+            global holdb=uw_b'tangents[i,:]
         end
-        global holdb=uw_b'tangents[i,:]
     end
 end
 
@@ -122,6 +124,10 @@ println("CL: $cl")
 pan_vels = zeros(num_pan,2)
 for i = 1:num_pan
     pan_vels[i,:] = u_vec
+    #=
+    temp = (mu[i] + mu[i+1])/4
+    pan_vels[i,:] = pan_vels[i,:] + coordRot2D([temp, 0], thetas[i], [0,0])
+    =#
     for j = 1:num_pan
         res = linVort(mu[j], mu[j+1], pan_pts[j,1:2], pan_pts[j,3:4], c_pts[i,:])
         pan_vels[i,:] = pan_vels[i,:] + res[1,:]
