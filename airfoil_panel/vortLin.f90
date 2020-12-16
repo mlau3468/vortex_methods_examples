@@ -63,6 +63,7 @@ OPEN(12, FILE='G.txt', STATUS='REPLACE')
 OPEN(13, FILE='CO.txt', STATUS='REPLACE')
 OPEN(14, FILE='RHS.txt', STATUS='REPLACE')
 OPEN(15, FILE='THETAS.txt', STATUS='REPLACE')
+OPEN(16, FILE='B.txt', STATUS='REPLACE')
 OPEN(9,FILE='AFOIL2.DAT',STATUS='OLD')
 WRITE(6,*) 'ENTER NUMBER OF PANELS'
 READ(5,*) M
@@ -193,6 +194,15 @@ DO I=1,N
     end do
     write(11, *) ''  ! this gives you the line break
  end do
+
+ ! Write A matrix
+DO I=1,M
+   DO J=1,N
+      write(16, '(F16.10)', advance='no') B(I,J)
+   end do
+   write(16, *) ''  ! this gives you the line break
+end do
+
 
 
  ! WRITE RHS vector
