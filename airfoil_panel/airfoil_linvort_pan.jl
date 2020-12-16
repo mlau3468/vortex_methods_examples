@@ -153,7 +153,6 @@ for I = 1:num_pan
     global Cl=Cl+V*dists[I]
     CP=1-V^2
     cp[I] = CP
-    println(CP)
 end
 writedlm("cp.csv", cp, ',')
 im = plot(c_pts[:,1], cp, yflip=true)
