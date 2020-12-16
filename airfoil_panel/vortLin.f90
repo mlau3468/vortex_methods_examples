@@ -189,7 +189,7 @@ A(N,N)=1
 ! Write A matrix
 DO I=1,N
     DO J=1,N
-       write(11, '(F12.10)', advance='no') A(I,J)
+       write(11, '(F16.10)', advance='no') A(I,J)
     end do
     write(11, *) ''  ! this gives you the line break
  end do
@@ -197,7 +197,7 @@ DO I=1,N
 
  ! WRITE RHS vector
  DO I=1,N
-    WRITE(14, '(F12.10)') A(I,N+1)
+    WRITE(14, '(F16.10)') A(I,N+1)
  END DO
 
 IF(M.EQ.10) THEN
