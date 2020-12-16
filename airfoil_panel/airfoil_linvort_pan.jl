@@ -99,8 +99,8 @@ for i = 1:num_pan
         end
         if i == j || i == j-1
             B[i,j] = uw_a'tangents[i,:]+holdb
-            global holdb=uw_b'tangents[i,:]
         end
+        global holdb=uw_b'tangents[i,:]
     end
 end
 
