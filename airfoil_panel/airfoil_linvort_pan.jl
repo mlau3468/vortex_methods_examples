@@ -49,28 +49,6 @@ B = zeros(num_pan, num_pan+1) # tangent matrix
 RHS = zeros(num_pan+1)
 u_vec = U .* [cosd(alpha), sind(alpha)]
 
-function linVort2(mu1, mu2, p1, p2, p)
-    theta = -atan(p2[2]-p1[2], p2[1]-p1[1])
-    p_new = coordRot2D(p, theta, p1)
-
-    x1 = 0
-    x2 = ptDist(p1, p2)
-
-    x = p_new[1]
-    z = p_new[2]
-    up_a=-0.5*(x-x2)/(x2)
-    up_b=0.5*(x)/(x2)
-    wp_a=-0.15916
-    wp_b=0.15916
-
-    vel_a = coordRot2D([up_a, wp_a], -theta, [0,0])
-    vel_b = coordRot2D([up_b, wp_b], -theta, [0,0])
-
-    vel = vel_a .+ vel_b
-    return [vel'; vel_a'; vel_b']
-
-end
-
 for i = 1:num_pan
     RHS[i] = -u_vec'norms[i, :]
     for j = 1:num_pan + 1
@@ -140,13 +118,15 @@ for i = 1:num_pan
         end
 
         if j == 1
-            B[i,1] = vel_a'tangents[i,:]
+            #B[i,1] = vel_a'tangents[i,:]
             global holdb = vel_b'tangents[i,:]
         elseif j == num_pan
-            B[i,num_pan] = vel_a'tangents[i,:]+holdb
-            B[i,num_pan+1] = vel_b'tangents[i,:]
+            #B[i,num_pan] = vel_a'tangents[i,:]+holdb
+            #B[i,num_pan+1] = vel_b'tangents[i,:]
         else
+            if i == j || i == j-1
             B[i,j] = vel_a'tangents[i,:]+holdb
+            end
             global holdb=vel_b'tangents[i,:]
         end
     end
