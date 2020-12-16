@@ -147,7 +147,7 @@ W1L=-((X2-Z*(TH2-TH1))-X*LOG(R1/R2)+X2*LOG(R1/R2))/(6.28319*X2)
 W2L=((X2-Z*(TH2-TH1))-X*LOG(R1/R2))/(6.28319*X2)
 IF(I.EQ.89) THEN
    !WRITE(*,*) Z, ',',X2, ',', R1, ',', R2, ',', TH1, ',', TH2
-   WRITE(*,*) U1L, ',', W1L, ',', U2L, ',', W2L, ',', X2
+   !WRITE(*,*) U1L, ',', W1L, ',', U2L, ',', W2L, ',', X2
 IF (J.EQ.11) THEN
 END IF
 END IF
@@ -189,7 +189,7 @@ A(N,N)=1
 ! Write A matrix
 DO I=1,N
     DO J=1,N
-       write(11, '(F10.6)', advance='no') A(I,J)
+       write(11, '(F12.10)', advance='no') A(I,J)
     end do
     write(11, *) ''  ! this gives you the line break
  end do
@@ -197,7 +197,7 @@ DO I=1,N
 
  ! WRITE RHS vector
  DO I=1,N
-    WRITE(14, '(F10.6)') A(I,N+1)
+    WRITE(14, '(F12.10)') A(I,N+1)
  END DO
 
 IF(M.EQ.10) THEN
