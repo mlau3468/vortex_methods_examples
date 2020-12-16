@@ -89,8 +89,8 @@ for i = 1:num_pan
             z = p_new[2]
             up_a=-0.5*(x-x2)/(x2)
             up_b=0.5*(x)/(x2)
-            wp_a=-0.15916
-            wp_b=0.15916
+            wp_a=-1/2/pi
+            wp_b=1/2/pi
 
             uw_a = coordRot2D([up_a, wp_a], -theta, [0,0])
             uw_b = coordRot2D([up_b, wp_b], -theta, [0,0])
