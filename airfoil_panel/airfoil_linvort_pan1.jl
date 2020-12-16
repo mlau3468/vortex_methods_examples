@@ -1,6 +1,6 @@
 include("airfoil_util.jl")
 
-function linVort(mu1, mu2, p1, p2, p)
+function linVort(mu1, mu2, p1, p2, p, coloc=false)
     r1 = ptDist(p1, p)
     r2 = ptDist(p2, p)
     theta = -atan(p2[2]-p1[2], p2[1]-p1[1])
@@ -17,7 +17,7 @@ function linVort(mu1, mu2, p1, p2, p)
 
     tol = 1e-8
     # if on panel itself
-    if z < tol && abs(theta1) < tol && abs((abs(theta2)-pi) < tol)
+    if (z < tol && abs(theta1) < tol && abs((abs(theta2)-pi) < tol)) || coloc
         up_a=-0.5*(x-x2)/(x2)
         up_b=0.5*(x)/(x2)
         wp_a=-1/2/pi
@@ -42,7 +42,7 @@ end
 
 pan_pts = readAF("airfoil.csv", true)
 writeAF(pan_pts, "airfoil.dat")
-#pan_pts = repanel(pan_pts, 50, 1.0, true)
+#pan_pts = repanel(pan_pts, 80, 0.75, true)
 pan_pts, c_pts, thetas, norms, tangents, dists = procPanels(pan_pts)
 # conditions
 U = 1
@@ -60,8 +60,12 @@ u_vec = U .* [cosd(alpha), sind(alpha)]
 for i = 1:num_pan
     RHS[i] = -u_vec'norms[i, :]
     for j = 1:num_pan
-
-        res = linVort(1, 1, pan_pts[j,1:2], pan_pts[j,3:4], c_pts[i,:])
+        if i == j 
+            res = linVort(1, 1, pan_pts[j,1:2], pan_pts[j,3:4], c_pts[i,:], true)
+        else
+            res = linVort(1, 1, pan_pts[j,1:2], pan_pts[j,3:4], c_pts[i,:])
+        end 
+        
         uw_a = res[2,:]
         uw_b = res[3,:]
         
