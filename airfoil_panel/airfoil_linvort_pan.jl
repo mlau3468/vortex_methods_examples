@@ -1,6 +1,6 @@
 include("airfoil_util.jl")
 
-function linVort(mu1, mu2, p1, p2, p, coloc=false)
+function linVortPan(mu1, mu2, p1, p2, p, coloc=false)
     r1 = ptDist(p1, p)
     r2 = ptDist(p2, p)
     theta = -atan(p2[2]-p1[2], p2[1]-p1[1])
@@ -40,14 +40,11 @@ function linVort(mu1, mu2, p1, p2, p, coloc=false)
 
 end
 
-pan_pts = readAF("airfoil.csv", true)
-writeAF(pan_pts, "airfoil.dat")
-#pan_pts = repanel(pan_pts, 80, 0.75, true)
+function airfoil_linVort(pan_pts, alpha)
 pan_pts, c_pts, thetas, norms, tangents, dists = procPanels(pan_pts)
 # conditions
 U = 1
 chord = 1
-alpha = 5
 rho = 1.225
 
 # Initialize solver matrix
@@ -61,9 +58,9 @@ for i = 1:num_pan
     RHS[i] = -u_vec'norms[i, :]
     for j = 1:num_pan
         if i == j 
-            res = linVort(1, 1, pan_pts[j,1:2], pan_pts[j,3:4], c_pts[i,:], true)
+            res = linVortPan(1, 1, pan_pts[j,1:2], pan_pts[j,3:4], c_pts[i,:], true)
         else
-            res = linVort(1, 1, pan_pts[j,1:2], pan_pts[j,3:4], c_pts[i,:])
+            res = linVortPan(1, 1, pan_pts[j,1:2], pan_pts[j,3:4], c_pts[i,:])
         end 
         
         uw_a = res[2,:]
@@ -101,7 +98,6 @@ for i = 1:num_pan
 end
 lift = sum(ls)
 cl = lift/0.5/rho/U^2/chord
-println("CL: $cl")
 
 # get cp
 vs = zeros(num_pan)
@@ -110,5 +106,18 @@ for i = 1:num_pan
     vs[i] = B[i,:]'mu + u_vec'tangents[i,:]
     cp[i] = 1-vs[i]^2/U^2
 end
-im = plot(c_pts[:,1], cp, yflip=true)
-display(im)
+cpPlot = plot(c_pts[:,1], cp, yflip=true)
+
+return [cl, cpPlot]
+end
+
+
+
+# Testing
+pan_pts = readAF("airfoil.csv", true)
+writeAF(pan_pts, "airfoil.dat")
+#pan_pts = repanel(pan_pts, 80, 0.75, true)
+
+cl, cpPlot = airfoil_linVort(pan_pts, 5)
+display(cpPlot)
+println("CL: $cl")

@@ -1,6 +1,6 @@
 include("airfoil_util.jl")
 
-function dub2D(mu, p1, p2, p)
+function constDubPan(mu, p1, p2, p)
     #mu = doublet strength
     #p = point to calc velocity
     #p1 = start point of doublet panel
@@ -38,10 +38,7 @@ function dub2D(mu, p1, p2, p)
 
 end
 
-
-pan_pts = readAF("airfoil.csv", true)
-writeAF(pan_pts, "airfoil.dat")
-#pan_pts = repanel(pan_pts, 50, 1, true)
+function airfoil_constDub(pan_pts, alpha)
 pan_pts, c_pts, thetas, norms, tangents, dists = procPanels(pan_pts)
 # append a panel for the wake
 pan_pts = [pan_pts; [pan_pts[end,3], pan_pts[end,4], NaN, NaN]']
@@ -49,7 +46,6 @@ pan_pts = [pan_pts; [pan_pts[end,3], pan_pts[end,4], NaN, NaN]']
 # conditions
 U = 1
 chord = 1
-alpha = 5
 rho = 1.225
 
 # Initialize solver matrix
@@ -63,9 +59,9 @@ for i in 1:num_pan
     RHS[i] =- u_vec'norms[i, :]
     for j in 1:num_pan+1
         if j == num_pan+1 # wake, last panel
-            uw = dub2D(1, pan_pts[j,1:2], nothing, c_pts[i,:])
+            uw = constDubPan(1, pan_pts[j,1:2], nothing, c_pts[i,:])
         else
-            uw = dub2D(1, pan_pts[j,1:2], pan_pts[j,3:4], c_pts[i, :])
+            uw = constDubPan(1, pan_pts[j,1:2], pan_pts[j,3:4], c_pts[i, :])
         end
         A[i,j] = uw'norms[i,:]
      end
@@ -78,7 +74,7 @@ A[end, end-1] = -1
 RHS[end] = 0
 
 # remove one panel
-remIdx = 30
+remIdx = Int(round(size(pan_pts,1)/2))
 num_pan = num_pan -1
 keep_idx = [1:remIdx-1; remIdx+1:num_pan+2]
 
@@ -110,21 +106,29 @@ for i in 1:num_pan
     # influence of other panels
     for j in 1:num_pan+1
         if j == num_pan+1 # wake, last panel
-            uw = dub2D(mu[j], pan_pts[j,1:2], nothing, c_pts[i,:])
+            uw = constDubPan(mu[j], pan_pts[j,1:2], nothing, c_pts[i,:])
         else
-            uw = dub2D(mu[j], pan_pts[j,1:2], pan_pts[j,3:4], c_pts[i, :])
+            uw = constDubPan(mu[j], pan_pts[j,1:2], pan_pts[j,3:4], c_pts[i, :])
         end
         pan_vels[i, :] = pan_vels[i,:] + uw
      end
 end
 
 cp = 1 .- (pan_vels[:,1].^2 + pan_vels[:,2].^2) ./ U.^2
-im = plot(c_pts[:,1], cp, yflip=true)
-display(im)
+cpPlot = plot(c_pts[:,1], cp, yflip=true)
 
 ps = cp.*0.5.*rho.*U.^2
 fs = ps.*dists.*(-1).*norms[:,2]
 cl = sum(fs)./0.5./chord./rho./U.^2
-println("CL: $cl")
+return [cl, cpPlot]
+end
 
-println(rho*U^2*mu[end])
+
+# Testing
+pan_pts = readAF("airfoil.csv", true)
+writeAF(pan_pts, "airfoil.dat")
+#pan_pts = repanel(pan_pts, 50, 1, true)
+cl, cpPlot = airfoil_constDub(pan_pts, alpha)
+
+println("CL: $cl")
+display(cpPlot)
