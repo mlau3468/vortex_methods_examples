@@ -1,0 +1,717 @@
+
+>>>>>> DUST PREPROCESSOR beginning >>>>>>
+
+
+
+Reading input parameters from file "dust_pre.in"
+
+
+Reading input parameters from file "Model/wing_DegenGeom_WingGeom_Surf0.in"
+ Trailing edge detection completed, found 9 elements at the trailing edge, with 10 nodes on the trailing edge
+
+
+Reading input parameters from file "Model/wing_DegenGeom_WingGeom_Surf1.in"
+ Trailing edge detection completed, found 9 elements at the trailing edge, with 10 nodes on the trailing edge
+
+<<<<<< DUST PREPROCESSOR end       <<<<<<
+
+
+>>>>>> DUST beginning >>>>>>
+
+
+====== Input parameters: ======
+
+
+Reading input parameters from file "dust.in"
+  sim_param%llSolver : GammaMethod
+ Initial time tstart:    0.0000000000000000
+ Final time tend:       0.50000000000000000
+ Time step dt:           5.0000000000000001E-003
+ Output interval:        5.0000000000000001E-003
+ Output first step:    T
+ Debug level:          50
+ Free stream velocity:   30.000000000000000        0.0000000000000000        0.0000000000000000
+ Maximum wake panels:           1
+ Results basename: ./Output/alia
+ Debug basename: ./Debug/alia
+
+====== Geometry Creation ======
+
+
+Reading input parameters from file "References.in"
+Reading geometry from file "geo_input.h5"
+ Trailing edge: elements: 9 nodes 10
+ Trailing edge: elements: 9 nodes 10
+
+ Geometry details:
+  number of total elements:          576
+  number of implicit elements:       576
+  number of explicit elements:         0
+  number of static elements:         576
+  number of moving elements:           0
+  number of surface panels:          576
+  number of vortex lattices:           0
+  number of lifting lines:             0
+  number of actuator disks:            0
+Created geometry in:     0.005 s.
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+ warning: The following parameters were set in the input file, but are not currently employed :
+    timesteps
+    restart_file
+    reset_time
+    u_ref
+    rigid_wake_vel
+    LLartificialViscosityAdaptive_Alpha
+    LLartificialViscosityAdaptive_dAlpha
+    FMMPanels
+    BoxLength
+    NBox
+    OctreeOrigin
+    NOctreeLevels
+    MinOctreePart
+    MultipoleDegree
+    DynLayers
+    NMaxOctreeLevels
+    LeavesTimeRatio
+    ParticlesRedistribution
+    OctreeLevelSolid
+    ParticlesRedistributionRatio
+    HCAS_time
+    HCAS_velocity
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+====== Initializing Wake ======
+
+====== Initializing Linear System ======
+Initialized linear system in:     0.080 s.
+
+------ Completed all preliminary operations in:     0.111 s.
+
+////////// Performing Computations //////////
+
+--> Step     1 of   101 simulation time:    0.00
+Elapsed wall time:     0.111
+Assembled linear system in:     0.063 s.
+Solved linear system in:     0.000 s.
+Updated wake in:     0.010 s.
+
+--> Step     2 of   101 simulation time:    0.01
+Elapsed wall time:     0.679
+Assembled linear system in:     0.106 s.
+Solved linear system in:     0.000 s.
+Updated wake in:     0.003 s.
+
+--> Step     3 of   101 simulation time:    0.01
+Elapsed wall time:     1.187
+Assembled linear system in:     0.003 s.
+Solved linear system in:     0.000 s.
+Updated wake in:     0.046 s.
+
+--> Step     4 of   101 simulation time:    0.01
+Elapsed wall time:     1.673
+Assembled linear system in:     0.032 s.
+Solved linear system in:     0.000 s.
+Updated wake in:     0.013 s.
+
+--> Step     5 of   101 simulation time:    0.02
+Elapsed wall time:     2.139
+Assembled linear system in:     0.092 s.
+Solved linear system in:     0.000 s.
+Updated wake in:     0.010 s.
+
+--> Step     6 of   101 simulation time:    0.03
+Elapsed wall time:     2.699
+Assembled linear system in:     0.004 s.
+Solved linear system in:     0.000 s.
+Updated wake in:     0.009 s.
+
+--> Step     7 of   101 simulation time:    0.03
+Elapsed wall time:     3.146
+Assembled linear system in:     0.109 s.
+Solved linear system in:     0.000 s.
+Updated wake in:     0.006 s.
+
+--> Step     8 of   101 simulation time:    0.04
+Elapsed wall time:     3.686
+Assembled linear system in:     0.067 s.
+Solved linear system in:     0.000 s.
+Updated wake in:     0.035 s.
+
+--> Step     9 of   101 simulation time:    0.04
+Elapsed wall time:     4.193
+Assembled linear system in:     0.020 s.
+Solved linear system in:     0.000 s.
+Updated wake in:     0.069 s.
+
+--> Step    10 of   101 simulation time:    0.04
+Elapsed wall time:     4.798
+Assembled linear system in:     0.115 s.
+Solved linear system in:     0.000 s.
+Updated wake in:     0.095 s.
+
+--> Step    11 of   101 simulation time:    0.05
+Elapsed wall time:     5.566
+Assembled linear system in:     0.122 s.
+Solved linear system in:     0.000 s.
+Updated wake in:     0.021 s.
+
+--> Step    12 of   101 simulation time:    0.06
+Elapsed wall time:     6.124
+Assembled linear system in:     0.106 s.
+Solved linear system in:     0.000 s.
+Updated wake in:     0.086 s.
+
+--> Step    13 of   101 simulation time:    0.06
+Elapsed wall time:     6.818
+Assembled linear system in:     0.099 s.
+Solved linear system in:     0.000 s.
+Updated wake in:     0.084 s.
+
+--> Step    14 of   101 simulation time:    0.07
+Elapsed wall time:     7.490
+Assembled linear system in:     0.107 s.
+Solved linear system in:     0.000 s.
+Updated wake in:     0.049 s.
+
+--> Step    15 of   101 simulation time:    0.07
+Elapsed wall time:     8.171
+Assembled linear system in:     0.111 s.
+Solved linear system in:     0.000 s.
+Updated wake in:     0.026 s.
+
+--> Step    16 of   101 simulation time:    0.07
+Elapsed wall time:     8.762
+Assembled linear system in:     0.107 s.
+Solved linear system in:     0.000 s.
+Updated wake in:     0.028 s.
+
+--> Step    17 of   101 simulation time:    0.08
+Elapsed wall time:     9.353
+Assembled linear system in:     0.062 s.
+Solved linear system in:     0.000 s.
+Updated wake in:     0.058 s.
+
+--> Step    18 of   101 simulation time:    0.09
+Elapsed wall time:     9.972
+Assembled linear system in:     0.102 s.
+Solved linear system in:     0.000 s.
+Updated wake in:     0.033 s.
+
+--> Step    19 of   101 simulation time:    0.09
+Elapsed wall time:    10.633
+Assembled linear system in:     0.108 s.
+Solved linear system in:     0.000 s.
+Updated wake in:     0.089 s.
+
+--> Step    20 of   101 simulation time:    0.10
+Elapsed wall time:    11.385
+Assembled linear system in:     0.102 s.
+Solved linear system in:     0.000 s.
+Updated wake in:     0.089 s.
+
+--> Step    21 of   101 simulation time:    0.10
+Elapsed wall time:    12.108
+Assembled linear system in:     0.087 s.
+Solved linear system in:     0.000 s.
+Updated wake in:     0.091 s.
+
+--> Step    22 of   101 simulation time:    0.10
+Elapsed wall time:    12.747
+Assembled linear system in:     0.117 s.
+Solved linear system in:     0.000 s.
+Updated wake in:     0.060 s.
+
+--> Step    23 of   101 simulation time:    0.11
+Elapsed wall time:    13.437
+Assembled linear system in:     0.121 s.
+Solved linear system in:     0.000 s.
+Updated wake in:     0.075 s.
+
+--> Step    24 of   101 simulation time:    0.12
+Elapsed wall time:    14.104
+Assembled linear system in:     0.018 s.
+Solved linear system in:     0.000 s.
+Updated wake in:     0.095 s.
+
+--> Step    25 of   101 simulation time:    0.12
+Elapsed wall time:    14.776
+Assembled linear system in:     0.094 s.
+Solved linear system in:     0.000 s.
+Updated wake in:     0.026 s.
+
+--> Step    26 of   101 simulation time:    0.12
+Elapsed wall time:    15.351
+Assembled linear system in:     0.121 s.
+Solved linear system in:     0.000 s.
+Updated wake in:     0.073 s.
+
+--> Step    27 of   101 simulation time:    0.13
+Elapsed wall time:    15.984
+Assembled linear system in:     0.030 s.
+Solved linear system in:     0.000 s.
+Updated wake in:     0.105 s.
+
+--> Step    28 of   101 simulation time:    0.14
+Elapsed wall time:    16.601
+Assembled linear system in:     0.087 s.
+Solved linear system in:     0.000 s.
+Updated wake in:     0.055 s.
+
+--> Step    29 of   101 simulation time:    0.14
+Elapsed wall time:    17.329
+Assembled linear system in:     0.115 s.
+Solved linear system in:     0.000 s.
+Updated wake in:     0.066 s.
+
+--> Step    30 of   101 simulation time:    0.14
+Elapsed wall time:    17.995
+Assembled linear system in:     0.109 s.
+Solved linear system in:     0.000 s.
+Updated wake in:     0.050 s.
+
+--> Step    31 of   101 simulation time:    0.15
+Elapsed wall time:    18.657
+Assembled linear system in:     0.102 s.
+Solved linear system in:     0.000 s.
+Updated wake in:     0.096 s.
+
+--> Step    32 of   101 simulation time:    0.15
+Elapsed wall time:    19.365
+Assembled linear system in:     0.114 s.
+Solved linear system in:     0.000 s.
+Updated wake in:     0.076 s.
+
+--> Step    33 of   101 simulation time:    0.16
+Elapsed wall time:    20.018
+Assembled linear system in:     0.096 s.
+Solved linear system in:     0.000 s.
+Updated wake in:     0.049 s.
+
+--> Step    34 of   101 simulation time:    0.17
+Elapsed wall time:    20.608
+Assembled linear system in:     0.095 s.
+Solved linear system in:     0.000 s.
+Updated wake in:     0.095 s.
+
+--> Step    35 of   101 simulation time:    0.17
+Elapsed wall time:    21.283
+Assembled linear system in:     0.086 s.
+Solved linear system in:     0.000 s.
+Updated wake in:     0.110 s.
+
+--> Step    36 of   101 simulation time:    0.18
+Elapsed wall time:    21.937
+Assembled linear system in:     0.111 s.
+Solved linear system in:     0.000 s.
+Updated wake in:     0.109 s.
+
+--> Step    37 of   101 simulation time:    0.18
+Elapsed wall time:    22.584
+Assembled linear system in:     0.111 s.
+Solved linear system in:     0.000 s.
+Updated wake in:     0.105 s.
+
+--> Step    38 of   101 simulation time:    0.18
+Elapsed wall time:    23.273
+Assembled linear system in:     0.113 s.
+Solved linear system in:     0.000 s.
+Updated wake in:     0.074 s.
+
+--> Step    39 of   101 simulation time:    0.19
+Elapsed wall time:    23.928
+Assembled linear system in:     0.074 s.
+Solved linear system in:     0.000 s.
+Updated wake in:     0.043 s.
+
+--> Step    40 of   101 simulation time:    0.20
+Elapsed wall time:    24.431
+Assembled linear system in:     0.111 s.
+Solved linear system in:     0.000 s.
+Updated wake in:     0.122 s.
+
+--> Step    41 of   101 simulation time:    0.20
+Elapsed wall time:    25.128
+Assembled linear system in:     0.114 s.
+Solved linear system in:     0.000 s.
+Updated wake in:     0.096 s.
+
+--> Step    42 of   101 simulation time:    0.21
+Elapsed wall time:    25.830
+Assembled linear system in:     0.128 s.
+Solved linear system in:     0.000 s.
+Updated wake in:     0.106 s.
+
+--> Step    43 of   101 simulation time:    0.21
+Elapsed wall time:    26.564
+Assembled linear system in:     0.114 s.
+Solved linear system in:     0.000 s.
+Updated wake in:     0.113 s.
+
+--> Step    44 of   101 simulation time:    0.21
+Elapsed wall time:    27.233
+Assembled linear system in:     0.099 s.
+Solved linear system in:     0.000 s.
+Updated wake in:     0.046 s.
+
+--> Step    45 of   101 simulation time:    0.22
+Elapsed wall time:    27.776
+Assembled linear system in:     0.113 s.
+Solved linear system in:     0.000 s.
+Updated wake in:     0.091 s.
+
+--> Step    46 of   101 simulation time:    0.23
+Elapsed wall time:    28.578
+Assembled linear system in:     0.106 s.
+Solved linear system in:     0.000 s.
+Updated wake in:     0.058 s.
+
+--> Step    47 of   101 simulation time:    0.23
+Elapsed wall time:    29.118
+Assembled linear system in:     0.107 s.
+Solved linear system in:     0.000 s.
+Updated wake in:     0.077 s.
+
+--> Step    48 of   101 simulation time:    0.24
+Elapsed wall time:    29.758
+Assembled linear system in:     0.101 s.
+Solved linear system in:     0.000 s.
+Updated wake in:     0.100 s.
+
+--> Step    49 of   101 simulation time:    0.24
+Elapsed wall time:    30.500
+Assembled linear system in:     0.079 s.
+Solved linear system in:     0.000 s.
+Updated wake in:     0.069 s.
+
+--> Step    50 of   101 simulation time:    0.24
+Elapsed wall time:    31.086
+Assembled linear system in:     0.103 s.
+Solved linear system in:     0.000 s.
+Updated wake in:     0.117 s.
+
+--> Step    51 of   101 simulation time:    0.25
+Elapsed wall time:    31.816
+Assembled linear system in:     0.108 s.
+Solved linear system in:     0.000 s.
+Updated wake in:     0.111 s.
+
+--> Step    52 of   101 simulation time:    0.26
+Elapsed wall time:    32.512
+Assembled linear system in:     0.102 s.
+Solved linear system in:     0.000 s.
+Updated wake in:     0.099 s.
+
+--> Step    53 of   101 simulation time:    0.26
+Elapsed wall time:    33.163
+Assembled linear system in:     0.099 s.
+Solved linear system in:     0.000 s.
+Updated wake in:     0.124 s.
+
+--> Step    54 of   101 simulation time:    0.27
+Elapsed wall time:    33.832
+Assembled linear system in:     0.120 s.
+Solved linear system in:     0.000 s.
+Updated wake in:     0.060 s.
+
+--> Step    55 of   101 simulation time:    0.27
+Elapsed wall time:    34.435
+Assembled linear system in:     0.104 s.
+Solved linear system in:     0.000 s.
+Updated wake in:     0.074 s.
+
+--> Step    56 of   101 simulation time:    0.28
+Elapsed wall time:    35.030
+Assembled linear system in:     0.085 s.
+Solved linear system in:     0.000 s.
+Updated wake in:     0.128 s.
+
+--> Step    57 of   101 simulation time:    0.28
+Elapsed wall time:    35.683
+Assembled linear system in:     0.092 s.
+Solved linear system in:     0.000 s.
+Updated wake in:     0.089 s.
+
+--> Step    58 of   101 simulation time:    0.29
+Elapsed wall time:    36.340
+Assembled linear system in:     0.109 s.
+Solved linear system in:     0.000 s.
+Updated wake in:     0.114 s.
+
+--> Step    59 of   101 simulation time:    0.29
+Elapsed wall time:    37.072
+Assembled linear system in:     0.120 s.
+Solved linear system in:     0.000 s.
+Updated wake in:     0.105 s.
+
+--> Step    60 of   101 simulation time:    0.29
+Elapsed wall time:    37.768
+Assembled linear system in:     0.108 s.
+Solved linear system in:     0.000 s.
+Updated wake in:     0.067 s.
+
+--> Step    61 of   101 simulation time:    0.30
+Elapsed wall time:    38.368
+Assembled linear system in:     0.109 s.
+Solved linear system in:     0.000 s.
+Updated wake in:     0.119 s.
+
+--> Step    62 of   101 simulation time:    0.30
+Elapsed wall time:    39.100
+Assembled linear system in:     0.134 s.
+Solved linear system in:     0.000 s.
+Updated wake in:     0.091 s.
+
+--> Step    63 of   101 simulation time:    0.31
+Elapsed wall time:    39.824
+Assembled linear system in:     0.102 s.
+Solved linear system in:     0.000 s.
+Updated wake in:     0.068 s.
+
+--> Step    64 of   101 simulation time:    0.32
+Elapsed wall time:    40.392
+Assembled linear system in:     0.133 s.
+Solved linear system in:     0.000 s.
+Updated wake in:     0.085 s.
+
+--> Step    65 of   101 simulation time:    0.32
+Elapsed wall time:    41.008
+Assembled linear system in:     0.102 s.
+Solved linear system in:     0.000 s.
+Updated wake in:     0.140 s.
+
+--> Step    66 of   101 simulation time:    0.33
+Elapsed wall time:    41.772
+Assembled linear system in:     0.090 s.
+Solved linear system in:     0.000 s.
+Updated wake in:     0.084 s.
+
+--> Step    67 of   101 simulation time:    0.33
+Elapsed wall time:    42.407
+Assembled linear system in:     0.103 s.
+Solved linear system in:     0.000 s.
+Updated wake in:     0.140 s.
+
+--> Step    68 of   101 simulation time:    0.34
+Elapsed wall time:    43.107
+Assembled linear system in:     0.108 s.
+Solved linear system in:     0.000 s.
+Updated wake in:     0.147 s.
+
+--> Step    69 of   101 simulation time:    0.34
+Elapsed wall time:    43.863
+Assembled linear system in:     0.106 s.
+Solved linear system in:     0.000 s.
+Updated wake in:     0.140 s.
+
+--> Step    70 of   101 simulation time:    0.35
+Elapsed wall time:    44.626
+Assembled linear system in:     0.124 s.
+Solved linear system in:     0.000 s.
+Updated wake in:     0.163 s.
+
+--> Step    71 of   101 simulation time:    0.35
+Elapsed wall time:    45.476
+Assembled linear system in:     0.114 s.
+Solved linear system in:     0.000 s.
+Updated wake in:     0.151 s.
+
+--> Step    72 of   101 simulation time:    0.35
+Elapsed wall time:    46.238
+Assembled linear system in:     0.117 s.
+Solved linear system in:     0.000 s.
+Updated wake in:     0.139 s.
+
+--> Step    73 of   101 simulation time:    0.36
+Elapsed wall time:    46.995
+Assembled linear system in:     0.077 s.
+Solved linear system in:     0.000 s.
+Updated wake in:     0.148 s.
+
+--> Step    74 of   101 simulation time:    0.36
+Elapsed wall time:    47.706
+Assembled linear system in:     0.111 s.
+Solved linear system in:     0.000 s.
+Updated wake in:     0.154 s.
+
+--> Step    75 of   101 simulation time:    0.37
+Elapsed wall time:    48.430
+Assembled linear system in:     0.127 s.
+Solved linear system in:     0.000 s.
+Updated wake in:     0.132 s.
+
+--> Step    76 of   101 simulation time:    0.38
+Elapsed wall time:    49.130
+Assembled linear system in:     0.100 s.
+Solved linear system in:     0.000 s.
+Updated wake in:     0.087 s.
+
+--> Step    77 of   101 simulation time:    0.38
+Elapsed wall time:    49.746
+Assembled linear system in:     0.133 s.
+Solved linear system in:     0.000 s.
+Updated wake in:     0.172 s.
+
+--> Step    78 of   101 simulation time:    0.39
+Elapsed wall time:    50.504
+Assembled linear system in:     0.131 s.
+Solved linear system in:     0.000 s.
+Updated wake in:     0.122 s.
+
+--> Step    79 of   101 simulation time:    0.39
+Elapsed wall time:    51.292
+Assembled linear system in:     0.122 s.
+Solved linear system in:     0.000 s.
+Updated wake in:     0.098 s.
+
+--> Step    80 of   101 simulation time:    0.40
+Elapsed wall time:    52.005
+Assembled linear system in:     0.113 s.
+Solved linear system in:     0.000 s.
+Updated wake in:     0.102 s.
+
+--> Step    81 of   101 simulation time:    0.40
+Elapsed wall time:    52.672
+Assembled linear system in:     0.105 s.
+Solved linear system in:     0.000 s.
+Updated wake in:     0.134 s.
+
+--> Step    82 of   101 simulation time:    0.41
+Elapsed wall time:    53.445
+Assembled linear system in:     0.121 s.
+Solved linear system in:     0.000 s.
+Updated wake in:     0.157 s.
+
+--> Step    83 of   101 simulation time:    0.41
+Elapsed wall time:    54.243
+Assembled linear system in:     0.117 s.
+Solved linear system in:     0.000 s.
+Updated wake in:     0.100 s.
+
+--> Step    84 of   101 simulation time:    0.42
+Elapsed wall time:    54.979
+Assembled linear system in:     0.088 s.
+Solved linear system in:     0.000 s.
+Updated wake in:     0.174 s.
+
+--> Step    85 of   101 simulation time:    0.42
+Elapsed wall time:    55.760
+Assembled linear system in:     0.124 s.
+Solved linear system in:     0.000 s.
+Updated wake in:     0.181 s.
+
+--> Step    86 of   101 simulation time:    0.42
+Elapsed wall time:    56.564
+Assembled linear system in:     0.102 s.
+Solved linear system in:     0.000 s.
+Updated wake in:     0.187 s.
+
+--> Step    87 of   101 simulation time:    0.43
+Elapsed wall time:    57.311
+Assembled linear system in:     0.116 s.
+Solved linear system in:     0.000 s.
+Updated wake in:     0.184 s.
+
+--> Step    88 of   101 simulation time:    0.43
+Elapsed wall time:    58.188
+Assembled linear system in:     0.126 s.
+Solved linear system in:     0.000 s.
+Updated wake in:     0.198 s.
+
+--> Step    89 of   101 simulation time:    0.44
+Elapsed wall time:    59.030
+Assembled linear system in:     0.110 s.
+Solved linear system in:     0.000 s.
+Updated wake in:     0.224 s.
+
+--> Step    90 of   101 simulation time:    0.45
+Elapsed wall time:    59.904
+Assembled linear system in:     0.127 s.
+Solved linear system in:     0.000 s.
+Updated wake in:     0.208 s.
+
+--> Step    91 of   101 simulation time:    0.45
+Elapsed wall time:    60.747
+Assembled linear system in:     0.111 s.
+Solved linear system in:     0.000 s.
+Updated wake in:     0.124 s.
+
+--> Step    92 of   101 simulation time:    0.46
+Elapsed wall time:    61.428
+Assembled linear system in:     0.115 s.
+Solved linear system in:     0.000 s.
+Updated wake in:     0.169 s.
+
+--> Step    93 of   101 simulation time:    0.46
+Elapsed wall time:    62.120
+Assembled linear system in:     0.120 s.
+Solved linear system in:     0.000 s.
+Updated wake in:     0.208 s.
+
+--> Step    94 of   101 simulation time:    0.47
+Elapsed wall time:    63.016
+Assembled linear system in:     0.132 s.
+Solved linear system in:     0.000 s.
+Updated wake in:     0.237 s.
+
+--> Step    95 of   101 simulation time:    0.47
+Elapsed wall time:    63.916
+Assembled linear system in:     0.129 s.
+Solved linear system in:     0.000 s.
+Updated wake in:     0.224 s.
+
+--> Step    96 of   101 simulation time:    0.48
+Elapsed wall time:    64.832
+Assembled linear system in:     0.126 s.
+Solved linear system in:     0.000 s.
+Updated wake in:     0.246 s.
+
+--> Step    97 of   101 simulation time:    0.48
+Elapsed wall time:    65.812
+Assembled linear system in:     0.133 s.
+Solved linear system in:     0.000 s.
+Updated wake in:     0.228 s.
+
+--> Step    98 of   101 simulation time:    0.48
+Elapsed wall time:    66.823
+Assembled linear system in:     0.124 s.
+Solved linear system in:     0.000 s.
+Updated wake in:     0.260 s.
+
+--> Step    99 of   101 simulation time:    0.49
+Elapsed wall time:    67.680
+Assembled linear system in:     0.112 s.
+Solved linear system in:     0.000 s.
+Updated wake in:     0.210 s.
+
+--> Step   100 of   101 simulation time:    0.49
+Elapsed wall time:    68.584
+Assembled linear system in:     0.133 s.
+Solved linear system in:     0.000 s.
+Updated wake in:     0.253 s.
+
+--> Step   101 of   101 simulation time:    0.50
+Elapsed wall time:    69.545
+Assembled linear system in:     0.131 s.
+Solved linear system in:     0.000 s.
+Updated wake in:     0.249 s.
+
+\\\\\\\\\\  Computations Finished \\\\\\\\\\
+Completed all computations in    70.460 s
+
+<<<<<< DUST end <<<<<<
+
+
+>>>>>> DUST POSTPROCESSOR beginning >>>>>>
+
+
+
+Reading input parameters from file "dust_post.in"
+
+++++++++++ Analysis: 1 visualization
+
+
+++++++++++ Visualization done
+
+
+<<<<<< DUST POSTPROCESSOR end       <<<<<<
+
