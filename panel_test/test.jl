@@ -245,13 +245,36 @@ for i = 1:nPan
     end
 end
 
+function factorize2(A)
+    # modification of LU decomposition in julia to output single matrix
+    L,U = factorize(A)
+    res = zeros(size(A))
+    for i = 1:size(A,1)
+        for j = 1:size(A,1)
+            if i <= j
+                res[i,j] = U[i,j]
+            else
+                res[i,j] = L[i,j]
+            end
+        end
+    end
+    return res
+end
+
+A = factorize2(A)
+
+
 writedlm("A.csv", A)
 writedlm("B.csv", B)
 
+
+
+println("finished")
+
+#=
 C = readdlm("test.txt", ',')
 D = zeros(nPan, nPan)
 for i=1:size(C,1)
     D[Int(C[i,1]), Int(C[i,2])] = C[i,3]
 end
-writedlm("D.csv", D)
-println("finished")
+=#
