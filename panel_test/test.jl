@@ -261,6 +261,8 @@ function factorize2(A)
     return res
 end
 
+
+writedlm("A_pre.csv", A)
 A = factorize2(A)
 
 
