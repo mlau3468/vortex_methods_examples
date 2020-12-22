@@ -2,7 +2,7 @@ from dust.tools.DUST_tools import *
 from time import time
 if __name__=='__main__':
     # Create DUST model from VSP degenerate geometry
-    geo_files, geo_names, mesh_stats = vspDegen2DustBasic('wing_DegenGeom.csv', 'Model/', -0.75, show=True, dup_chck='Full', scale=1/3.28)
+    geo_files, geo_names, mesh_stats = vspDegen2DustBasic('wing_DegenGeom.csv', 'Model/', -0.75, show=False, dup_chck='Full', scale=1/3.28)
 
     # ---------------------------------------------------------------------------------
 
@@ -41,8 +41,8 @@ if __name__=='__main__':
     options['BoxLength'] = 10
     options['NBox'] = [6, 3, 3]
     options['OctreeOrigin'] = [-10, -15, -15]
-    options['FarFieldRatioSource'] = 30
-    options['FarFieldRatioDoublet'] = 30
+    options['FarFieldRatioSource'] = 1000
+    options['FarFieldRatioDoublet'] = 1000
     options['debug_level'] = 50
     options['NOctreeLevels'] = 6
     options['MinOctreePart'] = 5
@@ -80,7 +80,7 @@ if __name__=='__main__':
 
     # Process Results
     case = ans['CaseObj']
-    case.show()
+    #case.show()
     print('Loads on Comp1:, reference frames: global, test (same as local), test2')
     print(case.components[1].get_loads(frame='global'))
     print(case.components[1].get_loads(frame='test'))

@@ -1,7 +1,7 @@
 MeshFileType = basic
 MeshFile = Model/wing_DegenGeom_WingGeom_Surf1_
 ElType = p
-SuppressTe = F
+SuppressTe = T
 TolSewing = 0.00001
 InnerProductTe = -0.75
 !ProjTe = F
