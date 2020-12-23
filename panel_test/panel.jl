@@ -9,8 +9,11 @@ struct refFrame
     children # list of child references
     move2Parent :: Bool # Is this reference frame moving with respect to the parent frame
     move2Global :: Bool # Is this reference frame moving with respect to the global frame
-    origin # 3x1 vector rigin in the parent frame
+    origin # 3x1 vector origin in the parent frame
     orient # 3x3 orientation matrix with respect to parent
+
+    vel_g # 3x1 vector velocity with respect to global frame 
+    rot_g #3x3 rotation rate matrix with respect to global frame
 end
 
 struct component
@@ -20,11 +23,16 @@ struct component
     ee  # points
     rr  # vertices
     neigh # neighboring
-    ee_te
-    rr_te
-    neigh_te
     n_pan :: Int
     n_vert :: Int
+
+    ii_te
+    rr_te
+    neigh_te
+    n_pan_te :: Int
+    n_vert_te :: Int
+    dir_te 
+
 end 
 
 function factorize2(A)
