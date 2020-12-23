@@ -26,6 +26,7 @@ struct component
     n_pan :: Int
     n_vert :: Int
 
+    i_te 
     ii_te
     rr_te
     neigh_te
@@ -159,4 +160,13 @@ function dub(pts, loc, normal)
     
         
     return dou
+end
+
+function calc_node_vel(r, G,f)
+    # calculate velocity of a point whose coordinate is rr. Boundary condition
+    #r: point coordinate
+    #G: frame rotation rate with respect othe base reference
+    #f: frame framve velocity with respect to the base reference
+    v = f.+(G*r) # velocity
+    return v
 end
