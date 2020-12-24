@@ -1,4 +1,5 @@
 include("panel.jl")
+using WriteVTK
 
 # Read input file
 fname = "./dust_output/wing/geo_input.h5"
@@ -202,7 +203,7 @@ writedlm("B.csv", B)
 
 writedlm("ee.csv", ee_wake', ',')
 writedlm("rr.csv", rr_wake', ',')
-#println("finished")
+eerr2vtk(ee_all, rr_all, "mesh.vtu")
 
 #=
 C = readdlm("test.txt", ',')
@@ -224,13 +225,4 @@ display(read(fid["Components"]["Comp001"]["Trailing_Edge"]["scale_te"])) #Indivi
 display(read(fid["Components"]["Comp001"]["Trailing_Edge"]["t_te"])) #Unit vector at TE nodes
 =#
 
-#display(read(fid["Components"]["Comp001"]["Trailing_Edge"]["ii_te"])) #TE id of the nodes of the TE elements
-#display(read(fid["Components"]["Comp001"]["Trailing_Edge"]["rr_te"])) #Coordinates of the nodes of the TE
 
-#display(read(fid["Components"]["Comp001"]["Trailing_Edge"]["ii_te"])) #TE id of the nodes of the TE elements
-#display(read(fid["Components"]["Comp002"]["Trailing_Edge"]["ii_te"])) #TE id of the nodes of the TE elements
-#display(read(fid["Components"]["Comp001"]["Trailing_Edge"]["rr_te"])) #TE id of the nodes of the TE elements
-#display(read(fid["Components"]["Comp002"]["Trailing_Edge"]["rr_te"])) #TE id of the nodes of the TE elements
-
-#display(read(fid["Components"]["Comp001"]["Trailing_Edge"]["rr_te"])) #TE id of the nodes of the TE elements
-#display(read(fid["Components"]["Comp001"]["Trailing_Edge"]["ii_te"])) #TE id of the nodes of the TE elements

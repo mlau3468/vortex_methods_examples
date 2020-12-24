@@ -172,3 +172,18 @@ function calc_node_vel(r, G,f)
     v = f.+(G*r) # velocity
     return v
 end
+
+
+function eerr2vtk(ee, rr, fname)
+    celltype = VTKCellTypes.VTK_QUAD
+    cells = MeshCell[]
+    cdata = Float32[]
+    pts = rr
+    for i =1:size(ee,2)
+        inds = ee[:,i]
+        c = MeshCell(celltype, inds)
+        push!(cells, c)
+    end
+    outfile = vtk_grid(fname, pts, cells, compress=2) do vtk
+    end
+end
