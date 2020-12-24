@@ -104,7 +104,9 @@ end
 
 # set up linear system
 A = zeros(nPan, nPan)
-B = zeros(nPan, nPan)
+B = zeros(nPan, nPan) #Bstatic
+RHS = zeros(nPan)
+
 for i = 1:nPan
     for j = 1:nPan
         if i == j
