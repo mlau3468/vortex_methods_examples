@@ -19,20 +19,22 @@ end
 struct component
     name::String
     elType :: String
+    refId :: Int
     refName :: String
-    ee  # points
+    ee  # panels
     rr  # vertices
     neigh # neighboring
-    n_pan :: Int
-    n_vert :: Int
+    n_pan :: Int # Number of panels
+    n_vert :: Int # Number of vertices
 
-    i_te 
-    ii_te
-    rr_te
-    neigh_te
+    e_te #panel index associated with each TE panel
+    i_te #component panel id of the nodes on the TE
+    ii_te #TE id of the nodes of the TE elements (index in rr_te)
+    rr_te #Coordinates of the nodes of the TE
+    neigh_te #TE id of neighboring TE elements
     n_pan_te :: Int
     n_vert_te :: Int
-    dir_te 
+    dir_te #Unit vector at TE nodes
 
 end 
 
