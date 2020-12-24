@@ -201,8 +201,8 @@ A = factorize2(A)
 writedlm("A.csv", A)
 writedlm("B.csv", B)
 
-writedlm("ee.csv", ee_wake', ',')
-writedlm("rr.csv", rr_wake', ',')
+#writedlm("ee.csv", ee_wake', ',')
+#writedlm("rr.csv", rr_wake', ',')
 eerr2vtk(ee_all, rr_all, "mesh.vtu")
 
 #=
