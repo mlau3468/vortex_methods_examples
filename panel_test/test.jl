@@ -118,9 +118,6 @@ for i = 1:nPan
     end
 end
 
-writedlm("A_pre.csv", A)
-
-
 # trailing edge first row
 last_pan = 0
 last_vert = 0
@@ -184,18 +181,21 @@ te_pan = Int.(te_pan)
 
 # influence of trailing edge
 for i = 1:size(ee_all,2)
+    # go through each wake panel
     for j = 1:size(ee_wake,2)
+        # effect of wake panel on panel i
         a = dub(rr_wake[:,ee_wake[:,j]], cent[:,i], normals[:,j])
+        a = - a # note flipping is down outside comput_pot
+        #=Modify influence coefficients of trailing edge panels 
+        associated with this trailing edge wake on panel i =#
         A[i,te_pan[1,j]] = A[i,te_pan[1,j]] + a
         A[i,te_pan[2,j]] = A[i,te_pan[2,j]] - a
-        if i == 1
-        #println(rr_wake[:,ee_wake[:,j]])
-        end
     end
     
     
 end
-writedlm("A_pre_wake.csv", A)
+
+# LU decomposition of A
 A = factorize2(A)
 writedlm("A.csv", A)
 writedlm("B.csv", B)
