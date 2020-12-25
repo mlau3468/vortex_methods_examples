@@ -131,6 +131,7 @@ comp_pan  = 0
 ee_wake = zeros(4, nWakePan)
 rr_wake = zeros(3, nWakeVert)
 te_pan = zeros(2, nWakePan)
+te_comp = zeros(nWakePan)
 te_scaling = 0.3
 
 for i = 1:numComp
@@ -150,6 +151,7 @@ for i = 1:numComp
     # figure out which panels are associated with the trailing edge
     for j = 1:comps[i].n_pan_te
         te_pan[:,last_pan.+j] = comp_pan .+ comps[i].e_te[:,j]
+        te_comp[last_pan+j] = i
     end
 
     global last_pan = last_pan + comps[i].n_pan_te
@@ -225,10 +227,23 @@ writedlm("res.csv", solution)
 # update strength of the wake panel at the trailing edge
 for i = 1:nWakePan
     magWake[i] = magPan[te_pan[1,i]] - magPan[te_pan[2,i]]
-    println(magWake[i])
 end
 
+# points_end
+points_end_left = zeros(3, nWakePan)
+points_end_right = zeros(3, nWakePan)
+for i = 1:nWakePan
+    posp1 = rr_wake[:,ee_wake[3,i]]
+    
+    posp2 = rr_wake[:,ee_wake[4,i]]
+end
 
+# row of points to generate particles
+for i = 1:nWakePan
+    # left side
+    dir1 = rr_wake[:,ee_wake[4,i]]
+    println(dir1)
+end
 
 writedlm("ee.csv", ee_wake', ',')
 writedlm("rr.csv", rr_wake', ',')
