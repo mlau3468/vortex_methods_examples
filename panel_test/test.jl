@@ -106,6 +106,8 @@ A = zeros(nPan, nPan)
 B = zeros(nPan, nPan) #Bstatic
 RHS = zeros(nPan)
 uvort = zeros(3,nPan)
+magPan = zeros(nPan)
+magWake = zeros(nWakePan)
 
 for i = 1:nPan
     for j = 1:nPan
@@ -215,12 +217,21 @@ writedlm("B_static.csv", B)
 
 # solve linear system
 solution = A\RHS
+magPan = copy(solution)
 
 # debug: output
 writedlm("res.csv", solution)
 
-#writedlm("ee.csv", ee_wake', ',')
-#writedlm("rr.csv", rr_wake', ',')
+# update strength of the wake panel at the trailing edge
+for i = 1:nWakePan
+    magWake[i] = magPan[te_pan[1,i]] - magPan[te_pan[2,i]]
+    println(magWake[i])
+end
+
+
+
+writedlm("ee.csv", ee_wake', ',')
+writedlm("rr.csv", rr_wake', ',')
 eerr2vtk(ee_all, rr_all, "mesh.vtu")
 
 #=
