@@ -2,6 +2,7 @@ using HDF5
 using Statistics
 using LinearAlgebra
 using DelimitedFiles
+using WriteVTK
 
 struct refFrame
     name :: String

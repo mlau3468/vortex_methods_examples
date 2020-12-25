@@ -1,5 +1,4 @@
 include("panel.jl")
-using WriteVTK
 
 # Read input file
 fname = "./dust_output/wing/geo_input.h5"
@@ -106,6 +105,7 @@ end
 A = zeros(nPan, nPan)
 B = zeros(nPan, nPan) #Bstatic
 RHS = zeros(nPan)
+uvort = zeros(3,nPan)
 
 for i = 1:nPan
     for j = 1:nPan
@@ -119,6 +119,7 @@ for i = 1:nPan
         sou = sourc(rr_all[:,ee_all[:,j]], cent[:,i], dou, normals[:,j])
         B[i,j] = sou
     end
+    RHS[i] = 0.0
 end
 
 # trailing edge first row
@@ -193,15 +194,30 @@ for i = 1:size(ee_all,2)
         associated with this trailing edge wake on panel i =#
         A[i,te_pan[1,j]] = A[i,te_pan[1,j]] + a
         A[i,te_pan[2,j]] = A[i,te_pan[2,j]] - a
+    end 
+end
+
+#assemble RHS (add uinf and uvort contribution)
+for i =1:nPan
+    for j = 1:nPan
+        # uvort is the velocity induced by vorticies on this panel
+        RHS[i] = RHS[i] + B[i,j] .* sum(normals[:,j].*(-uinf.-uvort[:,j]))
     end
-    
-    
 end
 
 # LU decomposition of A
-A = factorize2(A)
+#A = factorize2(A)
+
+# debug: output
 writedlm("A.csv", A)
-writedlm("B.csv", B)
+writedlm("B.csv", RHS)
+writedlm("B_static.csv", B)
+
+# solve linear system
+solution = A\RHS
+
+# debug: output
+writedlm("res.csv", solution)
 
 #writedlm("ee.csv", ee_wake', ',')
 #writedlm("rr.csv", rr_wake', ',')
