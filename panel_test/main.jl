@@ -252,23 +252,29 @@ end
 for i = 1:size(panels, 1)
     panels[i].mag[1] = solution[i]
 end
-
 for i = 1:size(wake_panels,1)
     wake_panels[i].mag[1] = panels[wake_panels[i].panIdx[1]].mag[1] - panels[wake_panels[i].panIdx[2]].mag[1]
 end
-
+pts1 = zeros(3,nWakePan)
+pts2 = zeros(3,nWakePan)
+# add particle
 for i = 1:size(wake_panels,1)
 #for i = 1:1
     posp1 = rr_wake[:,wake_panels[i].ee[3]]
-    test = elemVel(panels, wake_panels, posp1, uinf, rr_all, rr_wake)
-    println(posp1)
-    println(test)
-    println("--")
+    v1 = elemVel(panels, wake_panels, posp1, uinf, rr_all, rr_wake)
+    pts1[:,i] = posp1 .+ v1.*dt
     posp2 = rr_wake[:,wake_panels[i].ee[4]]
-    test = elemVel(panels, wake_panels, posp2, uinf, rr_all, rr_wake)
-    println(posp2)
-    println(test)
+    v2 = elemVel(panels, wake_panels, posp2, uinf, rr_all, rr_wake)
+    pts2[:,i] = posp2 .+ v2.*dt
+    
+end
+for i = 1:1
+#for i = 1:size(wake_panels,1)
     # left side
     dir1 = rr_wake[:,wake_panels[i].ee[4]]
-    
+    dir2 = pts2[:,i]
+    println(dir1)
+    println(dir2)
+
+    # right side
 end
