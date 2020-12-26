@@ -187,7 +187,6 @@ end
 
 
 ee_wake = Int.(ee_wake)
-display(ee_wake)
 te_pan = Int.(te_pan)
 
 
@@ -196,7 +195,9 @@ for i = 1:size(ee_all,2)
     # go through each wake panel
     for j = 1:size(ee_wake,2)
         # effect of wake panel on panel i
-        a = dub(rr_wake[:,ee_wake[:,j]], cent[:,i], normals[:,j])
+        #println(rr_wake[1,ee_wake[:,j]])
+        #println(cent[:,i])
+        a = hello(rr_wake[:,ee_wake[:,j]], cent[:,i], normals[:,j])
         a = - a # note flipping is down outside comput_pot
         #=Modify influence coefficients of trailing edge panels 
         associated with this trailing edge wake on panel i =#
@@ -233,6 +234,7 @@ for i = 1:nWakePan
     magWake[i] = magPan[te_pan[1,i]] - magPan[te_pan[2,i]]
 end
 
+
 # points_end
 points_end_left = zeros(3, nWakePan)
 points_end_right = zeros(3, nWakePan)
@@ -246,13 +248,11 @@ end
 for i = 1:nWakePan
     # left side
     dir1 = rr_wake[:,ee_wake[4,i]]
-    println(dir1)
 end
 
 writedlm("ee.csv", ee_wake', ',')
 writedlm("rr.csv", rr_wake', ',')
 eerr2vtk(ee_all, rr_all, "mesh2.vtu")
-display(rr_wake)
 
 #=
 C = readdlm("test.txt", ',')

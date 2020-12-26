@@ -87,8 +87,8 @@ for i = 1:numComp
 
         velbody = [0.0; 0.0; 0.0]
         velvort = [0.0; 0.0; 0.0]
-        n_ver, n_sides, center, edge_vec, edge_len, edge_uni, tang, normal, area, sinTi, cosTi = getGeoProp(pts)
-        new_pan = panel(res, i, ee_global, ee_comp, center, n_sides, n_ver, edge_len, edge_vec, edge_uni, normal, area, tang, cosTi, sinTi, velbody, velvort, 0.0)
+        n_ver, n_sides, center, edge_vec, edge_len, edge_uni, tang, normal, area, sinTi, cosTi = getPanProp(pts)
+        new_pan = panel(res, i, ee_global, ee_comp, center, n_sides, n_ver, edge_len, edge_vec, edge_uni, normal, area, tang, cosTi, sinTi, velbody, velvort, [0.0])
         push!(panels, new_pan)
         #panels[i] = new_pan
     end
@@ -178,8 +178,8 @@ for i = 1:numComp
         # create panel object
         velbody = [0; 0; 0]
         velvort = [0; 0; 0]
-        n_ver, n_sides, cpt, edge_vec, edge_len, edge_uni, tang, normal, area, sinTi, cosTi = getGeoProp([pts new_pts])
-        new_pan = wake_panel(res, i, ee_global, ee_comp, pan_idxglobal, pan_idxcomp, te_pan_dir,cpt, n_sides, n_ver, edge_len, edge_vec, edge_uni, normal, area, tang, cosTi, sinTi, velbody, velvort, 0.0)
+        n_ver, n_sides, cpt, edge_vec, edge_len, edge_uni, tang, normal, area, sinTi, cosTi = getPanProp([pts new_pts[:,2] new_pts[:,1]])
+        new_pan = wake_panel(res, i, ee_global, ee_comp, pan_idxglobal, pan_idxcomp, te_pan_dir,cpt, n_sides, n_ver, edge_len, edge_vec, edge_uni, normal, area, tang, cosTi, sinTi, velbody, velvort, [0.0])
         push!(wake_panels, new_pan)
     end
     global comp_pan = comp_pan + comps[i].n_pan
@@ -188,8 +188,48 @@ end
 #combine points from first and second row
 rr_wake = [rr_wake rr_wake_new[:,2:end]]
 
-writedlm("ee.csv", ee_wake', ',')
-writedlm("rr.csv", rr_wake', ',')
-
 panels2vtk(panels, rr_all, "mesh.vtu")
 panels2vtk(wake_panels, rr_wake, "mesh_wake.vtu")
+
+# influence of trailing edge
+for i = 1:size(panels,1)
+    # go through each wake panel
+    for j = 1:size(wake_panels,1)
+        # effect of wake panel on panel i
+        a = dub(wake_panels[j], panels[i].center, rr_wake)
+        a = - a # note flipping is down outside comput_pot
+        #=Modify influence coefficients of trailing edge panels 
+        associated with this trailing edge wake on panel i =#
+        A[i, wake_panels[j].panIdx[1]] = A[i, wake_panels[j].panIdx[1]] + a
+        A[i, wake_panels[j].panIdx[2]] = A[i, wake_panels[j].panIdx[2]] - a
+    end
+end
+
+# assemble RHS (add uinf and uvort contribution)
+for i = 1:size(panels,1)
+    for j = 1:size(panels,1)
+        RHS[i] = RHS[i] + B[i,j] .* sum(panels[j].norm.*(-uinf.-panels[j].velVort))
+    end
+end
+
+# LU decomposition of A
+#A = factorize2(A)
+# debug: output
+writedlm("A.csv", A)
+writedlm("B.csv", RHS)
+writedlm("B_static.csv", B)
+
+
+# solve linear system
+solution = A\RHS
+# debug: output
+writedlm("res.csv", solution)
+
+# update strengths
+for i = 1:size(panels, 1)
+    panels[i].mag[1] = solution[i]
+end
+
+for i = 1:size(wake_panels,1)
+    wake_panels[i].mag[1] = panels[wake_panels[i].panIdx[1]].mag[1] - panels[wake_panels[i].panIdx[2]].mag[1]
+end

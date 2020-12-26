@@ -332,3 +332,53 @@ function vel_sourc(pts, loc, normal)
 
     return vel
 end
+
+
+function hello(pts, loc, normal)
+
+    cpt = mean(pts, dims=2)
+    radius = norm(loc.-cpt)
+    e3 = normal
+
+    # get edge vectors
+    edge_vec = zeros(3,4)
+    edge_vec[:,1] = pts[:,2] .- pts[:,1]
+    edge_vec[:,2] = pts[:,3] .- pts[:,2]
+    edge_vec[:,3] = pts[:,4] .- pts[:,3]
+    edge_vec[:,4] = pts[:,1] .- pts[:,4]
+    
+    farField = false
+
+    if farField
+        # far field approximation
+    else
+        zQ = sum((loc.-cpt).*e3)
+        dou = 0.0
+        
+        n_ver = 4
+        for i1 = 1:n_ver
+            indp = 1+ (i1 % n_ver)
+            indm1 = n_ver - ((n_ver-i1+1) % n_ver)
+            ei = - (loc .- pts[:,i1])
+            ei = ei ./ norm(ei)
+            ap1 = edge_vec[:,i1] .- ei .* sum(ei .* edge_vec[:,i1])
+            am1 = -edge_vec[:,indm1] .+ ei .* sum(ei .* edge_vec[:,indm1])
+            ap1n = norm(ap1)
+            am1n = norm(am1)
+            sinB = sum(ei.*cross(am1, ap1)) ./ (ap1n.*am1n)
+            cosB = sum(am1.*ap1 ./ (ap1n.*am1n))
+            beta = atan(sinB, cosB)
+            dou = dou + beta
+        end
+        #Correct the result to obtain the solid angle (from Gauss-Bonnet theorem)
+        if dou < -(n_ver-2) * pi + 1e-5
+            dou = dou + (n_ver-2)*pi
+        elseif dou > (n_ver-2) * pi - 1e-5
+            dou = dou - (n_ver-2)*pi
+        end
+    end
+
+    
+        
+    return dou
+end

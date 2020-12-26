@@ -16,7 +16,7 @@ struct panel
     sinTi ::Array{Float64,1}
     velBody ::Array{Float64,1} # body velocity at the center
     velVort ::Array{Float64,1} # vorticity induced velocity at the center
-    mag :: Float64
+    mag :: Array{Float64,1}
 end
 
 struct wake_panel
@@ -40,10 +40,10 @@ struct wake_panel
     sinTi ::Array{Float64,1}
     velBody ::Array{Float64,1} # body velocity at the center
     velVort ::Array{Float64,1} # vorticity induced velocity at the center
-    mag :: Float64
+    mag :: Array{Float64,1}
 end
 
-function getGeoProp(pts)
+function getPanProp(pts)
     n_ver = 4
     n_sides = 4
 
