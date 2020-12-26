@@ -153,18 +153,19 @@ function vel_dub(pan, loc, rr)
     for i = 1:n_ver
         indp1 = 1 + i % n_ver
         indm1 = n_ver - (n_ver-i+1) % n_ver
-        av = loc-pts[:,i]
+        av = loc.-pts[:,i]
         ai = sum(av.*edge_uni[:,i])
         r1 = norm(av)
-        r2 = norm(loc./pts[:,indp1])
+        r2 = norm(loc.-pts[:,indp1])
         hv = av .- ai.*edge_uni[:,i]
         hi = norm(hv)
+        
         if hi > edge_len[i]*r_rankine
-            global v_dou = v_dou .+ ((edge_len[i]-ai)/r2 + ai/r1) / (hi*2) .* cross(edge_uni[:,i], hv)
+            global v_dou = v_dou .+ ((edge_len[i].-ai)./r2 .+ ai./r1) ./ (hi.^2) .* cross(edge_uni[:,i], hv)
         else
-            if r1 > edge_len[i]*r_cutoff && r2 > edge_len[i]*r_cutoff
+            if (r1 > edge_len[i]*r_cutoff) && (r2 > edge_len[i]*r_cutoff)
                 r_Ran = r_rankine * edge_len[i]
-                global v_dou = v_dou .+ ((edge_len[i]-ai)/r2 + ai/r1) / (r_Ran*2) .* cross(edge_uni[:,i], hv)
+                global v_dou = v_dou .+ ((edge_len[i].-ai)./r2 + ai./r1) ./ (r_Ran.^2) .* cross(edge_uni[:,i], hv)
             end
         end
     end
@@ -202,7 +203,6 @@ function vel_sourc(pan, loc, rr)
     cosTi = pan.cosTi
 
 
-
     for i = 1:n_ver
         if n_ver == 3 # triangle element
             indm1 = prev_tri[i]
@@ -215,13 +215,16 @@ function vel_sourc(pan, loc, rr)
         R1 = norm(loc .- pts[:,i])
         R2 = norm(loc .- pts[:, indp1])
 
-        if (R1+R2-edge_len[i] < 1e-12)
+        if (R1+R2-edge_len[i]) < 1e-12
             souLog = 0
         else
             souLog = log((R1+R2+edge_len[i]) / (R1+R2-edge_len[i]))
         end
         phix = phix + sinTi[i] * souLog
         phiy = phiy - cosTi[i] * souLog
+        println(sinTi[i])
+        #println(cosTi[i])
+        
     end
     normal = pan.norm
     pdou = dub(pan, loc, rr)
@@ -230,6 +233,7 @@ function vel_sourc(pan, loc, rr)
     phiy = - phiy
     pdou = - pdou
 
+    #println(pdou)
     vel = zeros(3)
     vel[1] = tang[1,1] * phix + tang[1,2]*phiy + normal[1] * pdou
     vel[2] = tang[2,1] * phix + tang[2,2]*phiy + normal[2] * pdou

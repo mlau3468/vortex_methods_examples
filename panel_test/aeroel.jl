@@ -47,6 +47,32 @@ function getPanProp(pts)
     n_ver = 4
     n_sides = 4
 
+    # settings
+    prev_qua = [4 1 2 3]
+    next_qua = [2 3 4 1]
+    prev_tri = [3 1 2]
+    next_tri = [2 3 1]
+
+    # get edge vectors
+    edge_vec = zeros(3,4)
+
+    if n_sides == 3
+    elseif n_sides == 4
+        for i = 1:n_sides
+            edge_vec[:,i] = pts[:, next_qua[i]] .- pts[:, i]
+        end
+    end
+
+    # get edge lens
+    edge_len = zeros(4)
+    # unit vectors
+    edge_uni = zeros(3,4)
+    for i = 1:n_sides
+        edge_len[i] = norm(edge_vec[:,i])
+        edge_uni[:,i] = edge_vec[:,i] ./ norm(edge_vec[:,i])
+    end
+
+    #=
     # get edge vectors
     edge_vec = zeros(3,4)
     edge_vec[:,1] = pts[:,2] .- pts[:,1]
@@ -66,12 +92,15 @@ function getPanProp(pts)
     edge_uni[:,2] = edge_vec[:,2] ./ norm(edge_vec[:,2])
     edge_uni[:,3] = edge_vec[:,3] ./ norm(edge_vec[:,3])
     edge_uni[:,4] = edge_vec[:,4] ./ norm(edge_vec[:,4])
+    =#
 
-    # central point
-    cpt = mean(pts, dims=2)[:,1]
+
     # normal 
     v3 = cross(edge_vec[:,1], edge_vec[:,2])
     normal = v3./norm(v3)
+
+    # central point
+    cpt = mean(pts, dims=2)[:,1]
 
     # local tangent unit vector as in PANAIR
     tanl = 0.5 .* (pts[:,n_sides] .+ pts[:,1]) .- cpt
@@ -88,8 +117,8 @@ function getPanProp(pts)
     cosTi = zeros(n_sides)
 
     for i = 1:n_sides
-        sinTi[i] = sum(edge_uni[:,i] .* tang[:,1])
-        cosTi[i] = sum(edge_uni[:,i] .* tang[:,2])
+        cosTi[i] = sum(edge_uni[:,i] .* tang[:,1])
+        sinTi[i] = sum(edge_uni[:,i] .* tang[:,2])
     end
 
     return(n_ver, n_sides, cpt, edge_vec, edge_len, edge_uni, tang, normal, area, sinTi, cosTi)

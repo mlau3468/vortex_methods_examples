@@ -53,7 +53,7 @@ Reading geometry from file "geo_input.h5"
   number of vortex lattices:           0
   number of lifting lines:             0
   number of actuator disks:            0
-Created geometry in:     0.007 s.
+Created geometry in:     0.005 s.
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
  warning: The following parameters were set in the input file, but are not currently employed :
     timesteps
@@ -83,19 +83,20 @@ Created geometry in:     0.007 s.
 ====== Initializing Wake ======
 
 ====== Initializing Linear System ======
-Initialized linear system in:     0.078 s.
+Initialized linear system in:     0.083 s.
 
------- Completed all preliminary operations in:     0.120 s.
+------ Completed all preliminary operations in:     0.115 s.
 
 ////////// Performing Computations //////////
 
 --> Step     1 of   101 simulation time:    0.00
-Elapsed wall time:     0.120
-Assembled linear system in:     0.004 s.
+Elapsed wall time:     0.115
+Assembled linear system in:     0.007 s.
 Solved linear system in:     0.000 s.
-  0.29786060459211078        0.0000000000000000       -2.6735904018236247E-002  0.29786060459211078       0.16937669376693767       -2.6735904018236247E-002  0.30371789634146340       0.16937669376693767       -2.6571859756097563E-002  0.30371789634146340        0.0000000000000000       -2.6571859756097563E-002
-  0.34854665792326289        0.0000000000000000       -3.0493866263253851E-002
-  0.48356008145791152      -0.27222223900470482        2.4199849116815493     
+   1.1469131280737570E-018
+  -1.0000000000000000     
+  -1.1469131280737570E-018
+   1.0000000000000000     
  -0.11745092465286287        8.9162620514197100E-002   9.4766865038357871E-003
 
 >>>>>> DUST POSTPROCESSOR beginning >>>>>>

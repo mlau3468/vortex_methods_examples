@@ -227,8 +227,8 @@ writedlm("res.csv", solution)
 
 function elemVel(panels, loc, uinf, rr)
     vel_total = zeros(3,0)
-
-    for i =1:size(panels,1)
+    for i = 1:1
+    #for i =1:size(panels,1)
        vdub = vel_dub(panels[i], loc, rr)
 
        vsou = vel_sourc(panels[i], loc, rr)
@@ -238,9 +238,7 @@ function elemVel(panels, loc, uinf, rr)
        ub = panels[i].velBody
        vel = vdub.*mag .- vsou .*(sum(nor.*(ub.-uinf.-uvort)))
        if i == 1
-       println(rr[:, panels[i].ee]')
-       println(loc)
-       println(vdub)
+       #println(vdub)
        println(vsou)
        end
 
