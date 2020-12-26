@@ -59,6 +59,7 @@ Pinf = 0
 rhoinf = 1.225
 dt = 0.005
 
+@time begin
 # global points
 
 ee_all = zeros(4, nPan)
@@ -82,7 +83,7 @@ for i = 1:numComp
 
     global last_pan = last_pan + comps[i].n_pan
 end
-
+end
 # recast as integers
 ee_all = Int.(ee_all)
 
@@ -101,6 +102,7 @@ for j = 1:size(ee_all,2)
     normals[:, j] = v3./norm(v3)
 end
 
+@time begin
 # set up linear system
 A = zeros(nPan, nPan)
 B = zeros(nPan, nPan) #Bstatic
@@ -122,6 +124,7 @@ for i = 1:nPan
         B[i,j] = sou
     end
     RHS[i] = 0.0
+end
 end
 
 # trailing edge first row
@@ -184,6 +187,7 @@ end
 
 
 ee_wake = Int.(ee_wake)
+display(ee_wake)
 te_pan = Int.(te_pan)
 
 
@@ -247,7 +251,8 @@ end
 
 writedlm("ee.csv", ee_wake', ',')
 writedlm("rr.csv", rr_wake', ',')
-eerr2vtk(ee_all, rr_all, "mesh.vtu")
+eerr2vtk(ee_all, rr_all, "mesh2.vtu")
+display(rr_wake)
 
 #=
 C = readdlm("test.txt", ',')
@@ -270,3 +275,4 @@ display(read(fid["Components"]["Comp001"]["Trailing_Edge"]["t_te"])) #Unit vecto
 =#
 
 
+#display(read(fid["Components"]["Comp002"]["Trailing_Edge"]["e_te"]))

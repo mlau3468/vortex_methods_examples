@@ -4,41 +4,6 @@ using LinearAlgebra
 using DelimitedFiles
 using WriteVTK
 
-struct refFrame
-    name :: String
-    parent :: String
-    children # list of child references
-    move2Parent :: Bool # Is this reference frame moving with respect to the parent frame
-    move2Global :: Bool # Is this reference frame moving with respect to the global frame
-    origin # 3x1 vector origin in the parent frame
-    orient # 3x3 orientation matrix with respect to parent
-
-    vel_g # 3x1 vector velocity with respect to global frame 
-    rot_g #3x3 rotation rate matrix with respect to global frame
-end
-
-struct component
-    name::String
-    elType :: String
-    refId :: Int
-    refName :: String
-    ee  # panels
-    rr  # vertices
-    neigh # neighboring
-    n_pan :: Int # Number of panels
-    n_vert :: Int # Number of vertices
-
-    e_te #panel index associated with each TE panel
-    i_te #component panel id of the nodes on the TE
-    ii_te #TE id of the nodes of the TE elements (index in rr_te)
-    rr_te #Coordinates of the nodes of the TE
-    neigh_te #TE id of neighboring TE elements
-    n_pan_te :: Int
-    n_vert_te :: Int
-    dir_te #Unit vector at TE nodes
-
-end 
-
 function factorize2(A)
     # modification of LU decomposition in julia to output single matrix
     L,U = factorize(A)
@@ -55,26 +20,20 @@ function factorize2(A)
     return res
 end
 
-function sourc(pts, loc, dou, normal)
+function sourc(pan, loc, dou, rr)
+    pts = rr[:, pan.ee]
     
-    cpt = mean(pts, dims=2)
+    cpt = pan.center
     radius = norm(loc.-cpt)
-    e3 = normal
+    e3 = pan.norm
     zQ = sum((loc.-cpt).*e3)
     Qp = loc .- zQ .* e3
 
     # get edge lens
-    edge_len = zeros(4)
-    edge_len[1] = norm(pts[:,2] .- pts[:,1])
-    edge_len[2] = norm(pts[:,3] .- pts[:,2])
-    edge_len[3] = norm(pts[:,4] .- pts[:,3])
-    edge_len[4] = norm(pts[:,1] .- pts[:,4])
+    edge_len = pan.edgeLen
+
     # get edge vectors
-    edge_vec = zeros(3,4)
-    edge_vec[:,1] = pts[:,2] .- pts[:,1]
-    edge_vec[:,2] = pts[:,3] .- pts[:,2]
-    edge_vec[:,3] = pts[:,4] .- pts[:,3]
-    edge_vec[:,4] = pts[:,1] .- pts[:,4]
+    edge_vec = pan.edgeVec
 
     # settings
     prev_qua = [4 1 2 3]
@@ -121,18 +80,14 @@ function sourc(pts, loc, dou, normal)
 end
 
 
-function dub(pts, loc, normal)
-
+function dub(pan, loc, rr)
+    pts = rr[:, pan.ee]
     cpt = mean(pts, dims=2)
     radius = norm(loc.-cpt)
-    e3 = normal
+    e3 = pan.norm
 
     # get edge vectors
-    edge_vec = zeros(3,4)
-    edge_vec[:,1] = pts[:,2] .- pts[:,1]
-    edge_vec[:,2] = pts[:,3] .- pts[:,2]
-    edge_vec[:,3] = pts[:,4] .- pts[:,3]
-    edge_vec[:,4] = pts[:,1] .- pts[:,4]
+    edge_vec = pan.edgeVec
 
     farField = false
 
@@ -164,9 +119,6 @@ function dub(pts, loc, normal)
             dou = dou - (n_ver-2)*pi
         end
     end
-
-    
-        
     return dou
 end
 
@@ -177,21 +129,6 @@ function calc_node_vel(r, G,f)
     #f: frame framve velocity with respect to the base reference
     v = f.+(G*r) # velocity
     return v
-end
-
-
-function eerr2vtk(ee, rr, fname)
-    celltype = VTKCellTypes.VTK_QUAD
-    cells = MeshCell[]
-    cdata = Float32[]
-    pts = rr
-    for i =1:size(ee,2)
-        inds = ee[:,i]
-        c = MeshCell(celltype, inds)
-        push!(cells, c)
-    end
-    outfile = vtk_grid(fname, pts, cells, compress=2) do vtk
-    end
 end
 
 function vel_dub(pts, loc, normal)
@@ -332,3 +269,4 @@ function vel_sourc(pts, loc, normal)
 
     return vel
 end
+
