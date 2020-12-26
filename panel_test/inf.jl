@@ -131,65 +131,53 @@ function calc_node_vel(r, G,f)
     return v
 end
 
-function vel_dub(pts, loc, normal)
+function vel_dub(pan, loc, rr)
     #=
     !> compute velocity AIC of panel <this>, on the control point <pos>
 !! Biot-Savart law. Regular kernel: linear core (Rankine vortex)
 !! Compute the velocity induced by a vortex ring (equivalent to a constant
 !!  intentsity surface doublet) with intensity 4*pi. <------
 =#
-    v_dou = 0.0
+    global v_dou = 0.0
     n_ver = 4
-
+    pts = rr[:, pan.ee]
     # get edge vectors
-    edge_vec = zeros(3,4)
-    edge_vec[:,1] = pts[:,2] .- pts[:,1]
-    edge_vec[:,2] = pts[:,3] .- pts[:,2]
-    edge_vec[:,3] = pts[:,4] .- pts[:,3]
-    edge_vec[:,4] = pts[:,1] .- pts[:,4]
+    edge_vec = pan.edgeVec
     # get edge lens
-    edge_len = zeros(4)
-    edge_len[1] = norm(pts[:,2] .- pts[:,1])
-    edge_len[2] = norm(pts[:,3] .- pts[:,2])
-    edge_len[3] = norm(pts[:,4] .- pts[:,3])
-    edge_len[4] = norm(pts[:,1] .- pts[:,4])
+    edge_len = pan.edgeLen
     # unit vectors
-    edge_uni = zeros(3,4)
-    edge_uni[:,1] = edge_vec[:,1] ./ norm(edge_vec[:,1])
-    edge_uni[:,2] = edge_vec[:,2] ./ norm(edge_vec[:,2])
-    edge_uni[:,3] = edge_vec[:,3] ./ norm(edge_vec[:,3])
-    edge_uni[:,4] = edge_vec[:,4] ./ norm(edge_vec[:,4])
+    edge_uni = pan.edgeUni
 
     r_rankine = 0.1
     r_cutoff = 0.001
     for i = 1:n_ver
         indp1 = 1 + i % n_ver
         indm1 = n_ver - (n_ver-i+1) % n_ver
-        av = pos-pts[:i]
-        ai = sum(av.*edge_uni(:,i))
-        R1 = norm(av)
-        R2 = norm(loc./pts[:,indp1])
+        av = loc-pts[:,i]
+        ai = sum(av.*edge_uni[:,i])
+        r1 = norm(av)
+        r2 = norm(loc./pts[:,indp1])
         hv = av .- ai.*edge_uni[:,i]
         hi = norm(hv)
-
         if hi > edge_len[i]*r_rankine
-            global v_dou = v_dou + ((edge_len[i]-ai)/r2 + ai/r1) / (hi*2) * cross(edge_uni[:,i], hv)
+            global v_dou = v_dou .+ ((edge_len[i]-ai)/r2 + ai/r1) / (hi*2) .* cross(edge_uni[:,i], hv)
         else
-            if R1 > edge_len[i]*r_cutoff && R2 > edge_len[i]*r_cutoff
+            if r1 > edge_len[i]*r_cutoff && r2 > edge_len[i]*r_cutoff
                 r_Ran = r_rankine * edge_len[i]
-                global v_dou = v_dou + ((edge_len[i]-ai)/r2 + ai/r1) / (r_Ran*2) * cross(edge_uni[:,i], hv)
+                global v_dou = v_dou .+ ((edge_len[i]-ai)/r2 + ai/r1) / (r_Ran*2) .* cross(edge_uni[:,i], hv)
             end
         end
     end
+
     return v_dou
 end
 
-function vel_sourc(pts, loc, normal)
+function vel_sourc(pan, loc, rr)
     phix = 0.0
     phiy = 0.0
 
     n_ver = 4
-
+    pts = rr[:,pan.ee]
     # settings
     prev_qua = [4 1 2 3]
     next_qua = [2 3 4 1]
@@ -197,42 +185,22 @@ function vel_sourc(pts, loc, normal)
     next_tri = [2 3 1]
 
     # get edge vectors
-    edge_vec = zeros(3,4)
-    edge_vec[:,1] = pts[:,2] .- pts[:,1]
-    edge_vec[:,2] = pts[:,3] .- pts[:,2]
-    edge_vec[:,3] = pts[:,4] .- pts[:,3]
-    edge_vec[:,4] = pts[:,1] .- pts[:,4]
+    edge_vec = pan.edgeVec
     # get edge lens
-    edge_len = zeros(4)
-    edge_len[1] = norm(pts[:,2] .- pts[:,1])
-    edge_len[2] = norm(pts[:,3] .- pts[:,2])
-    edge_len[3] = norm(pts[:,4] .- pts[:,3])
-    edge_len[4] = norm(pts[:,1] .- pts[:,4])
-
+    edge_len = pan.edgeLen
     # unit vectors
-    edge_uni = zeros(3,4)
-    edge_uni[:,1] = edge_vec[:,1] ./ norm(edge_vec[:,1])
-    edge_uni[:,2] = edge_vec[:,2] ./ norm(edge_vec[:,2])
-    edge_uni[:,3] = edge_vec[:,3] ./ norm(edge_vec[:,3])
-    edge_uni[:,4] = edge_vec[:,4] ./ norm(edge_vec[:,4])
+    edge_uni = pan.edgeUni
 
     # central point
-    cpt = mean(pts, dims=2)
+    cpt = pan.center
 
     # local tangent unit vector as in PANAIR
     n_sides = 4
-    tanl = 0.5 .* (pts[:,n_sides] .+ pts[:,1]) .- cpt
-    tang = zeros(3,2)
-    tang[:,1] = tanl ./ norm(tanl)
-    tang[:,2] = cross(normal, tang[:,1])
+    tang = pan.tang
 
-    sinTi = zeros(n_sides)
-    cosTi = zeros(n_sides)
+    sinTi = pan.sinTi
+    cosTi = pan.cosTi
 
-    for i = 1:n_sides
-        sinTi[i] = sum(edge_uni[:,i] .* tang(:,1))
-        cosTi[i] = sum(edge_uni[:,i] .* tang(:,2))
-    end
 
 
     for i = 1:n_ver
@@ -244,10 +212,10 @@ function vel_sourc(pts, loc, normal)
             indp1 = next_qua[i]
         end
 
-        R1 = norm(loc .- pts(:,i))
-        R2 = norm(loc .- pts(:, indp1))
+        R1 = norm(loc .- pts[:,i])
+        R2 = norm(loc .- pts[:, indp1])
 
-        if (R1+R2-edge_len[i < 1e-12])
+        if (R1+R2-edge_len[i] < 1e-12)
             souLog = 0
         else
             souLog = log((R1+R2+edge_len[i]) / (R1+R2-edge_len[i]))
@@ -255,8 +223,8 @@ function vel_sourc(pts, loc, normal)
         phix = phix + sinTi[i] * souLog
         phiy = phiy - cosTi[i] * souLog
     end
-
-    pdou = dub(pts, loc, normal)
+    normal = pan.norm
+    pdou = dub(pan, loc, rr)
 
     phix = - phix
     phiy = - phiy
