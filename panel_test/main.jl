@@ -225,25 +225,26 @@ solution = A\RHS
 # debug: output
 writedlm("res.csv", solution)
 
-function elemVel(panels, loc, uinf, rr)
-    vel_total = zeros(3,0)
-    for i = 1:1
-    #for i =1:size(panels,1)
+function elemVel(panels, wake_panels, loc, uinf, rr, rr_wake)
+    vel_total = zeros(3)
+    for i =1:size(panels,1)
        vdub = vel_dub(panels[i], loc, rr)
-
        vsou = vel_sourc(panels[i], loc, rr)
        nor = panels[i].norm
        mag = panels[i].mag[1]
        uvort = panels[i].velVort
        ub = panels[i].velBody
        vel = vdub.*mag .- vsou .*(sum(nor.*(ub.-uinf.-uvort)))
-       if i == 1
-       #println(vdub)
-       println(vsou)
-       end
-
        vel_total = vel_total.+vel./(4*pi)
     end
+    for i = 1:size(wake_panels,1)
+        vdub = vel_dub(wake_panels[i], loc, rr_wake)
+        mag = wake_panels[i].mag[1]
+        vel = vdub.*mag
+        vel_total = vel_total.+vel./(4*pi)
+    end
+
+    vel_total = vel_total .+ uinf
     return vel_total
 end
 
@@ -256,14 +257,17 @@ for i = 1:size(wake_panels,1)
     wake_panels[i].mag[1] = panels[wake_panels[i].panIdx[1]].mag[1] - panels[wake_panels[i].panIdx[2]].mag[1]
 end
 
-#for i = 1:size(wake_panels,1)
-for i = 1:1
+for i = 1:size(wake_panels,1)
+#for i = 1:1
     posp1 = rr_wake[:,wake_panels[i].ee[3]]
-    #test = elemVel(panels, posp1, uinf, rr_all)
-    
+    test = elemVel(panels, wake_panels, posp1, uinf, rr_all, rr_wake)
+    println(posp1)
+    println(test)
+    println("--")
     posp2 = rr_wake[:,wake_panels[i].ee[4]]
-    test = elemVel(panels, posp2, uinf, rr_all)
-
+    test = elemVel(panels, wake_panels, posp2, uinf, rr_all, rr_wake)
+    println(posp2)
+    println(test)
     # left side
     dir1 = rr_wake[:,wake_panels[i].ee[4]]
     

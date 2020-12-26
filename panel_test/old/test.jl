@@ -232,6 +232,7 @@ writedlm("res.csv", solution)
 # update strength of the wake panel at the trailing edge
 for i = 1:nWakePan
     magWake[i] = magPan[te_pan[1,i]] - magPan[te_pan[2,i]]
+    println(magWake[i] )
 end
 
 

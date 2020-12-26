@@ -222,13 +222,11 @@ function vel_sourc(pan, loc, rr)
         end
         phix = phix + sinTi[i] * souLog
         phiy = phiy - cosTi[i] * souLog
-        println(sinTi[i])
-        #println(cosTi[i])
-        
     end
     normal = pan.norm
     pdou = dub(pan, loc, rr)
 
+    # missing negative, check equations
     phix = - phix
     phiy = - phiy
     pdou = - pdou
