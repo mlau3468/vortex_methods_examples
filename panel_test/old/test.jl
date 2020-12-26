@@ -248,11 +248,11 @@ end
 for i = 1:nWakePan
     # left side
     dir1 = rr_wake[:,ee_wake[4,i]]
+    println(dir1)
 end
 
 writedlm("ee.csv", ee_wake', ',')
 writedlm("rr.csv", rr_wake', ',')
-eerr2vtk(ee_all, rr_all, "mesh2.vtu")
 
 #=
 C = readdlm("test.txt", ',')

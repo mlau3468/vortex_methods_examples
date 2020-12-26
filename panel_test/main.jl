@@ -233,3 +233,14 @@ end
 for i = 1:size(wake_panels,1)
     wake_panels[i].mag[1] = panels[wake_panels[i].panIdx[1]].mag[1] - panels[wake_panels[i].panIdx[2]].mag[1]
 end
+
+for i = 1:nWakePan
+    posp1 = rr_wake[:,wake_panels[i].ee[3]]
+    
+    posp2 = rr_wake[:,wake_panels[i].ee[4]]
+
+    # left side
+    dir1 = rr_wake[:,wake_panels[i].ee[4]]
+
+    println(dir1)
+end
