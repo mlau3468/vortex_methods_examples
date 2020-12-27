@@ -275,5 +275,5 @@ display(read(fid["Components"]["Comp001"]["Trailing_Edge"]["scale_te"])) #Indivi
 display(read(fid["Components"]["Comp001"]["Trailing_Edge"]["t_te"])) #Unit vector at TE nodes
 =#
 
-
+#display(fid["Components"])
 #display(read(fid["Components"]["Comp002"]["Trailing_Edge"]["e_te"]))

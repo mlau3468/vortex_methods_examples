@@ -47,7 +47,7 @@ function sourc(pan, loc, dou, rr)
     # sou = 
     else
     sou = 0.0
-    n_ver = 4
+    n_ver = pan.nVert
     for i=1:n_ver
         if n_ver == 3 # triangle element
             indm1 = prev_tri[i]
@@ -139,7 +139,7 @@ function vel_dub(pan, loc, rr)
 !!  intentsity surface doublet) with intensity 4*pi. <------
 =#
     global v_dou = 0.0
-    n_ver = 4
+    n_ver = pan.nVert
     pts = rr[:, pan.ee]
     # get edge vectors
     edge_vec = pan.edgeVec
@@ -177,7 +177,7 @@ function vel_sourc(pan, loc, rr)
     phix = 0.0
     phiy = 0.0
 
-    n_ver = 4
+    n_ver = pan.nVert
     pts = rr[:,pan.ee]
     # settings
     prev_qua = [4 1 2 3]
@@ -196,12 +196,11 @@ function vel_sourc(pan, loc, rr)
     cpt = pan.center
 
     # local tangent unit vector as in PANAIR
-    n_sides = 4
+    n_sides = pan.nSide
     tang = pan.tang
 
     sinTi = pan.sinTi
     cosTi = pan.cosTi
-
 
     for i = 1:n_ver
         if n_ver == 3 # triangle element

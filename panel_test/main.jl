@@ -14,7 +14,9 @@ te_scaling = 0.3
 # Read input file
 fname = "./dust_output/wing/geo_input.h5"
 fid = h5open(fname, "r")
+
 #display(fid["Components"])
+#display(read(fid["Components"]["Comp001"]["Trailing_Edge"]["o_te"]))
 
 
 numComp = read(fid["Components"]["NComponents"])
@@ -50,13 +52,14 @@ for i = 1:numComp
     ii_te = read(fid["Components"][comp_keys[i]]["Trailing_Edge"]["ii_te"])
     rr_te = read(fid["Components"][comp_keys[i]]["Trailing_Edge"]["rr_te"])
     neigh_te = read(fid["Components"][comp_keys[i]]["Trailing_Edge"]["neigh_te"])
+    neigh_te_o = read(fid["Components"][comp_keys[i]]["Trailing_Edge"]["o_te"])
     te_dir = read(fid["Components"][comp_keys[i]]["Trailing_Edge"]["t_te"])
     n_pan = size(ee,2)
     n_vert = size(rr, 2)
     n_wake_pan = size(ii_te,2)
     n_wake_vert = size(rr_te, 2)
 
-    newComp = component(name, elType, refId, refTag, ee, rr, neigh,  n_pan, n_vert, e_te, i_te, ii_te, rr_te, neigh_te, n_wake_pan, n_wake_vert, te_dir)
+    newComp = component(name, elType, refId, refTag, ee, rr, neigh,  n_pan, n_vert, e_te, i_te, ii_te, rr_te, neigh_te, neigh_te_o, n_wake_pan, n_wake_vert, te_dir)
     global comps = append!(comps, [newComp])
     global nPan = nPan + n_pan
     global nVert = nVert + n_vert
@@ -132,12 +135,10 @@ end
 wake_panels = []
 rr_wake = zeros(3, nWakeVert)
 rr_wake_new = zeros(3, 1)
-num_new = 0
-last_vert = 0
-wake_pan = 0
-wake_vert = 0
-
-comp_pan = 0
+num_new = 0 # counter: number of additional wake vertices added due to second row
+wake_vert = 0 # counter: number of wake vertices 
+wake_pan = 0 # counter: number of wake panels added
+comp_pan = 0 # counter: number of component panels traversed
 for i = 1:numComp
     res = comps[i].refId
     ref_vel = refs[res].vel_g
@@ -147,16 +148,32 @@ for i = 1:numComp
 
     # rotate vertices accordingly and append first row
     for j = 1:comps[i].n_vert_te
-        rr_wake[:,last_vert+1] = orient*comps[i].rr_te[:,j] + orig # WARNING: THIS IS IN PLACE
-        global last_vert = last_vert + 1
+        rr_wake[:,wake_vert+j] = orient*comps[i].rr_te[:,j] + orig
     end
 
     for j = 1:comps[i].n_pan_te
+        # wake panels
         ee_comp = comps[i].ii_te[:,j]
-        pan_idxcomp = comps[i].e_te[:,j]
-
         ee_global = ee_comp .+ wake_vert
+
+        # panel connnected to this wake panel
+        pan_idxcomp = comps[i].e_te[:,j]
         pan_idxglobal = pan_idxcomp .+ comp_pan
+
+        # panel neighbors
+        pan_neighcomp = comps[i].neigh_te[:,j]
+        pan_neighglobal = copy(pan_neighcomp)
+        if pan_neighglobal[1] > 0
+            pan_neighglobal[1] = pan_neighglobal[1] .+ wake_pan
+        end
+        if pan_neighglobal[2] > 0
+            pan_neighglobal[2] = pan_neighglobal[2] .+ wake_pan
+        end
+        pan_neighcomp = Int.(pan_neighcomp)
+        pan_neighglobal = Int.(pan_neighglobal)
+
+        # neighbor orientations
+        neigh_te_orient = comps[i].neigh_te_o[:,j]
 
         pts = copy(comps[i].rr_te[:,ee_comp])
         for k = 1:size(pts,2)
@@ -166,24 +183,24 @@ for i = 1:numComp
         # build second row
         w_start_pt = mean(pts, dims=2) # Middle point between these two points
         vel_te = calc_node_vel(w_start_pt, ref_rot, ref_vel)
-        te_pan_dir = comps[i].dir_te[:,j]
-        dist = orient*te_pan_dir
+        te_pan_dir = orient*comps[i].dir_te[:,j]
+        dist = te_pan_dir
         new_pts = pts .+ dist.*te_scaling.*norm(uinf.-vel_te).*dt ./ norm(dist)
         global rr_wake_new = [rr_wake_new new_pts]
         ee_global = [ee_global; num_new + nWakeVert + 2]
         ee_global = [ee_global; num_new + nWakeVert + 1]
         global num_new = num_new + 2
-        global wake_pan = wake_pan + 1
 
         # create panel object
         velbody = [0; 0; 0]
         velvort = [0; 0; 0]
         n_ver, n_sides, cpt, edge_vec, edge_len, edge_uni, tang, normal, area, sinTi, cosTi = getPanProp([pts new_pts[:,2] new_pts[:,1]])
-        new_pan = wake_panel(res, i, ee_global, ee_comp, pan_idxglobal, pan_idxcomp, te_pan_dir,cpt, n_sides, n_ver, edge_len, edge_vec, edge_uni, normal, area, tang, cosTi, sinTi, velbody, velvort, [0.0])
+        new_pan = wake_panel(res, i, ee_global, ee_comp, pan_idxglobal, pan_idxcomp, te_pan_dir,cpt, n_sides, n_ver, edge_len, edge_vec, edge_uni, normal, area, tang, cosTi, sinTi, velbody, velvort, [0.0], pan_neighglobal, pan_neighcomp, neigh_te_orient)
         push!(wake_panels, new_pan)
     end
     global comp_pan = comp_pan + comps[i].n_pan
     global wake_vert = wake_vert + comps[i].n_vert_te
+    global wake_pan = wake_pan + comps[i].n_pan_te
 end
 #combine points from first and second row
 rr_wake = [rr_wake rr_wake_new[:,2:end]]
@@ -259,22 +276,38 @@ pts1 = zeros(3,nWakePan)
 pts2 = zeros(3,nWakePan)
 # add particle
 for i = 1:size(wake_panels,1)
-#for i = 1:1
     posp1 = rr_wake[:,wake_panels[i].ee[3]]
     v1 = elemVel(panels, wake_panels, posp1, uinf, rr_all, rr_wake)
     pts1[:,i] = posp1 .+ v1.*dt
     posp2 = rr_wake[:,wake_panels[i].ee[4]]
     v2 = elemVel(panels, wake_panels, posp2, uinf, rr_all, rr_wake)
     pts2[:,i] = posp2 .+ v2.*dt
-    
-end
-for i = 1:1
-#for i = 1:size(wake_panels,1)
-    # left side
-    dir1 = rr_wake[:,wake_panels[i].ee[4]]
-    dir2 = pts2[:,i]
-    println(dir1)
-    println(dir2)
 
+end
+
+#for i = 1:1
+for i = 1:size(wake_panels,1)
+    partvec = zeros(3)
+    # left side
+    println(wake_panels[i].neigh_te)
+    dir = rr_wake[:,wake_panels[i].ee[4]] .- pts2[:,i]
+    if wake_panels[i].neigh_te[1] > 0
+        ave = wake_panels[i].mag[1] - wake_panels[i].neigh_orient[1] * wake_panels[wake_panels[i].neigh_te[1]].mag[1]
+        ave = ave/2
+    else
+        ave = wake_panels[i].mag[1]
+    end
+    partvec = partvec .+ dir.*ave
+
+    #println(partvec)
     # right side
+    dir = -rr_wake[:,wake_panels[i].ee[3]] .+ pts1[:,i]
+    if wake_panels[i].neigh_te[2] > 0
+        ave = wake_panels[i].mag[1] - wake_panels[i].neigh_orient[2] * wake_panels[wake_panels[i].neigh_te[2]].mag[1]
+        ave = ave/2
+    else
+        ave = wake_panels[i].mag[1]
+    end
+    partvec = partvec .+ dir.*ave
+    #println(partvec)
 end

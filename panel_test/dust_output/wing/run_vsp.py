@@ -47,6 +47,7 @@ if __name__=='__main__':
     options['NOctreeLevels'] = 6
     options['MinOctreePart'] = 5
     options['MultipoleDegree'] = 2
+    options['join_te'] = False
 
     # Dust references.in
     new_ref = {'Reference_Tag': 'test', 'Parent_Tag' : '0', 'Origin': [0,0,0,], 'Orientation': [0.9961947,  0.0000000,  -0.0871557, 0.0000000,  1.0000000,  0.0000000, 0.0871557,  0.0000000,  0.9961947]}

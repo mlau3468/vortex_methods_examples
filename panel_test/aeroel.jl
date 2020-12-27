@@ -41,6 +41,9 @@ struct wake_panel
     velBody ::Array{Float64,1} # body velocity at the center
     velVort ::Array{Float64,1} # vorticity induced velocity at the center
     mag :: Array{Float64,1}
+    neigh_te :: Array{Int,1} # neighboring wake element indices global
+    neigh_te_comp :: Array{Int,1} # neighboring wake element indices in component
+    neigh_orient :: Array{Float64,1} # relative orientation of each neighboring element
 end
 
 function getPanProp(pts)
@@ -71,29 +74,6 @@ function getPanProp(pts)
         edge_len[i] = norm(edge_vec[:,i])
         edge_uni[:,i] = edge_vec[:,i] ./ norm(edge_vec[:,i])
     end
-
-    #=
-    # get edge vectors
-    edge_vec = zeros(3,4)
-    edge_vec[:,1] = pts[:,2] .- pts[:,1]
-    edge_vec[:,2] = pts[:,3] .- pts[:,2]
-    edge_vec[:,3] = pts[:,4] .- pts[:,3]
-    edge_vec[:,4] = pts[:,1] .- pts[:,4]
-    # get edge lens
-    edge_len = zeros(4)
-    edge_len[1] = norm(pts[:,2] .- pts[:,1])
-    edge_len[2] = norm(pts[:,3] .- pts[:,2])
-    edge_len[3] = norm(pts[:,4] .- pts[:,3])
-    edge_len[4] = norm(pts[:,1] .- pts[:,4])
-
-    # unit vectors
-    edge_uni = zeros(3,4)
-    edge_uni[:,1] = edge_vec[:,1] ./ norm(edge_vec[:,1])
-    edge_uni[:,2] = edge_vec[:,2] ./ norm(edge_vec[:,2])
-    edge_uni[:,3] = edge_vec[:,3] ./ norm(edge_vec[:,3])
-    edge_uni[:,4] = edge_vec[:,4] ./ norm(edge_vec[:,4])
-    =#
-
 
     # normal 
     v3 = cross(edge_vec[:,1], edge_vec[:,2])
@@ -153,6 +133,7 @@ struct component
     ii_te #TE id of the nodes of the TE elements (index in rr_te)
     rr_te #Coordinates of the nodes of the TE
     neigh_te #TE id of neighboring TE elements
+    neigh_te_o # relative orientation of neighbors
     n_pan_te :: Int
     n_vert_te :: Int
     dir_te #Unit vector at TE nodes
