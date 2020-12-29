@@ -46,6 +46,13 @@ struct wake_panel
     neigh_orient :: Array{Float64,1} # relative orientation of each neighboring element
 end
 
+struct wake_part
+    dir :: Array{Float64, 1}
+    mag :: Array{Float64,1}
+    center :: Array{Float64,1}
+    vel :: Array{Float64,1}
+end
+
 function getPanProp(pts)
     n_ver = 4
     n_sides = 4

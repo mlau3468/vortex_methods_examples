@@ -272,6 +272,7 @@ end
 for i = 1:size(wake_panels,1)
     wake_panels[i].mag[1] = panels[wake_panels[i].panIdx[1]].mag[1] - panels[wake_panels[i].panIdx[2]].mag[1]
 end
+lastpanidou = zeros(nWakePan)
 pts1 = zeros(3,nWakePan)
 pts2 = zeros(3,nWakePan)
 # add particle
@@ -310,4 +311,19 @@ for i = 1:size(wake_panels,1)
     end
     partvec = partvec .+ dir.*ave
     #println(partvec)
+
+    # end side
+    dir =  pts2[:,i] .- pts1[:,i]
+    ave = wake_panels[i].mag[1]-lastpanidou[i]
+    lastpanidou[i] = wake_panels[i].mag[1]
+    partvec = partvec .+ dir.*ave
+    #println(partvec)
+    
+
+    # calculate the center
+    posp = (pts1[:,i] .+ pts2[:,i] .+ rr_wake[:,wake_panels[i].ee[4]].+ rr_wake[:,wake_panels[i].ee[3]])./4
+    #println(posp)
+    println("-----")
+
+    # add wake particle
 end
