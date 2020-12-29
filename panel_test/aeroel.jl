@@ -14,7 +14,7 @@ struct panel
     tang ::Array{Float64,2} # teangent unit vectors as in PANAIR
     cosTi ::Array{Float64,1}
     sinTi ::Array{Float64,1}
-    velBody ::Array{Float64,1} # body velocity at the center
+    velBody ::Array{Float64,1} # body velocity at the center, global coordinates
     velVort ::Array{Float64,1} # vorticity induced velocity at the center
     mag :: Array{Float64,1}
 end

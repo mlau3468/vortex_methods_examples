@@ -133,6 +133,8 @@ end
 
 # Build trailing edge
 wake_panels = []
+wake_particles = []
+end_vorts = zeros(nWakePan)
 rr_wake = zeros(3, nWakeVert)
 rr_wake_new = zeros(3, 1)
 num_new = 0 # counter: number of additional wake vertices added due to second row
@@ -272,7 +274,9 @@ end
 for i = 1:size(wake_panels,1)
     wake_panels[i].mag[1] = panels[wake_panels[i].panIdx[1]].mag[1] - panels[wake_panels[i].panIdx[2]].mag[1]
 end
-lastpanidou = zeros(nWakePan)
+
+lastpanidou = zeros(nWakePan) #Last vortex intensity from removed panels
+endpanidou = zeros(nWakePan) #Last vortex intensity from removed panels
 pts1 = zeros(3,nWakePan)
 pts2 = zeros(3,nWakePan)
 # add particle
@@ -290,7 +294,7 @@ end
 for i = 1:size(wake_panels,1)
     partvec = zeros(3)
     # left side
-    println(wake_panels[i].neigh_te)
+    #println(wake_panels[i].neigh_te)
     dir = rr_wake[:,wake_panels[i].ee[4]] .- pts2[:,i]
     if wake_panels[i].neigh_te[1] > 0
         ave = wake_panels[i].mag[1] - wake_panels[i].neigh_orient[1] * wake_panels[wake_panels[i].neigh_te[1]].mag[1]
@@ -323,7 +327,32 @@ for i = 1:size(wake_panels,1)
     # calculate the center
     posp = (pts1[:,i] .+ pts2[:,i] .+ rr_wake[:,wake_panels[i].ee[4]].+ rr_wake[:,wake_panels[i].ee[3]])./4
     #println(posp)
-    println("-----")
+
 
     # add wake particle
+    cent = posp
+    mag = norm(partvec)
+    if wake_panels[i].mag[1] > 1e-13
+        dir = partvec./mag
+    else
+        dir = partvec
+    end
+
+    vel = [0;0;0] # panel doesn't move
+
+    new_part = wake_part(dir, [mag], cent, vel)
+
+    push!(wake_particles, new_part)
+
+    endpanidou[i] = wake_panels[i].mag[1]
+
+
+    # Debug
+    #println(dir)
+    #println(mag)
+    #println(cent)
+    #println("----")
+    #println(wake_panels[i].mag[1])
+    
+
 end
