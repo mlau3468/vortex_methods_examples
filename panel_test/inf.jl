@@ -239,3 +239,34 @@ function vel_sourc(pan, loc, rr)
     return vel
 end
 
+
+function elemVel(panels, wake_panels, loc, uinf, rr, rr_wake)
+    # calculate velocity contribution on a point loc due to all panels and wakes
+    vel_total = zeros(3)
+    for i =1:size(panels,1)
+       vdub = vel_dub(panels[i], loc, rr)
+       vsou = vel_sourc(panels[i], loc, rr)
+       nor = panels[i].norm
+       mag = panels[i].mag[1]
+       uvort = panels[i].velVort
+       ub = panels[i].velBody
+       vel = vdub.*mag .- vsou .*(sum(nor.*(ub.-uinf.-uvort)))
+       vel_total = vel_total.+vel./(4*pi)
+    end
+    for i = 1:size(wake_panels,1)
+        vdub = vel_dub(wake_panels[i], loc, rr_wake)
+        mag = wake_panels[i].mag[1]
+        vel = vdub.*mag
+        vel_total = vel_total.+vel./(4*pi)
+    end
+
+    vel_total = vel_total .+ uinf
+    return vel_total
+end
+
+function debugMatrices(A, RHS, sol, it, debug_dir)
+    it = Int(it)
+    writedlm(debug_dir*"A_$it.csv", A)
+    writedlm(debug_dir*"B_$it.csv", RHS)
+    writedlm(debug_dir*"res_$it.csv", sol)
+end

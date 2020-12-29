@@ -8,6 +8,12 @@ Pinf = 0
 rhoinf = 1.225
 dt = 0.005
 te_scaling = 0.3
+t_end = 0.01
+debug_dir = "./debug/"
+vis_dir = "./vis/"
+
+t = 0.0
+step_num = Int(1)
 
 
 
@@ -106,31 +112,6 @@ for i = 1:numComp
 end
 end
 
-@time begin
-# set up linear system
-A = zeros(nPan, nPan)
-B = zeros(nPan, nPan) #Bstatic
-RHS = zeros(nPan)
-uvort = zeros(3,nPan)
-magPan = zeros(nPan)
-magWake = zeros(nWakePan)
-
-for i = 1:nPan
-    for j = 1:nPan
-        if i == j
-            dou = -2*pi
-        else
-            dou = dub(panels[j], panels[i].center, rr_all)
-        end
-        A[i,j] = -dou
-
-        sou = sourc(panels[j], panels[i].center, dou, rr_all)
-        B[i,j] = sou
-    end
-    RHS[i] = 0.0
-end
-end
-
 # Build trailing edge
 wake_panels = []
 wake_particles = []
@@ -207,8 +188,35 @@ end
 #combine points from first and second row
 rr_wake = [rr_wake rr_wake_new[:,2:end]]
 
-panels2vtk(panels, rr_all, "mesh.vtu")
-panels2vtk(wake_panels, rr_wake, "mesh_wake.vtu")
+lastpanidou = zeros(nWakePan) #Last vortex intensity from removed panels
+endpanidou = zeros(nWakePan) #Last vortex intensity from removed panels
+
+
+# Timestepping
+while t < t_end
+
+# influence of panels
+@time begin
+    # set up linear system
+    local A = zeros(nPan, nPan)
+    local B = zeros(nPan, nPan) #Bstatic
+    local RHS = zeros(nPan)
+    
+    for i = 1:nPan
+        for j = 1:nPan
+            if i == j
+                dou = -2*pi
+            else
+                dou = dub(panels[j], panels[i].center, rr_all)
+            end
+            A[i,j] = -dou
+    
+            sou = sourc(panels[j], panels[i].center, dou, rr_all)
+            B[i,j] = sou
+        end
+        RHS[i] = 0.0
+    end
+end
 
 # influence of trailing edge
 for i = 1:size(panels,1)
@@ -234,38 +242,13 @@ end
 # LU decomposition of A
 #A = factorize2(A)
 # debug: output
-writedlm("A.csv", A)
-writedlm("B.csv", RHS)
 writedlm("B_static.csv", B)
 
 
 # solve linear system
-solution = A\RHS
+local solution = A\RHS
 # debug: output
-writedlm("res.csv", solution)
-
-function elemVel(panels, wake_panels, loc, uinf, rr, rr_wake)
-    vel_total = zeros(3)
-    for i =1:size(panels,1)
-       vdub = vel_dub(panels[i], loc, rr)
-       vsou = vel_sourc(panels[i], loc, rr)
-       nor = panels[i].norm
-       mag = panels[i].mag[1]
-       uvort = panels[i].velVort
-       ub = panels[i].velBody
-       vel = vdub.*mag .- vsou .*(sum(nor.*(ub.-uinf.-uvort)))
-       vel_total = vel_total.+vel./(4*pi)
-    end
-    for i = 1:size(wake_panels,1)
-        vdub = vel_dub(wake_panels[i], loc, rr_wake)
-        mag = wake_panels[i].mag[1]
-        vel = vdub.*mag
-        vel_total = vel_total.+vel./(4*pi)
-    end
-
-    vel_total = vel_total .+ uinf
-    return vel_total
-end
+debugMatrices(A, RHS, solution, step_num, debug_dir)
 
 # update strengths
 for i = 1:size(panels, 1)
@@ -275,10 +258,9 @@ for i = 1:size(wake_panels,1)
     wake_panels[i].mag[1] = panels[wake_panels[i].panIdx[1]].mag[1] - panels[wake_panels[i].panIdx[2]].mag[1]
 end
 
-lastpanidou = zeros(nWakePan) #Last vortex intensity from removed panels
-endpanidou = zeros(nWakePan) #Last vortex intensity from removed panels
-pts1 = zeros(3,nWakePan)
-pts2 = zeros(3,nWakePan)
+
+local pts1 = zeros(3,nWakePan)
+local pts2 = zeros(3,nWakePan)
 # add particle
 for i = 1:size(wake_panels,1)
     posp1 = rr_wake[:,wake_panels[i].ee[3]]
@@ -353,6 +335,16 @@ for i = 1:size(wake_panels,1)
     #println(cent)
     #println("----")
     #println(wake_panels[i].mag[1])
+
+    # visualize
+    panels2vtk(panels, rr_all, "mesh_$step_num.vtu", vis_dir)
+    panels2vtk(wake_panels, rr_wake, "wake_pan_$step_num.vtu", vis_dir)
+    particles2vtk(wake_particles, "wake_particles_$step_num.vtu", vis_dir)
     
 
 end
+
+global t = t + dt
+global step_num = step_num + Int(1)
+
+end # timestepping
