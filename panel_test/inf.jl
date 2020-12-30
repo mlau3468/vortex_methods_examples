@@ -239,9 +239,7 @@ function vel_sourc(pan, loc, rr)
     return vel
 end
 
-
-function elemVel(panels, wake_panels, loc, uinf, rr, rr_wake)
-    # calculate velocity contribution on a point loc due to all panels and wakes
+function vel_panels(panels, loc, rr)
     vel_total = zeros(3)
     # contribution of panels
     for i =1:size(panels,1)
@@ -254,16 +252,41 @@ function elemVel(panels, wake_panels, loc, uinf, rr, rr_wake)
        vel = vdub.*mag .- vsou .*(sum(nor.*(ub.-uinf.-uvort)))
        vel_total = vel_total.+vel./(4*pi)
     end
-    # contribution of wake panels
+    return vel_total
+end
+
+function vel_wake_panels(wake_panels, loc, rr_wake)
+    vel_total = zeros(3)
     for i = 1:size(wake_panels,1)
         vdub = vel_dub(wake_panels[i], loc, rr_wake)
         mag = wake_panels[i].mag[1]
         vel = vdub.*mag
         vel_total = vel_total.+vel./(4*pi)
     end
-
+    return vel_total
+end
+#=
+function elemVel(panels, wake_panels, loc, uinf, rr, rr_wake)
+    # calculate velocity contribution on a point loc due to all panels and wakes
+    vel_total = zeros(3)
+    # contribution of panels
+    vel = vel_panels(panels, loc, rr)
+    vel_total = vel_total .+ vel
+    # contribution of wake panels
+    vel = vel_wake_panels(wake_panels, loc, rr_wake)
+    vel_total = vel_total .+ vel
     vel_total = vel_total .+ uinf
     return vel_total
+end
+=#
+
+function elemVel(panels, wake_panels, wake_particles, end_vorts, rr_all, rr_wake, loc)
+    vpan = vel_panels(panels, loc, rr_all)
+    vwake = vel_wake_panels(wake_panels, loc, rr_wake)
+    vend = uvortVortLines(end_vorts, loc)
+    vpart = uvortParticles(wake_particles, loc)
+    vel = uinf .+ vpan .+ vwake .+ vpart .+ vend
+    return vel
 end
 
 function uvortParticles(particles, loc)

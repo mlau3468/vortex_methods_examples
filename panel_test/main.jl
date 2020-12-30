@@ -8,7 +8,7 @@ Pinf = 0
 rhoinf = 1.225
 dt = 0.005
 te_scaling = 0.3
-t_end = 0.01
+t_end = 100*dt
 debug_dir = "./debug/"
 vis_dir = "./vis/"
 
@@ -73,7 +73,6 @@ for i = 1:numComp
     global nWakeVert = nWakeVert + n_wake_vert
 end
 
-@time begin
 # build global geometry
 panels = []
 rr_all = zeros(3, nVert)
@@ -109,7 +108,6 @@ for i = 1:numComp
     end
 
     global last_pan = last_pan + comps[i].n_pan
-end
 end
 
 # Build trailing edge and prep wake
@@ -205,26 +203,24 @@ while t < t_end
     
 
 # influence of panels
-@time begin
-    # set up linear system
-    local A = zeros(nPan, nPan)
-    local B = zeros(nPan, nPan) #Bstatic
-    local RHS = zeros(nPan)
-    
-    for i = 1:nPan
-        for j = 1:nPan
-            if i == j
-                dou = -2*pi
-            else
-                dou = dub(panels[j], panels[i].center, rr_all)
-            end
-            A[i,j] = -dou
-    
-            sou = sourc(panels[j], panels[i].center, dou, rr_all)
-            B[i,j] = sou
+# set up linear system
+local A = zeros(nPan, nPan)
+local B = zeros(nPan, nPan) #Bstatic
+local RHS = zeros(nPan)
+
+for i = 1:nPan
+    for j = 1:nPan
+        if i == j
+            dou = -2*pi
+        else
+            dou = dub(panels[j], panels[i].center, rr_all)
         end
-        RHS[i] = 0.0
+        A[i,j] = -dou
+
+        sou = sourc(panels[j], panels[i].center, dou, rr_all)
+        B[i,j] = sou
     end
+    RHS[i] = 0.0
 end
 
 # influence of trailing edge
@@ -253,7 +249,6 @@ end
 # debug: output
 writedlm("B_static.csv", B)
 
-
 # solve linear system
 local solution = A\RHS
 # debug: output
@@ -267,21 +262,38 @@ for i = 1:size(wake_panels,1)
     wake_panels[i].mag[1] = panels[wake_panels[i].panIdx[1]].mag[1] - panels[wake_panels[i].panIdx[2]].mag[1]
 end
 
-
-local pts1 = zeros(3,nWakePan)
-local pts2 = zeros(3,nWakePan)
-# add particle
-for i = 1:size(wake_panels,1)
-    posp1 = rr_wake[:,wake_panels[i].ee[3]]
-    v1 = elemVel(panels, wake_panels, posp1, uinf, rr_all, rr_wake)
-    pts1[:,i] = posp1 .+ v1.*dt
-    posp2 = rr_wake[:,wake_panels[i].ee[4]]
-    v2 = elemVel(panels, wake_panels, posp2, uinf, rr_all, rr_wake)
-    pts2[:,i] = posp2 .+ v2.*dt
-
+# calculate velocities at existing particles
+for i = 1:size(wake_particles,1)
+    vpan = vel_panels(panels, wake_particles[i].center, rr_all)
+    vwake = vel_wake_panels(wake_panels, wake_particles[i].center, rr_wake)
+    vend = uvortVortLines(end_vorts, wake_particles[i].center)
+    vpart = uvortParticles(wake_particles, wake_particles[i].center)
+    vel = uinf .+ vpan .+ vwake .+ vpart .+ vend
+    wake_particles[i].vel[:] = vel[:]
+    #println(wake_particles[i].vel[:])
 end
 
-#for i = 1:1
+# update particle positions
+for i = 1:size(wake_particles,1)
+    pos_p = wake_particles[i].center .+ wake_particles[i].vel .* dt
+    wake_particles[i].center[:] = pos_p
+    #println(pos_p)
+end
+
+# shed particles new particles
+local pts1 = zeros(3,nWakePan) # temporary vector to hold end vortex points
+local pts2 = zeros(3,nWakePan)
+for i = 1:size(wake_panels,1)
+    posp1 = rr_wake[:,wake_panels[i].ee[3]]
+    #v1 = elemVel(panels, wake_panels, posp1, uinf, rr_all, rr_wake)
+    v1 = elemVel(panels, wake_panels, wake_particles, end_vorts, rr_all, rr_wake, posp1)
+    pts1[:,i] = posp1 .+ v1.*dt
+    posp2 = rr_wake[:,wake_panels[i].ee[4]]
+    #v2 = elemVel(panels, wake_panels, posp2, uinf, rr_all, rr_wake)
+    v2 = elemVel(panels, wake_panels, wake_particles, end_vorts, rr_all, rr_wake, posp2)
+    pts2[:,i] = posp2 .+ v2.*dt
+end
+
 for i = 1:size(wake_panels,1)
     partvec = zeros(3)
     # left side
@@ -295,7 +307,6 @@ for i = 1:size(wake_panels,1)
     end
     partvec = partvec .+ dir.*ave
 
-    #println(partvec)
     # right side
     dir = -rr_wake[:,wake_panels[i].ee[3]] .+ pts1[:,i]
     if wake_panels[i].neigh_te[2] > 0
@@ -305,18 +316,15 @@ for i = 1:size(wake_panels,1)
         ave = wake_panels[i].mag[1]
     end
     partvec = partvec .+ dir.*ave
-    #println(partvec)
 
     # end side
     dir =  pts2[:,i] .- pts1[:,i]
     ave = wake_panels[i].mag[1]-lastpanidou[i]
     lastpanidou[i] = wake_panels[i].mag[1]
     partvec = partvec .+ dir.*ave
-    #println(partvec)
     
     # calculate the center
     posp = (pts1[:,i] .+ pts2[:,i] .+ rr_wake[:,wake_panels[i].ee[4]].+ rr_wake[:,wake_panels[i].ee[3]])./4
-    #println(posp)
 
     # add wake particle
     cent = posp
@@ -328,6 +336,7 @@ for i = 1:size(wake_panels,1)
     end
     vel = [0;0;0] # panel doesn't move
     new_part = wake_part(dir, [mag], cent, vel)
+    #println(cent)
     push!(wake_particles, new_part)
     endpanidou[i] = wake_panels[i].mag[1]
 
@@ -340,7 +349,13 @@ for i = 1:size(wake_panels,1)
     ver_vel = [0;0;0]
     center, n_ver, n_sides, edge_vec, edge_len, edge_uni = getLineProp([p1 p2])
     newvortline = vortline(ee,  [p1 p2], center, edge_vec, edge_uni, edge_len, ver_vel, mag)
-    push!(end_vorts, newvortline)
+
+    if size(end_vorts,1) < size(wake_panels,1)
+        push!(end_vorts, newvortline)
+    else
+        end_vorts[i] = newvortline
+    end
+    
 
 end
 
@@ -354,4 +369,5 @@ particles2vtk(wake_particles, "wake_particles_$step_num.vtu", vis_dir)
 global t = t + dt
 global step_num = step_num + Int(1)
 
+println("Time: $t")
 end # timestepping
