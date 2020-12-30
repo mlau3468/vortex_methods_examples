@@ -112,10 +112,10 @@ for i = 1:numComp
 end
 end
 
-# Build trailing edge
+# Build trailing edge and prep wake
 wake_panels = []
 wake_particles = []
-end_vorts = zeros(nWakePan)
+end_vorts = []
 rr_wake = zeros(3, nWakeVert)
 rr_wake_new = zeros(3, 1)
 num_new = 0 # counter: number of additional wake vertices added due to second row
@@ -194,6 +194,15 @@ endpanidou = zeros(nWakePan) #Last vortex intensity from removed panels
 
 # Timestepping
 while t < t_end
+    # update uvort, influence of vortex particles and end vortex line
+    #for i = 1:1
+    for i = 1:size(panels, 1)
+        vel = uvortParticles(wake_particles, panels[i].center)
+        vel2 = uvortVortLines(end_vorts, panels[i].center)
+        vel = vel .+ vel2
+        panels[i].velVort[:] = vel[:]
+    end
+    
 
 # influence of panels
 @time begin
@@ -305,11 +314,9 @@ for i = 1:size(wake_panels,1)
     partvec = partvec .+ dir.*ave
     #println(partvec)
     
-
     # calculate the center
     posp = (pts1[:,i] .+ pts2[:,i] .+ rr_wake[:,wake_panels[i].ee[4]].+ rr_wake[:,wake_panels[i].ee[3]])./4
     #println(posp)
-
 
     # add wake particle
     cent = posp
@@ -319,30 +326,30 @@ for i = 1:size(wake_panels,1)
     else
         dir = partvec
     end
-
     vel = [0;0;0] # panel doesn't move
-
     new_part = wake_part(dir, [mag], cent, vel)
-
     push!(wake_particles, new_part)
-
     endpanidou[i] = wake_panels[i].mag[1]
 
-
-    # Debug
-    #println(dir)
-    #println(mag)
-    #println(cent)
-    #println("----")
-    #println(wake_panels[i].mag[1])
-
-    # visualize
-    panels2vtk(panels, rr_all, "mesh_$step_num.vtu", vis_dir)
-    panels2vtk(wake_panels, rr_wake, "wake_pan_$step_num.vtu", vis_dir)
-    particles2vtk(wake_particles, "wake_particles_$step_num.vtu", vis_dir)
-    
+    # attach end vortex
+    ee = [wake_panels[i].ee[4]; wake_panels[i].ee[3]]
+    p1 = rr_wake[:,wake_panels[i].ee[4]]
+    p2 = rr_wake[:,wake_panels[i].ee[3]]
+    mag = lastpanidou[i]
+    mag = [mag]
+    ver_vel = [0;0;0]
+    center, n_ver, n_sides, edge_vec, edge_len, edge_uni = getLineProp([p1 p2])
+    newvortline = vortline(ee,  [p1 p2], center, edge_vec, edge_uni, edge_len, ver_vel, mag)
+    push!(end_vorts, newvortline)
 
 end
+
+# visualize
+panels2vtk(panels, rr_all, "mesh_$step_num.vtu", vis_dir)
+panels2vtk(wake_panels, rr_wake, "wake_pan_$step_num.vtu", vis_dir)
+particles2vtk(wake_particles, "wake_particles_$step_num.vtu", vis_dir)
+
+# attach end vortex
 
 global t = t + dt
 global step_num = step_num + Int(1)

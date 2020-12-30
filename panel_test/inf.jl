@@ -243,6 +243,7 @@ end
 function elemVel(panels, wake_panels, loc, uinf, rr, rr_wake)
     # calculate velocity contribution on a point loc due to all panels and wakes
     vel_total = zeros(3)
+    # contribution of panels
     for i =1:size(panels,1)
        vdub = vel_dub(panels[i], loc, rr)
        vsou = vel_sourc(panels[i], loc, rr)
@@ -253,6 +254,7 @@ function elemVel(panels, wake_panels, loc, uinf, rr, rr_wake)
        vel = vdub.*mag .- vsou .*(sum(nor.*(ub.-uinf.-uvort)))
        vel_total = vel_total.+vel./(4*pi)
     end
+    # contribution of wake panels
     for i = 1:size(wake_panels,1)
         vdub = vel_dub(wake_panels[i], loc, rr_wake)
         mag = wake_panels[i].mag[1]
@@ -263,6 +265,65 @@ function elemVel(panels, wake_panels, loc, uinf, rr, rr_wake)
     vel_total = vel_total .+ uinf
     return vel_total
 end
+
+function uvortParticles(particles, loc)
+    v_total = zeros(3)
+    vortex_rad = 0.1
+    for i = 1:size(particles, 1)
+        vel = vel_particl(particles[i], loc)
+        v_total = v_total .+ vel./(4*pi)
+        #print(i)
+        #print(' ')
+        #println(vel)
+    end
+    return v_total
+end
+
+function vel_particl(particle, loc)
+    vortex_rad = 0.1
+    dist = loc .- particle.center
+    #Rosenhead kernel regularized velocity
+    vvort = cross(particle.dir, dist) ./ (sqrt(sum(dist.^2)+vortex_rad.^2)).^3
+    vel = vvort .* particle.mag
+    return vel
+end
+
+function uvortVortLines(vortlines, loc)
+    v_total = zeros(3)
+    for i = 1:size(vortlines,1)
+        vel = vel_vortline(vortlines[i], loc)
+        v_total = v_total .+ vel./(4*pi)
+        #print(i)
+        #print(' ')
+        #println(vel)
+    end
+    return v_total
+end
+
+function vel_vortline(panel, loc)
+    av = loc.-panel.rr[:,1]
+    ai = sum(av.*panel.edgeUni)
+    R1 = norm(av)
+    R2 = norm(loc.-panel.rr[:,2])
+    hv = av .- ai.*panel.edgeUni
+    hi = norm(hv)
+    r_rankine = 0.1
+    r_cutoff = 0.001
+    if hi > panel.edgeLen.*r_rankine
+        vdou = ((panel.edgeLen.-ai)./R2 .+ai./R1) ./ (hi.^2) .* cross(panel.edgeUni, hv)
+    else
+        if R1 > panel.edgeLen.*r_cutoff && R2 > panel.edgeLen.*r_cutoff
+            r_ran = r_rankine .* panel.edgeLen
+            vdou = ((panel.edgeLen.-ai)./R2 .+ai./R1) ./ (r_ran.^2) .* cross(panel.edgeUni, hv)
+        else
+            vdou = 0
+        end
+    end
+    vel = vdou .* panel.mag[1]
+    return vel
+end
+
+
 
 function debugMatrices(A, RHS, sol, it, debug_dir)
     it = Int(it)

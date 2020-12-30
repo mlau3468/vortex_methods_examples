@@ -48,9 +48,31 @@ end
 
 struct wake_part
     dir :: Array{Float64, 1}
-    mag :: Array{Float64,1}
-    center :: Array{Float64,1}
+    mag :: Array{Float64,1} # magnitude
+    center :: Array{Float64,1} # position in global frame
+    vel :: Array{Float64,1} # velocity in global frame
+end
+
+struct vortline
+    ee :: Array{Int32,1} # index in rr wake
+    rr :: Array{Float64,2} #points
+    center ::Array{Float64,1}
+    edgeVec ::Array{Float64,1}
+    edgeUni ::Array{Float64,1}
+    edgeLen :: Float64
     vel :: Array{Float64,1}
+    mag :: Array{Float64,1} # magnitude
+end 
+
+function getLineProp(pts)
+    center =  mean(pts, dims=2)[:,1]
+    n_ver = 2
+    n_sides = 1
+
+    edge_vec = pts[:,2] .- pts[:,1]
+    edge_len = norm(edge_vec)
+    edge_uni = edge_vec ./ edge_len
+    return(center, n_ver, n_sides, edge_vec, edge_len, edge_uni)
 end
 
 function getPanProp(pts)
