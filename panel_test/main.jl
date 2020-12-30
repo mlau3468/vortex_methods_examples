@@ -34,6 +34,7 @@ comp_keys = keys(fid["Components"])[1:end-1]
 refs = []
 ref_keys = []
 newRef = refFrame("test", "0", [], false, false, [0;0;0], [0.9961947 0.0 -0.0871557; 0.0 1.0 0.0; 0.0871557 0.0 0.9961947]', [0;0;0], zeros(3,3))
+# orient is defined as v_global = orient * v_local
 refs = append!(refs, [newRef])
 ref_keys = ["test"]
 
