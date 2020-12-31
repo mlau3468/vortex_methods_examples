@@ -216,7 +216,8 @@ step_num = step_num + 1
 # Timestepping
 while t < t_end
     # update uvort, influence of vortex particles and end vortex line
-    for i = 1:size(panels, 1)
+
+for i = 1:size(panels, 1)
         vel = uvortParticles(wake_particles, panels[i].center)
         vel2 = uvortVortLines(end_vorts, panels[i].center)
         vel = vel .+ vel2
@@ -225,14 +226,14 @@ while t < t_end
         #print(' ')
         #println(panels[i].velVort[:])
     end
-
+#=
     for i = 1:size(wake_panels,1)
         vel = uvortParticles(wake_particles, panels[i].center)
         vel2 = uvortVortLines(end_vorts, panels[i].center)
         vel = vel .+ vel2
         wake_panels[i].velVort[:] = vel[:]
     end
-    
+=#  
 
 # influence of panels
 # set up linear system
@@ -296,7 +297,8 @@ end
 
 # calculate velocities at existing particles
 for i = 1:size(wake_particles,1)
-    wake_particles[i].vel[:] = elemVel(panels, wake_panels, wake_particles, end_vorts, rr_all, rr_wake, wake_particles[i].center) .+ uinf
+    vel = elemVel(panels, wake_panels, wake_particles, end_vorts, rr_all, rr_wake, wake_particles[i].center) .+ uinf
+    wake_particles[i].vel[:] = vel
 end
 
 # update particle positions
@@ -311,9 +313,9 @@ pts2 = zeros(3,nWakePan)
 for i = 1:size(wake_panels,1)
     posp1 = rr_wake[:,wake_panels[i].ee[3]]
     v1 = elemVel(panels, wake_panels, wake_particles, end_vorts, rr_all, rr_wake, posp1) .+ uinf
-    pts1[:,i] = posp1 .+ v1.*dt
     posp2 = rr_wake[:,wake_panels[i].ee[4]]
     v2 = elemVel(panels, wake_panels, wake_particles, end_vorts, rr_all, rr_wake, posp2) .+ uinf
+    pts1[:,i] = posp1 .+ v1.*dt
     pts2[:,i] = posp2 .+ v2.*dt
 
     #println(posp1)
