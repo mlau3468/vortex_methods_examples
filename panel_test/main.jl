@@ -1,6 +1,7 @@
 include("inf.jl")
 include("aeroel.jl")
 include("vis.jl")
+import Base.Threads.@spawn
 
 # solver input
 uinf = [30; 0; 0]
@@ -168,6 +169,9 @@ for i = 1:numComp
         te_pan_dir = orient*comps[i].dir_te[:,j]
         dist = te_pan_dir
         new_pts = pts .+ dist.*te_scaling.*norm(uinf.-vel_te).*dt ./ norm(dist)
+        #println(pts')
+        #println(new_pts')
+        #println("--------")
         global rr_wake_new = [rr_wake_new new_pts]
         ee_global = [ee_global; num_new + nWakeVert + 2]
         ee_global = [ee_global; num_new + nWakeVert + 1]
@@ -190,26 +194,53 @@ rr_wake = [rr_wake rr_wake_new[:,2:end]]
 lastpanidou = zeros(nWakePan) #Last vortex intensity from removed panels
 endpanidou = zeros(nWakePan) #Last vortex intensity from removed panels
 
+# visualize
+panels2vtk(panels, rr_all, "mesh_$step_num.vtu", vis_dir)
+panels2vtk(wake_panels, rr_wake, "wake_pan_$step_num.vtu", vis_dir)
+particles2vtk(wake_particles, "wake_particles_$step_num.vtu", vis_dir)
+step_num = step_num + 1
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 # Timestepping
 while t < t_end
     # update uvort, influence of vortex particles and end vortex line
-    #for i = 1:1
     for i = 1:size(panels, 1)
         vel = uvortParticles(wake_particles, panels[i].center)
         vel2 = uvortVortLines(end_vorts, panels[i].center)
         vel = vel .+ vel2
         panels[i].velVort[:] = vel[:]
+        #print(i)
+        #print(' ')
+        #println(panels[i].velVort[:])
+    end
+
+    for i = 1:size(wake_panels,1)
+        vel = uvortParticles(wake_particles, panels[i].center)
+        vel2 = uvortVortLines(end_vorts, panels[i].center)
+        vel = vel .+ vel2
+        wake_panels[i].velVort[:] = vel[:]
     end
     
 
 # influence of panels
 # set up linear system
-local A = zeros(nPan, nPan)
-local B = zeros(nPan, nPan) #Bstatic
-local RHS = zeros(nPan)
+A = zeros(nPan, nPan)
+B = zeros(nPan, nPan) #Bstatic
+RHS = zeros(nPan)
 
-for i = 1:nPan
+Threads.@threads for i = 1:nPan
     for j = 1:nPan
         if i == j
             dou = -2*pi
@@ -229,8 +260,8 @@ for i = 1:size(panels,1)
     # go through each wake panel
     for j = 1:size(wake_panels,1)
         # effect of wake panel on panel i
-        a = dub(wake_panels[j], panels[i].center, rr_wake)
-        a = - a # note flipping is down outside comput_pot
+        local a = dub(wake_panels[j], panels[i].center, rr_wake)
+        local a = - a # note flipping is down outside comput_pot
         #=Modify influence coefficients of trailing edge panels 
         associated with this trailing edge wake on panel i =#
         A[i, wake_panels[j].panIdx[1]] = A[i, wake_panels[j].panIdx[1]] + a
@@ -245,15 +276,14 @@ for i = 1:size(panels,1)
     end
 end
 
-# LU decomposition of A
-#A = factorize2(A)
+
 # debug: output
 writedlm("B_static.csv", B)
 
 # solve linear system
-local solution = A\RHS
+solution = A\RHS
 # debug: output
-debugMatrices(A, RHS, solution, step_num, debug_dir)
+debugMatrices(A, RHS, solution, step_num-1, debug_dir)
 
 # update strengths
 for i = 1:size(panels, 1)
@@ -261,38 +291,37 @@ for i = 1:size(panels, 1)
 end
 for i = 1:size(wake_panels,1)
     wake_panels[i].mag[1] = panels[wake_panels[i].panIdx[1]].mag[1] - panels[wake_panels[i].panIdx[2]].mag[1]
+    #println(wake_panels[i].mag[1])
 end
 
 # calculate velocities at existing particles
 for i = 1:size(wake_particles,1)
-    vpan = vel_panels(panels, wake_particles[i].center, rr_all)
-    vwake = vel_wake_panels(wake_panels, wake_particles[i].center, rr_wake)
-    vend = uvortVortLines(end_vorts, wake_particles[i].center)
-    vpart = uvortParticles(wake_particles, wake_particles[i].center)
-    vel = uinf .+ vpan .+ vwake .+ vpart .+ vend
-    wake_particles[i].vel[:] = vel[:]
-    #println(wake_particles[i].vel[:])
+    wake_particles[i].vel[:] = elemVel(panels, wake_panels, wake_particles, end_vorts, rr_all, rr_wake, wake_particles[i].center) .+ uinf
 end
 
 # update particle positions
 for i = 1:size(wake_particles,1)
-    pos_p = wake_particles[i].center .+ wake_particles[i].vel .* dt
-    wake_particles[i].center[:] = pos_p
-    #println(pos_p)
+    wake_particles[i].center[:] = wake_particles[i].center .+ wake_particles[i].vel .* dt
+    #println(wake_particles[i].center[:])
 end
 
-# shed particles new particles
-local pts1 = zeros(3,nWakePan) # temporary vector to hold end vortex points
-local pts2 = zeros(3,nWakePan)
+# shed new particles
+pts1 = zeros(3,nWakePan) # temporary vector to hold end vortex points
+pts2 = zeros(3,nWakePan)
 for i = 1:size(wake_panels,1)
     posp1 = rr_wake[:,wake_panels[i].ee[3]]
-    #v1 = elemVel(panels, wake_panels, posp1, uinf, rr_all, rr_wake)
-    v1 = elemVel(panels, wake_panels, wake_particles, end_vorts, rr_all, rr_wake, posp1)
+    v1 = elemVel(panels, wake_panels, wake_particles, end_vorts, rr_all, rr_wake, posp1) .+ uinf
     pts1[:,i] = posp1 .+ v1.*dt
     posp2 = rr_wake[:,wake_panels[i].ee[4]]
-    #v2 = elemVel(panels, wake_panels, posp2, uinf, rr_all, rr_wake)
-    v2 = elemVel(panels, wake_panels, wake_particles, end_vorts, rr_all, rr_wake, posp2)
+    v2 = elemVel(panels, wake_panels, wake_particles, end_vorts, rr_all, rr_wake, posp2) .+ uinf
     pts2[:,i] = posp2 .+ v2.*dt
+
+    #println(posp1)
+    #println(pts1[:,i])
+    #println(posp2)
+    #println(pts1[:,i])
+    #println("------")
+
 end
 
 for i = 1:size(wake_panels,1)
@@ -356,7 +385,6 @@ for i = 1:size(wake_panels,1)
     else
         end_vorts[i] = newvortline
     end
-    
 
 end
 

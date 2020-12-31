@@ -239,6 +239,49 @@ function vel_sourc(pan, loc, rr)
     return vel
 end
 
+
+function vel_particl(particle, loc)
+    vortex_rad = 0.1
+    dist = loc .- particle.center
+    #Rosenhead kernel regularized velocity
+    vvort = cross(particle.dir, dist) ./ (sqrt(sum(dist.^2)+vortex_rad.^2)).^3
+    vel = vvort .* particle.mag
+    return vel
+end
+
+
+function vel_vortline(panel, loc)
+    av = loc.-panel.rr[:,1]
+    ai = sum(av.*panel.edgeUni)
+    R1 = norm(av)
+    R2 = norm(loc.-panel.rr[:,2])
+    hv = av .- ai.*panel.edgeUni
+    hi = norm(hv)
+    r_rankine = 0.1
+    r_cutoff = 0.001
+    if hi > panel.edgeLen.*r_rankine
+        vdou = ((panel.edgeLen.-ai)./R2 .+ai./R1) ./ (hi.^2) .* cross(panel.edgeUni, hv)
+    else
+        if R1 > panel.edgeLen.*r_cutoff && R2 > panel.edgeLen.*r_cutoff
+            r_ran = r_rankine .* panel.edgeLen
+            vdou = ((panel.edgeLen.-ai)./R2 .+ai./R1) ./ (r_ran.^2) .* cross(panel.edgeUni, hv)
+        else
+            vdou = 0
+        end
+    end
+    vel = vdou .* panel.mag[1]
+    return vel
+end
+
+function elemVel(panels, wake_panels, wake_particles, end_vorts, rr_all, rr_wake, loc)
+    vpan = vel_panels(panels, loc, rr_all)
+    vwake = vel_wake_panels(wake_panels, loc, rr_wake)
+    vend = uvortVortLines(end_vorts, loc)
+    vpart = uvortParticles(wake_particles, loc)
+    vel = vpan .+ vwake .+ vpart .+ vend
+    return vel
+end
+
 function vel_panels(panels, loc, rr)
     vel_total = zeros(3)
     # contribution of panels
@@ -265,29 +308,7 @@ function vel_wake_panels(wake_panels, loc, rr_wake)
     end
     return vel_total
 end
-#=
-function elemVel(panels, wake_panels, loc, uinf, rr, rr_wake)
-    # calculate velocity contribution on a point loc due to all panels and wakes
-    vel_total = zeros(3)
-    # contribution of panels
-    vel = vel_panels(panels, loc, rr)
-    vel_total = vel_total .+ vel
-    # contribution of wake panels
-    vel = vel_wake_panels(wake_panels, loc, rr_wake)
-    vel_total = vel_total .+ vel
-    vel_total = vel_total .+ uinf
-    return vel_total
-end
-=#
 
-function elemVel(panels, wake_panels, wake_particles, end_vorts, rr_all, rr_wake, loc)
-    vpan = vel_panels(panels, loc, rr_all)
-    vwake = vel_wake_panels(wake_panels, loc, rr_wake)
-    vend = uvortVortLines(end_vorts, loc)
-    vpart = uvortParticles(wake_particles, loc)
-    vel = uinf .+ vpan .+ vwake .+ vpart .+ vend
-    return vel
-end
 
 function uvortParticles(particles, loc)
     v_total = zeros(3)
@@ -302,15 +323,6 @@ function uvortParticles(particles, loc)
     return v_total
 end
 
-function vel_particl(particle, loc)
-    vortex_rad = 0.1
-    dist = loc .- particle.center
-    #Rosenhead kernel regularized velocity
-    vvort = cross(particle.dir, dist) ./ (sqrt(sum(dist.^2)+vortex_rad.^2)).^3
-    vel = vvort .* particle.mag
-    return vel
-end
-
 function uvortVortLines(vortlines, loc)
     v_total = zeros(3)
     for i = 1:size(vortlines,1)
@@ -321,36 +333,4 @@ function uvortVortLines(vortlines, loc)
         #println(vel)
     end
     return v_total
-end
-
-function vel_vortline(panel, loc)
-    av = loc.-panel.rr[:,1]
-    ai = sum(av.*panel.edgeUni)
-    R1 = norm(av)
-    R2 = norm(loc.-panel.rr[:,2])
-    hv = av .- ai.*panel.edgeUni
-    hi = norm(hv)
-    r_rankine = 0.1
-    r_cutoff = 0.001
-    if hi > panel.edgeLen.*r_rankine
-        vdou = ((panel.edgeLen.-ai)./R2 .+ai./R1) ./ (hi.^2) .* cross(panel.edgeUni, hv)
-    else
-        if R1 > panel.edgeLen.*r_cutoff && R2 > panel.edgeLen.*r_cutoff
-            r_ran = r_rankine .* panel.edgeLen
-            vdou = ((panel.edgeLen.-ai)./R2 .+ai./R1) ./ (r_ran.^2) .* cross(panel.edgeUni, hv)
-        else
-            vdou = 0
-        end
-    end
-    vel = vdou .* panel.mag[1]
-    return vel
-end
-
-
-
-function debugMatrices(A, RHS, sol, it, debug_dir)
-    it = Int(it)
-    writedlm(debug_dir*"A_$it.csv", A)
-    writedlm(debug_dir*"B_$it.csv", RHS)
-    writedlm(debug_dir*"res_$it.csv", sol)
 end

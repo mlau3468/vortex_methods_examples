@@ -33,6 +33,7 @@ end
 function particles2vtk(particles_list, fname, vis_dir)
 
 npoints = size(particles_list, 1)
+if npoints > 0
 x = zeros(size(particles_list, 1))
 y = zeros(size(particles_list, 1))
 z = zeros(size(particles_list, 1))
@@ -49,5 +50,17 @@ cells = [MeshCell(VTKCellTypes.VTK_VERTEX, (i, )) for i = 1:npoints]
 vtk_grid(vis_dir * fname, x, y, z, cells) do vtk
     vtk["mag", VTKPointData()] = mag
 end
+end
+end
 
+
+function debugMatrices(A, RHS, sol, it, debug_dir)
+    it = Int(it)
+    # LU decomposition of A to check with DUST
+    A_LU = factorize2(A)
+
+    writedlm(debug_dir*"A_$it.csv", A)
+    writedlm(debug_dir*"A_LU_$it.csv", A_LU)
+    writedlm(debug_dir*"B_$it.csv", RHS)
+    writedlm(debug_dir*"res_$it.csv", sol)
 end
