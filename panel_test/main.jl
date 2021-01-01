@@ -37,7 +37,7 @@ step_num = step_num + 1
 while t < t_end
     # update uvort, influence of vortex particles and end vortex line
 
-for i = 1:size(panels, 1)
+@Threads.threads for i = 1:size(panels, 1)
         vel = uvortParticles(wake_particles, panels[i].center)
         vel2 = uvortVortLines(end_vorts, panels[i].center)
         vel = vel .+ vel2
@@ -87,7 +87,7 @@ end
 
 # calculate velocities at existing particles
 @time begin
-for i = 1:size(wake_particles,1)
+@Threads.threads for i = 1:size(wake_particles,1)
     vel =  elemVel(panels, wake_panels, wake_particles, end_vorts, rr_all, rr_wake, wake_particles[i].center) .+ uinf
     wake_particles[i].vel[:] = vel
 end

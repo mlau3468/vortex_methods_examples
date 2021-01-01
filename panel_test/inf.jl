@@ -138,7 +138,7 @@ function vel_dub(pan, loc, rr)
 !! Compute the velocity induced by a vortex ring (equivalent to a constant
 !!  intentsity surface doublet) with intensity 4*pi. <------
 =#
-    global v_dou = 0.0
+    v_dou = 0.0
     n_ver = pan.nVert
     pts = rr[:, pan.ee]
     # get edge vectors
@@ -161,11 +161,11 @@ function vel_dub(pan, loc, rr)
         hi = norm(hv)
         
         if hi > edge_len[i]*r_rankine
-            global v_dou = v_dou .+ ((edge_len[i].-ai)./r2 .+ ai./r1) ./ (hi.^2) .* cross(edge_uni[:,i], hv)
+            v_dou = v_dou .+ ((edge_len[i].-ai)./r2 .+ ai./r1) ./ (hi.^2) .* cross(edge_uni[:,i], hv)
         else
             if (r1 > edge_len[i]*r_cutoff) && (r2 > edge_len[i]*r_cutoff)
                 r_Ran = r_rankine * edge_len[i]
-                global v_dou = v_dou .+ ((edge_len[i].-ai)./r2 + ai./r1) ./ (r_Ran.^2) .* cross(edge_uni[:,i], hv)
+                v_dou = v_dou .+ ((edge_len[i].-ai)./r2 + ai./r1) ./ (r_Ran.^2) .* cross(edge_uni[:,i], hv)
             end
         end
     end
