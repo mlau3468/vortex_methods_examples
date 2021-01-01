@@ -82,7 +82,7 @@ end
 
 function dub(pan, loc, rr)
     pts = rr[:, pan.ee]
-    cpt = mean(pts, dims=2)
+    cpt = pan.center
     radius = norm(loc.-cpt)
     e3 = pan.norm
 
@@ -285,7 +285,7 @@ end
 function vel_panels(panels, loc, rr)
     vel_total = zeros(3)
     # contribution of panels
-    for i =1:size(panels,1)
+    @inbounds for i =1:size(panels,1)
        vdub = vel_dub(panels[i], loc, rr)
        vsou = vel_sourc(panels[i], loc, rr)
        nor = panels[i].norm
@@ -300,7 +300,7 @@ end
 
 function vel_wake_panels(wake_panels, loc, rr_wake)
     vel_total = zeros(3)
-    for i = 1:size(wake_panels,1)
+    @inbounds for i = 1:size(wake_panels,1)
         vdub = vel_dub(wake_panels[i], loc, rr_wake)
         mag = wake_panels[i].mag[1]
         vel = vdub.*mag
@@ -313,7 +313,7 @@ end
 function uvortParticles(particles, loc)
     v_total = zeros(3)
     vortex_rad = 0.1
-    for i = 1:size(particles, 1)
+    @inbounds for i = 1:size(particles, 1)
         vel = vel_particl(particles[i], loc)
         v_total = v_total .+ vel./(4*pi)
         #print(i)
@@ -340,8 +340,8 @@ function panel_influence(panels, rr_all)
     A = zeros(nPan, nPan)
     B = zeros(nPan, nPan) #Bstatic
     RHS = zeros(nPan)
-    @Threads.threads for i = 1:nPan
-        for j = 1:nPan
+    @inbounds @Threads.threads for i = 1:nPan
+    @inbounds for j = 1:nPan
             if i == j
                 dou = -2*pi
             else
@@ -373,8 +373,8 @@ function te_influence(wake_panels, rr_wake, panels, A)
 end
 
 function calc_RHS(panels, B, RHS)
-    @Threads.threads for i = 1:size(panels,1)
-        for j = 1:size(panels,1)
+    @inbounds @Threads.threads for i = 1:size(panels,1)
+    @inbounds for j = 1:size(panels,1)
             RHS[i] = RHS[i] + B[i,j] .* sum(panels[j].norm.*(-uinf.-panels[j].velVort))
         end
     end

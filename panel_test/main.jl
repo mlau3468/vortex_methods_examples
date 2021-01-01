@@ -67,7 +67,6 @@ A = te_influence(wake_panels, rr_wake, panels, A)
 # assemble RHS (add uinf and uvort contribution)
 RHS = calc_RHS(panels, B, RHS)
 
-
 # debug: output
 writedlm("B_static.csv", B)
 
