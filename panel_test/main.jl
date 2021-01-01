@@ -102,7 +102,7 @@ end
 # shed new particles
 pts1 = zeros(3,nWakePan) # temporary vector to hold end vortex points
 pts2 = zeros(3,nWakePan)
-for i = 1:size(wake_panels,1)
+@Threads.threads for i = 1:size(wake_panels,1)
     posp1 = rr_wake[:,wake_panels[i].ee[3]]
     v1 = elemVel(panels, wake_panels, wake_particles, end_vorts, rr_all, rr_wake, posp1) .+ uinf
     posp2 = rr_wake[:,wake_panels[i].ee[4]]

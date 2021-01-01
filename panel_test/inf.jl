@@ -340,7 +340,7 @@ function panel_influence(panels, rr_all)
     A = zeros(nPan, nPan)
     B = zeros(nPan, nPan) #Bstatic
     RHS = zeros(nPan)
-    for i = 1:nPan
+    @Threads.threads for i = 1:nPan
         for j = 1:nPan
             if i == j
                 dou = -2*pi
@@ -358,7 +358,7 @@ function panel_influence(panels, rr_all)
 end
 
 function te_influence(wake_panels, rr_wake, panels, A)
-    for i = 1:size(panels,1)
+    @Threads.threads for i = 1:size(panels,1)
         # go through each wake panel
         for j = 1:size(wake_panels,1)
             # effect of wake panel on panel i
@@ -373,7 +373,7 @@ function te_influence(wake_panels, rr_wake, panels, A)
 end
 
 function calc_RHS(panels, B, RHS)
-    for i = 1:size(panels,1)
+    @Threads.threads for i = 1:size(panels,1)
         for j = 1:size(panels,1)
             RHS[i] = RHS[i] + B[i,j] .* sum(panels[j].norm.*(-uinf.-panels[j].velVort))
         end
