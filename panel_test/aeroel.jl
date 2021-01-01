@@ -168,3 +168,180 @@ struct component
     dir_te #Unit vector at TE nodes
 
 end 
+
+function get_geo(fname, uinf)
+te_scaling = 0.3
+# Read input file
+#fname = "./dust_output/wing/geo_input.h5"
+fid = h5open(fname, "r")
+
+#display(fid["Components"])
+#display(read(fid["Components"]["Comp001"]["Trailing_Edge"]["o_te"]))
+
+
+numComp = read(fid["Components"]["NComponents"])
+comp_keys = keys(fid["Components"])[1:end-1]
+#display(comp_keys)
+
+
+# Build reference frames
+refs = []
+ref_keys = []
+newRef = refFrame("test", "0", [], false, false, [0;0;0], [0.9961947 0.0 -0.0871557; 0.0 1.0 0.0; 0.0871557 0.0 0.9961947]', [0;0;0], zeros(3,3))
+# orient is defined as v_global = orient * v_local
+refs = append!(refs, [newRef])
+ref_keys = ["test"]
+
+# Build component lists
+comps = component[]
+nPan = 0
+nVert = 0
+nWakePan = 0
+nWakeVert = 0
+
+for i = 1:numComp
+    name = read(fid["Components"][comp_keys[i]]["CompName"])
+    ee = read(fid["Components"][comp_keys[i]]["Geometry"]["ee"])
+    neigh = read(fid["Components"][comp_keys[i]]["Geometry"]["neigh"])
+    rr = read(fid["Components"][comp_keys[i]]["Geometry"]["rr"])
+    refTag = read(fid["Components"][comp_keys[i]]["RefTag"])
+    refId = findall(x -> x.==refTag, ref_keys)[1]
+    elType = read(fid["Components"][comp_keys[i]]["ElType"])
+
+    e_te = read(fid["Components"][comp_keys[i]]["Trailing_Edge"]["e_te"])
+    i_te = read(fid["Components"][comp_keys[i]]["Trailing_Edge"]["i_te"])
+    ii_te = read(fid["Components"][comp_keys[i]]["Trailing_Edge"]["ii_te"])
+    rr_te = read(fid["Components"][comp_keys[i]]["Trailing_Edge"]["rr_te"])
+    neigh_te = read(fid["Components"][comp_keys[i]]["Trailing_Edge"]["neigh_te"])
+    neigh_te_o = read(fid["Components"][comp_keys[i]]["Trailing_Edge"]["o_te"])
+    te_dir = read(fid["Components"][comp_keys[i]]["Trailing_Edge"]["t_te"])
+    n_pan = size(ee,2)
+    n_vert = size(rr, 2)
+    n_wake_pan = size(ii_te,2)
+    n_wake_vert = size(rr_te, 2)
+
+    newComp = component(name, elType, refId, refTag, ee, rr, neigh,  n_pan, n_vert, e_te, i_te, ii_te, rr_te, neigh_te, neigh_te_o, n_wake_pan, n_wake_vert, te_dir)
+    comps = append!(comps, [newComp])
+    nPan = nPan + n_pan
+    nVert = nVert + n_vert
+    nWakePan = nWakePan + n_wake_pan
+    nWakeVert = nWakeVert + n_wake_vert
+end
+
+# build global geometry
+panels = panel[]
+rr_all = zeros(3, nVert)
+
+last_pan = 0
+last_vert = 0
+for i = 1:numComp
+    res = comps[i].refId
+    orig = refs[res].origin
+    orient = refs[res].orient
+
+    # append panels
+    for j = 1:comps[i].n_pan
+        ee_comp = comps[i].ee[:,j]
+        ee_global = Int.(ee_comp .+ last_vert)
+        pts = copy(comps[i].rr[:,ee_comp])
+        for k = 1:size(pts,2)
+            pts[:,k] = orient*pts[:,k]  .+ orig
+        end
+
+        velbody = [0.0; 0.0; 0.0]
+        velvort = [0.0; 0.0; 0.0]
+        n_ver, n_sides, center, edge_vec, edge_len, edge_uni, tang, normal, area, sinTi, cosTi = getPanProp(pts)
+        new_pan = panel(res, i, ee_global, ee_comp, center, n_sides, n_ver, edge_len, edge_vec, edge_uni, normal, area, tang, cosTi, sinTi, velbody, velvort, [0.0])
+        push!(panels, new_pan)
+        #panels[i] = new_pan
+    end
+    
+    # rotate vertices accordingly and append vertices
+    for j = 1:comps[i].n_vert
+        rr_all[:, last_vert+1] = orient*comps[i].rr[:,j] + orig
+        last_vert = last_vert + 1
+    end
+
+    last_pan = last_pan + comps[i].n_pan
+end
+
+# Build trailing edge and prep wake
+wake_panels = wake_panel[]
+wake_particles = wake_part[]
+end_vorts = vortline[]
+rr_wake = zeros(3, nWakeVert)
+rr_wake_new = zeros(3, 1)
+num_new = 0 # counter: number of additional wake vertices added due to second row
+wake_vert = 0 # counter: number of wake vertices 
+wake_pan = 0 # counter: number of wake panels added
+comp_pan = 0 # counter: number of component panels traversed
+for i = 1:numComp
+    res = comps[i].refId
+    ref_vel = refs[res].vel_g
+    ref_rot = refs[res].rot_g
+    orig = refs[res].origin
+    orient = refs[res].orient
+
+    # rotate vertices accordingly and append first row
+    for j = 1:comps[i].n_vert_te
+        rr_wake[:,wake_vert+j] = orient*comps[i].rr_te[:,j] + orig
+    end
+
+    for j = 1:comps[i].n_pan_te
+        # wake panels
+        ee_comp = comps[i].ii_te[:,j]
+        ee_global = ee_comp .+ wake_vert
+
+        # panel connnected to this wake panel
+        pan_idxcomp = comps[i].e_te[:,j]
+        pan_idxglobal = pan_idxcomp .+ comp_pan
+
+        # panel neighbors
+        pan_neighcomp = comps[i].neigh_te[:,j]
+        pan_neighglobal = copy(pan_neighcomp)
+        if pan_neighglobal[1] > 0
+            pan_neighglobal[1] = pan_neighglobal[1] .+ wake_pan
+        end
+        if pan_neighglobal[2] > 0
+            pan_neighglobal[2] = pan_neighglobal[2] .+ wake_pan
+        end
+        pan_neighcomp = Int.(pan_neighcomp)
+        pan_neighglobal = Int.(pan_neighglobal)
+
+        # neighbor orientations
+        neigh_te_orient = comps[i].neigh_te_o[:,j]
+
+        pts = copy(comps[i].rr_te[:,ee_comp])
+        for k = 1:size(pts,2)
+            pts[:,k] = orient*pts[:,k] .+ orig
+        end
+
+        # build second row
+        w_start_pt = mean(pts, dims=2) # Middle point between these two points
+        vel_te = calc_node_vel(w_start_pt, ref_rot, ref_vel)
+        te_pan_dir = orient*comps[i].dir_te[:,j]
+        dist = te_pan_dir
+        new_pts = pts .+ dist.*te_scaling.*norm(uinf.-vel_te).*dt ./ norm(dist)
+        #println(pts')
+        #println(new_pts')
+        #println("--------")
+        rr_wake_new = [rr_wake_new new_pts]
+        ee_global = [ee_global; num_new + nWakeVert + 2]
+        ee_global = [ee_global; num_new + nWakeVert + 1]
+        num_new = num_new + 2
+
+        # create panel object
+        velbody = [0; 0; 0]
+        velvort = [0; 0; 0]
+        n_ver, n_sides, cpt, edge_vec, edge_len, edge_uni, tang, normal, area, sinTi, cosTi = getPanProp([pts new_pts[:,2] new_pts[:,1]])
+        new_pan = wake_panel(res, i, ee_global, ee_comp, pan_idxglobal, pan_idxcomp, te_pan_dir,cpt, n_sides, n_ver, edge_len, edge_vec, edge_uni, normal, area, tang, cosTi, sinTi, velbody, velvort, [0.0], pan_neighglobal, pan_neighcomp, neigh_te_orient)
+        push!(wake_panels, new_pan)
+    end
+    comp_pan = comp_pan + comps[i].n_pan
+    wake_vert = wake_vert + comps[i].n_vert_te
+    wake_pan = wake_pan + comps[i].n_pan_te
+end
+#combine points from first and second row
+rr_wake = [rr_wake rr_wake_new[:,2:end]]
+return panels, rr_all, wake_panels, rr_wake, wake_particles, end_vorts
+end
