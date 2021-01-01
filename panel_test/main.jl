@@ -3,13 +3,25 @@ include("aeroel.jl")
 include("vis.jl")
 import Base.Threads.@spawn
 
+# Build reference frames
+refs = []
+ref_keys = []
+newRef = refFrame("test", "0", [], false, false, [0;0;0], [0.9961947 0.0 -0.0871557; 0.0 1.0 0.0; 0.0871557 0.0 0.9961947]', [0;0;0], zeros(3,3))
+# orient is defined as v_global = orient * v_local
+refs = append!(refs, [newRef])
+ref_keys = ["test"]
+
+# Read geometry
+@time begin
+    panels, rr_all, wake_panels, rr_wake, wake_particles, end_vorts = get_geo("./dust_output/wing/geo_input.h5", uinf, refs, ref_keys)
+    end
+
 
 # solver input
 uinf = [30; 0; 0]
 Pinf = 0
 rhoinf = 1.225
 dt = 0.005
-
 t_end = 100*dt
 debug_dir = "./debug/"
 vis_dir = "./vis/"
@@ -17,9 +29,6 @@ vis_dir = "./vis/"
 t = 0.0
 step_num = Int(1)
 
-@time begin
-panels, rr_all, wake_panels, rr_wake, wake_particles, end_vorts = get_geo("./dust_output/wing/geo_input.h5", uinf)
-end
 nWakePan = size(wake_panels, 1)
 nPan = size(panels, 1)
 

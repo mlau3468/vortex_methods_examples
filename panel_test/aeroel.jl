@@ -169,7 +169,7 @@ struct component
 
 end 
 
-function get_geo(fname, uinf)
+function get_geo(fname, uinf, refs, ref_keys)
 te_scaling = 0.3
 # Read input file
 #fname = "./dust_output/wing/geo_input.h5"
@@ -183,14 +183,6 @@ numComp = read(fid["Components"]["NComponents"])
 comp_keys = keys(fid["Components"])[1:end-1]
 #display(comp_keys)
 
-
-# Build reference frames
-refs = []
-ref_keys = []
-newRef = refFrame("test", "0", [], false, false, [0;0;0], [0.9961947 0.0 -0.0871557; 0.0 1.0 0.0; 0.0871557 0.0 0.9961947]', [0;0;0], zeros(3,3))
-# orient is defined as v_global = orient * v_local
-refs = append!(refs, [newRef])
-ref_keys = ["test"]
 
 # Build component lists
 comps = component[]
