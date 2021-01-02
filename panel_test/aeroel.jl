@@ -337,3 +337,27 @@ end
 rr_wake = [rr_wake rr_wake_new[:,2:end]]
 return panels, rr_all, wake_panels, rr_wake, wake_particles, end_vorts
 end
+
+function update_particles(panels, wake_panels, wake_particles, end_vorts, rr_all, rr_wake, uinf, dt)
+    # calculate velocities at existing particles
+    @Threads.threads for i in 1:size(wake_particles,1)
+        vel =  elemVel(panels, wake_panels, wake_particles, end_vorts, rr_all, rr_wake, wake_particles[i].center) .+ uinf
+        wake_particles[i].vel[:] = vel
+        # update particle positions
+        wake_particles[i].center[:] = wake_particles[i].center .+vel.*dt
+    end
+    return wake_particles
+end
+
+function update_panel_uvorts(panels, wake_particles, end_vorts)
+    @inbounds @Threads.threads for i = 1:size(panels, 1)
+        vel = uvortParticles(wake_particles, panels[i].center)
+        vel2 = uvortVortLines(end_vorts, panels[i].center)
+        vel = vel .+ vel2
+        panels[i].velVort[:] = vel[:]
+        #print(i)
+        #print(' ')
+        #println(panels[i].velVort[:])
+    end
+    return panels
+end

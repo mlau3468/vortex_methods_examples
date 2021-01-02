@@ -1,6 +1,7 @@
 include("inf.jl")
 include("aeroel.jl")
 include("vis.jl")
+include("linsys.jl")
 import Base.Threads.@spawn
 
 # Build reference frames
@@ -14,8 +15,9 @@ ref_keys = ["test"]
 # Read geometry
 @time begin
     panels, rr_all, wake_panels, rr_wake, wake_particles, end_vorts = get_geo("./dust_output/wing/geo_input.h5", uinf, refs, ref_keys)
-    end
+end
 
+function run(panels, rr_all, wake_panels, rr_wake, wake_particles, end_vorts)
 
 # solver input
 uinf = [30; 0; 0]
@@ -45,16 +47,7 @@ step_num = step_num + 1
 # Timestepping
 while t < t_end
     # update uvort, influence of vortex particles and end vortex line
-
-@Threads.threads for i = 1:size(panels, 1)
-        vel = uvortParticles(wake_particles, panels[i].center)
-        vel2 = uvortVortLines(end_vorts, panels[i].center)
-        vel = vel .+ vel2
-        panels[i].velVort[:] = vel[:]
-        #print(i)
-        #print(' ')
-        #println(panels[i].velVort[:])
-end
+    panels = update_panel_uvorts(panels, wake_particles, end_vorts)
 #=
     for i = 1:size(wake_panels,1)
         vel = uvortParticles(wake_particles, panels[i].center)
@@ -93,18 +86,9 @@ for i = 1:size(wake_panels,1)
     #println(wake_panels[i].mag[1])
 end
 
-# calculate velocities at existing particles
+# calculate velocities at particles and evolve by dt
 @time begin
-@Threads.threads for i = 1:size(wake_particles,1)
-    vel =  elemVel(panels, wake_panels, wake_particles, end_vorts, rr_all, rr_wake, wake_particles[i].center) .+ uinf
-    wake_particles[i].vel[:] = vel
-end
-end
-
-# update particle positions
-for i = 1:size(wake_particles,1)
-    wake_particles[i].center[:] = wake_particles[i].center .+ wake_particles[i].vel .* dt
-    #println(wake_particles[i].center[:])
+wake_particles = update_particles(panels, wake_panels, wake_particles, end_vorts, rr_all, rr_wake, uinf, dt)
 end
 
 # shed new particles
@@ -197,8 +181,11 @@ particles2vtk(wake_particles, "wake_particles_$step_num.vtu", vis_dir)
 
 # attach end vortex
 
-global t = t + dt
-global step_num = step_num + Int(1)
+t = t + dt
+step_num = step_num + Int(1)
 
 println("Time: $t")
 end # timestepping
+end
+
+run(panels, rr_all, wake_panels, rr_wake, wake_particles, end_vorts)
