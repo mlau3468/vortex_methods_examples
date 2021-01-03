@@ -4,6 +4,8 @@ struct panel
     ee  :: Array{Int32,1}# index of points forming vertices in global points list
     eeComp :: Array{Int32,1}# index of points forming vertices in local points list
     center:: Array{Float64,1}
+    neigh :: Array{Int32,1} # index of neighboring elements in global
+    neighComp :: Array{Int32,1} # index of neighboring elements in component
     nSide :: Int
     nVert :: Int
     edgeLen ::Array{Float64,1}
@@ -76,8 +78,9 @@ function getLineProp(pts)
 end
 
 function getPanProp(pts)
-    n_ver = 4
-    n_sides = 4
+
+    n_ver = size(pts,2)
+    n_sides = size(pts, 2)
 
     # settings
     prev_qua = [4 1 2 3]
@@ -86,9 +89,12 @@ function getPanProp(pts)
     next_tri = [2 3 1]
 
     # get edge vectors
-    edge_vec = zeros(3,4)
+    edge_vec = zeros(3,n_sides)
 
     if n_sides == 3
+        for i = 1:n_sides
+            edge_vec[:,i] = pts[:, next_tri[i]] .- pts[:, i]
+        end
     elseif n_sides == 4
         for i = 1:n_sides
             edge_vec[:,i] = pts[:, next_qua[i]] .- pts[:, i]
@@ -96,9 +102,9 @@ function getPanProp(pts)
     end
 
     # get edge lens
-    edge_len = zeros(4)
+    edge_len = zeros(n_sides)
     # unit vectors
-    edge_uni = zeros(3,4)
+    edge_uni = zeros(3,n_sides)
     for i = 1:n_sides
         edge_len[i] = norm(edge_vec[:,i])
         edge_uni[:,i] = edge_vec[:,i] ./ norm(edge_vec[:,i])
@@ -233,8 +239,26 @@ for i = 1:numComp
 
     # append panels
     for j = 1:comps[i].n_pan
+        # local component indexes
         ee_comp = comps[i].ee[:,j]
+        neigh_comp = comps[i].neigh[:,j]
+    
+        # if triangle, last vertex is filled with a 0
+        if ee_comp[end] == 0
+            ee_comp = ee_comp[1:end-1]
+            neigh_comp = neigh_comp[1:end-1]
+        end
+
+        # global indexes
         ee_global = Int.(ee_comp .+ last_vert)
+
+        neigh_global =  copy(neigh_comp)
+        for k = 1:size(neigh_comp,1) # ignore 0s, as they mean no neighbor on this edge
+            if neigh_global[k] != 0
+            neigh_global[k] = Int.(neigh_global[k] .+ last_pan)
+            end
+        end
+        
         pts = copy(comps[i].rr[:,ee_comp])
         for k = 1:size(pts,2)
             pts[:,k] = orient*pts[:,k]  .+ orig
@@ -243,7 +267,7 @@ for i = 1:numComp
         velbody = [0.0; 0.0; 0.0]
         velvort = [0.0; 0.0; 0.0]
         n_ver, n_sides, center, edge_vec, edge_len, edge_uni, tang, normal, area, sinTi, cosTi = getPanProp(pts)
-        new_pan = panel(res, i, ee_global, ee_comp, center, n_sides, n_ver, edge_len, edge_vec, edge_uni, normal, area, tang, cosTi, sinTi, velbody, velvort, [0.0])
+        new_pan = panel(res, i, ee_global, ee_comp, center, neigh_global, neigh_comp, n_sides, n_ver, edge_len, edge_vec, edge_uni, normal, area, tang, cosTi, sinTi, velbody, velvort, [0.0])
         push!(panels, new_pan)
         #panels[i] = new_pan
     end
@@ -291,10 +315,10 @@ for i = 1:numComp
         # panel neighbors
         pan_neighcomp = comps[i].neigh_te[:,j]
         pan_neighglobal = copy(pan_neighcomp)
-        if pan_neighglobal[1] > 0
+        if pan_neighglobal[1] > 0 # ignore 0s, as they mean no neighbor on this edge
             pan_neighglobal[1] = pan_neighglobal[1] .+ wake_pan
         end
-        if pan_neighglobal[2] > 0
+        if pan_neighglobal[2] > 0 # ignore 0s, as they mean no neighbor on this edge
             pan_neighglobal[2] = pan_neighglobal[2] .+ wake_pan
         end
         pan_neighcomp = Int.(pan_neighcomp)
@@ -343,8 +367,10 @@ function update_particles(panels, wake_panels, wake_particles, end_vorts, rr_all
     @Threads.threads for i in 1:size(wake_particles,1)
         vel =  elemVel(panels, wake_panels, wake_particles, end_vorts, rr_all, rr_wake, wake_particles[i].center) .+ uinf
         wake_particles[i].vel[:] = vel
-        # update particle positions
-        wake_particles[i].center[:] = wake_particles[i].center .+vel.*dt
+    end
+    # update particle positions
+    @Threads.threads for i in 1:size(wake_particles,1)
+        wake_particles[i].center[:] = wake_particles[i].center .+wake_particles[i].vel.*dt
     end
     return wake_particles
 end

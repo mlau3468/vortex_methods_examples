@@ -1,13 +1,18 @@
 
 function panels2vtk(panel_list, rr, fname, vis_dir)
     celltype = VTKCellTypes.VTK_QUAD
+    celltype2 = VTKCellTypes.VTK_TRIANGLE
     cells = MeshCell[]
     cdata = Float32[]
     pts = rr
     mag = zeros(size(panel_list,1))
     for i =1:size(panel_list,1)
         inds = panel_list[i].ee
-        c = MeshCell(celltype, inds)
+        if panel_list[i].nVert == 4
+            c = MeshCell(celltype, inds)
+        elseif panel_list[i].nVert == 3
+            c = MeshCell(celltype2, inds)
+        end
         push!(cells, c)
         mag[i] = panel_list[i].mag[1]
     end

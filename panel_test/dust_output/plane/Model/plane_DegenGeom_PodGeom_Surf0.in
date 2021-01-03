@@ -1,0 +1,9 @@
+MeshFileType = basic
+MeshFile = Model/plane_DegenGeom_PodGeom_Surf0_
+ElType = p
+SuppressTe = T
+TolSewing = 0.00001
+InnerProductTe = -0.75
+!ProjTe = F
+!ProjTeVector = ...
+ProjTeDir = parallel

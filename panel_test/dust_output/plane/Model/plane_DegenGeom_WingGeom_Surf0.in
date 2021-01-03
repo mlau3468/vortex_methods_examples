@@ -1,0 +1,9 @@
+MeshFileType = basic
+MeshFile = Model/plane_DegenGeom_WingGeom_Surf0_
+ElType = p
+SuppressTe = F
+TolSewing = 0.00001
+InnerProductTe = -0.75
+!ProjTe = F
+!ProjTeVector = ...
+ProjTeDir = parallel

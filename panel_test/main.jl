@@ -4,6 +4,15 @@ include("vis.jl")
 include("linsys.jl")
 import Base.Threads.@spawn
 
+# solver input
+uinf = [30; 0; 0]
+Pinf = 0
+rhoinf = 1.225
+dt = 0.005
+t_end = 100*dt
+debug_dir = "./plane/debug/"
+vis_dir = "./plane/vis/"
+
 # Build reference frames
 refs = []
 ref_keys = []
@@ -14,19 +23,12 @@ ref_keys = ["test"]
 
 # Read geometry
 @time begin
-    panels, rr_all, wake_panels, rr_wake, wake_particles, end_vorts = get_geo("./dust_output/wing/geo_input.h5", uinf, refs, ref_keys)
+    panels, rr_all, wake_panels, rr_wake, wake_particles, end_vorts = get_geo("./dust_output/plane/geo_input.h5", uinf, refs, ref_keys)
 end
 
 function run(panels, rr_all, wake_panels, rr_wake, wake_particles, end_vorts)
 
-# solver input
-uinf = [30; 0; 0]
-Pinf = 0
-rhoinf = 1.225
-dt = 0.005
-t_end = 100*dt
-debug_dir = "./debug/"
-vis_dir = "./vis/"
+
 
 t = 0.0
 step_num = Int(1)

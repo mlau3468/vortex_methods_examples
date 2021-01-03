@@ -97,7 +97,7 @@ function dub(pan, loc, rr)
         zQ = sum((loc.-cpt).*e3)
         dou = 0.0
         
-        n_ver = 4
+        n_ver = pan.nVert
         for i1 = 1:n_ver
             indp = 1+ (i1 % n_ver)
             indm1 = n_ver - ((n_ver-i1+1) % n_ver)
