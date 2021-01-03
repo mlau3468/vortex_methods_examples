@@ -175,9 +175,40 @@ struct component
 
 end 
 
-function get_geo(fname, uinf, refs, ref_keys)
-te_scaling = 0.3
-# Read input file
+function update_particles(panels, wake_panels, wake_particles, end_vorts, rr_all, rr_wake, uinf, dt)
+    # calculate velocities at existing particles
+    @Threads.threads for i in 1:size(wake_particles,1)
+        vel =  elemVel(panels, wake_panels, wake_particles, end_vorts, rr_all, rr_wake, wake_particles[i].center) .+ uinf
+        wake_particles[i].vel[:] = vel
+    end
+    # update particle positions
+    @Threads.threads for i in 1:size(wake_particles,1)
+        wake_particles[i].center[:] = wake_particles[i].center .+wake_particles[i].vel.*dt
+    end
+    return wake_particles
+end
+
+function update_panel_uvorts(panels, wake_particles, end_vorts)
+    @inbounds @Threads.threads for i = 1:size(panels, 1)
+        vel = vel_wake_particles(wake_particles, panels[i].center)
+        vel = vel .+ vel_wake_vortlines(end_vorts, panels[i].center)
+        panels[i].velVort[:] = vel[:]
+        #print(i)
+        #print(' ')
+        #println(panels[i].velVort[:])
+    end
+    return panels
+end
+
+function read_components(fname, refs)
+
+# read references
+refs = []
+for i = 1:size(refs,1)
+    refs = append!(refs, [refs[i].name])
+end
+
+    # Read input file
 #fname = "./dust_output/wing/geo_input.h5"
 fid = h5open(fname, "r")
 
@@ -225,14 +256,22 @@ for i = 1:numComp
     nWakePan = nWakePan + n_wake_pan
     nWakeVert = nWakeVert + n_wake_vert
 end
+return comps
+end
 
-# build global geometry
+function initialize_panels(comps, refs)
+    # build global geometry
+    numComp = size(comps,1)
 panels = panel[]
+nVert = 0
+for i = 1:numComp
+    nVert = nVert + comps[i].n_vert
+end
 rr_all = zeros(3, nVert)
 
 last_pan = 0
 last_vert = 0
-for i = 1:numComp
+for i = 1:size(comps,1)
     res = comps[i].refId
     orig = refs[res].origin
     orient = refs[res].orient
@@ -280,11 +319,21 @@ for i = 1:numComp
 
     last_pan = last_pan + comps[i].n_pan
 end
+return panels, rr_all
+end
 
-# Build trailing edge and prep wake
+function initialize_wake(comps, refs, uinf, dt)
+    te_scaling = 0.3
+    # Build trailing edge and prep wake
+    numComp = size(comps,1)
+    nWakeVert = 0
+    for i = 1:numComp
+        nWakeVert = nWakeVert + comps[i].n_vert_te
+    end
 wake_panels = wake_panel[]
 wake_particles = wake_part[]
 end_vorts = vortline[]
+
 rr_wake = zeros(3, nWakeVert)
 rr_wake_new = zeros(3, 1)
 num_new = 0 # counter: number of additional wake vertices added due to second row
@@ -359,31 +408,6 @@ for i = 1:numComp
 end
 #combine points from first and second row
 rr_wake = [rr_wake rr_wake_new[:,2:end]]
-return panels, rr_all, wake_panels, rr_wake, wake_particles, end_vorts
-end
 
-function update_particles(panels, wake_panels, wake_particles, end_vorts, rr_all, rr_wake, uinf, dt)
-    # calculate velocities at existing particles
-    @Threads.threads for i in 1:size(wake_particles,1)
-        vel =  elemVel(panels, wake_panels, wake_particles, end_vorts, rr_all, rr_wake, wake_particles[i].center) .+ uinf
-        wake_particles[i].vel[:] = vel
-    end
-    # update particle positions
-    @Threads.threads for i in 1:size(wake_particles,1)
-        wake_particles[i].center[:] = wake_particles[i].center .+wake_particles[i].vel.*dt
-    end
-    return wake_particles
-end
-
-function update_panel_uvorts(panels, wake_particles, end_vorts)
-    @inbounds @Threads.threads for i = 1:size(panels, 1)
-        vel = uvortParticles(wake_particles, panels[i].center)
-        vel2 = uvortVortLines(end_vorts, panels[i].center)
-        vel = vel .+ vel2
-        panels[i].velVort[:] = vel[:]
-        #print(i)
-        #print(' ')
-        #println(panels[i].velVort[:])
-    end
-    return panels
+return wake_panels, rr_wake, wake_particles, end_vorts
 end

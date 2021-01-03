@@ -276,8 +276,8 @@ end
 function elemVel(panels, wake_panels, wake_particles, end_vorts, rr_all, rr_wake, loc)
     vpan = vel_panels(panels, loc, rr_all)
     vwake = vel_wake_panels(wake_panels, loc, rr_wake)
-    vend = uvortVortLines(end_vorts, loc)
-    vpart = uvortParticles(wake_particles, loc)
+    vend = vel_wake_vortlines(end_vorts, loc)
+    vpart = vel_wake_particles(wake_particles, loc)
     vel = vpan .+ vwake .+ vpart .+ vend
     return vel
 end
@@ -310,7 +310,7 @@ function vel_wake_panels(wake_panels, loc, rr_wake)
 end
 
 
-function uvortParticles(particles, loc)
+function vel_wake_particles(particles, loc)
     v_total = zeros(3)
     vortex_rad = 0.1
     @inbounds for i = 1:size(particles, 1)
@@ -323,7 +323,7 @@ function uvortParticles(particles, loc)
     return v_total
 end
 
-function uvortVortLines(vortlines, loc)
+function vel_wake_vortlines(vortlines, loc)
     v_total = zeros(3)
     for i = 1:size(vortlines,1)
         vel = vel_vortline(vortlines[i], loc)
