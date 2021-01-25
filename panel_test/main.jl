@@ -10,8 +10,8 @@ Pinf = 0
 rhoinf = 1.225
 dt = 0.005
 t_end = 100*dt
-debug_dir = "./wing/debug/"
-vis_dir = "./wing/vis/"
+debug_dir = "./plane/debug/"
+vis_dir = "./plane/vis/"
 
 # Build reference frames
 refs = []
@@ -21,12 +21,13 @@ append!(refs, [newRef])
 
 # Read geometry
 @time begin
-    comps = read_components("./dust_output/wing/geo_input.h5", refs)
+    comps = read_components("./dust_output/plane/geo_input.h5", refs)
     panels, rr_all = initialize_panels(comps, refs)
     wake_panels, rr_wake, wake_particles, end_vorts = initialize_wake(comps, refs, uinf, dt)
 end
 
 function run(panels, rr_all, wake_panels, rr_wake, wake_particles, end_vorts)
+    join_te = true
 
 # Experimental stuff
 wake_ends = [] # indices of wake panel ends
@@ -93,6 +94,65 @@ end
 wake_particles = update_particles(panels, wake_panels, wake_particles, end_vorts, rr_all, rr_wake, uinf, dt)
 end
 
+# join te
+join_te_fact = 1
+joined_te = zeros(Int,2,size(wake_ends,1),2) # note hard coded last 2 is n+1 wake panels. with n hardcoded to be 1
+for i = 1:size(wake_ends,1)
+    iw = wake_ends[i]
+    sp1 = copy(rr_wake[:, wake_panels[iw].ee[1]])
+    sp2 = copy(rr_wake[:, wake_panels[iw].ee[2]])
+    l1 = norm(sp1.-sp2)
+    for j = i+1:size(wake_ends,1)
+        ir = wake_ends[j]
+        sp1_1 = copy(rr_wake[:, wake_panels[ir].ee[1]])
+        sp2_1 = copy(rr_wake[:, wake_panels[ir].ee[2]])
+        l2 = norm(sp1_1.-sp2_1)
+        tol = join_te_fact * min(l1,l2)
+        # check which pair of nodes to be joined
+        case = 1
+        lmin = norm(sp1_1.-sp1)
+        if norm(sp2_1.-sp1) < lmin
+            lmin = norm(sp2_1.-sp1)
+            case = 2
+        end
+        if norm(sp1_1.-sp2) < lmin
+            lmin = norm(sp1_1.-sp2)
+            case = 3
+        end
+        if norm(sp2_1.-sp2) < lmin
+            lmin = norm(sp2_1.-sp2)
+            case = 4
+        end
+        #checking only one side is enough, it is the opposite side for the other end
+        if case == 1
+            if lmin < tol
+                posp = (sp1.+sp1_1)./2
+            end
+        elseif case == 2
+            if lmin < tol
+                posp = (sp1 .+ sp2_1)./2
+                rr_wake[:, wake_panels[iw].ee[1]] = posp
+                rr_wake[:, wake_panels[ir].ee[2]] = posp
+                posp = (rr_wake[:, wake_panels[iw].ee[3]] .+   rr_wake[:, wake_panels[ir].ee[4]] ) ./ 2
+                rr_wake[:, wake_panels[iw].ee[4]] = posp
+                rr_wake[:, wake_panels[ir].ee[3]] = posp
+                joined_te[1,i,1] = ir
+                joined_te[2,j,1] = iw
+            end
+        elseif case == 3
+            if lmin < tol
+                posp = (sp2.+sp1_1)./2
+            end
+        elseif case == 4
+            if lmin < tol
+                posp = (sp2.+sp2_1)./2
+            end
+        end
+
+    end
+end
+#display(joined_te)
+
 # shed new particles
 pts1 = zeros(3,nWakePan) # temporary vector to hold end vortex points
 pts2 = zeros(3,nWakePan)
@@ -112,42 +172,60 @@ pts2 = zeros(3,nWakePan)
 
 end
 
-# join te
-join_te_fact = 1
-for i = 1:size(wake_ends,1)
-    sp1 = rr_wake[:, wake_panels[wake_ends[i]].ee[1]]
-    sp2 = rr_wake[:, wake_panels[wake_ends[i]].ee[2]]
-    l1 = norm(sp1.-sp2)
-    for j = i+1:size(wake_ends,1)
-        sp1_1 = rr_wake[:, wake_panels[wake_ends[j]].ee[1]]
-        sp2_1 = rr_wake[:, wake_panels[wake_ends[j]].ee[2]]
-        l2 = norm(sp1_1.-sp2_1)
-        tol = join_te_fact * min(l1,l2)
-        # check which pair of nodes to be joined
-    end
-end
-
-
 for i = 1:size(wake_panels,1)
     partvec = zeros(3)
     # left side
     #println(wake_panels[i].neigh_te)
-    dir = rr_wake[:,wake_panels[i].ee[4]] .- pts2[:,i]
-    if wake_panels[i].neigh_te[1] > 0
+    dir = rr_wake[:,wake_panels[i].ee[4]] .- pts2[:,i] # todo: check if right is ee[4] or ee[3]
+    if wake_panels[i].neigh_te[1] > 0 # if has neighboring wake panel
         ave = wake_panels[i].mag[1] - wake_panels[i].neigh_orient[1] * wake_panels[wake_panels[i].neigh_te[1]].mag[1]
         ave = ave/2
     else
+        if join_te
+            iend = findfirst(isequal(i), wake_ends)
+            ineigh = joined_te[1,iend,1]
+            if ineigh > 0
+                # check orientation
+                if sum(wake_panels[i].norm .* wake_panels[ineigh].norm) > 0
+                    orient = 1
+                else
+                    orient = -1
+                end
+                ave = wake_panels[i].mag[1] - orient * wake_panels[ineigh].mag[1]
+                ave = ave / 2
+            else
+                ave = wake_panels[i].mag[1]
+            end
+        else
         ave = wake_panels[i].mag[1]
+        end 
     end
     partvec = partvec .+ dir.*ave
 
     # right side
     dir = -rr_wake[:,wake_panels[i].ee[3]] .+ pts1[:,i]
-    if wake_panels[i].neigh_te[2] > 0
+    if wake_panels[i].neigh_te[2] > 0 # if has neighboring wake panel
         ave = wake_panels[i].mag[1] - wake_panels[i].neigh_orient[2] * wake_panels[wake_panels[i].neigh_te[2]].mag[1]
         ave = ave/2
     else
+        if join_te
+            iend = findfirst(isequal(i), wake_ends)
+            ineigh = joined_te[2,iend,1]
+            if ineigh > 0
+                # check orientation
+                if sum(wake_panels[i].norm .* wake_panels[ineigh].norm) > 0
+                    orient = 1
+                else
+                    orient = -1
+                end
+                ave = wake_panels[i].mag[1] - orient * wake_panels[ineigh].mag[1]
+                ave = ave / 2
+            else
+                ave = wake_panels[i].mag[1]
+            end
+        else
         ave = wake_panels[i].mag[1]
+        end
     end
     partvec = partvec .+ dir.*ave
 
