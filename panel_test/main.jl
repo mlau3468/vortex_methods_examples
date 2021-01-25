@@ -96,7 +96,8 @@ end
 
 # join te
 join_te_fact = 1
-joined_te = zeros(Int,2,size(wake_ends,1),2) # note hard coded last 2 is n+1 wake panels. with n hardcoded to be 1
+joined_te = zeros(Int,2,size(wake_ends,1)) # format:(left/right joined, nieghbour index)
+# note removal of last dimension compared to DUST as only one wake panel is used.
 for i = 1:size(wake_ends,1)
     iw = wake_ends[i]
     sp1 = copy(rr_wake[:, wake_panels[iw].ee[1]])
@@ -138,8 +139,8 @@ for i = 1:size(wake_ends,1)
                 posp = (rr_wake[:, wake_panels[iw].ee[3]] .+   rr_wake[:, wake_panels[ir].ee[4]] ) ./ 2
                 rr_wake[:, wake_panels[iw].ee[4]] = posp
                 rr_wake[:, wake_panels[ir].ee[3]] = posp
-                joined_te[1,i,1] = ir
-                joined_te[2,j,1] = iw
+                joined_te[1,i] = ir
+                joined_te[2,j] = iw
             end
         elseif case == 3
             if lmin < tol
@@ -155,7 +156,6 @@ for i = 1:size(wake_ends,1)
 
     end
 end
-#display(joined_te)
 
 # shed new particles
 pts1 = zeros(3,nWakePan) # temporary vector to hold end vortex points
@@ -187,7 +187,7 @@ for i = 1:size(wake_panels,1)
     else
         if join_te
             iend = findfirst(isequal(i), wake_ends)
-            ineigh = joined_te[1,iend,1]
+            ineigh = joined_te[1,iend] # 1 is left
             if ineigh > 0
                 # check orientation
                 if sum(wake_panels[i].norm .* wake_panels[ineigh].norm) > 0
@@ -213,8 +213,8 @@ for i = 1:size(wake_panels,1)
         ave = ave/2
     else
         if join_te
-            iend = findfirst(isequal(i), wake_ends)
-            ineigh = joined_te[2,iend,1]
+            iend = findfirst(isequal(i), wake_ends) # index in wake ends list
+            ineigh = joined_te[2,iend] # 2 is right
             if ineigh > 0
                 # check orientation
                 if sum(wake_panels[i].norm .* wake_panels[ineigh].norm) > 0

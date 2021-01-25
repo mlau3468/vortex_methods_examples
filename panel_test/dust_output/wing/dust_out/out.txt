@@ -53,7 +53,7 @@ Reading geometry from file "geo_input.h5"
   number of vortex lattices:           0
   number of lifting lines:             0
   number of actuator disks:            0
-Created geometry in:     0.007 s.
+Created geometry in:     0.006 s.
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
  warning: The following parameters were set in the input file, but are not currently employed :
     timesteps
@@ -83,87 +83,23 @@ Created geometry in:     0.007 s.
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 ====== Initializing Wake ======
-           4
-           2
+          18
 
 ====== Initializing Linear System ======
-Initialized linear system in:     0.078 s.
+Initialized linear system in:     0.090 s.
 
------- Completed all preliminary operations in:     0.118 s.
+------ Completed all preliminary operations in:     0.126 s.
 
 ////////// Performing Computations //////////
 
 --> Step     1 of   101 simulation time:    0.00
-Elapsed wall time:     0.118
-Assembled linear system in:     0.109 s.
+Elapsed wall time:     0.126
+Assembled linear system in:     0.065 s.
 Solved linear system in:     0.000 s.
-Updated wake in:     0.084 s.
-          10
+Updated wake in:     0.051 s.
   -9.7311048108394971E-014
-           0
-           1
    9.7311048108394971E-014
-           0
 
 --> Step     2 of   101 simulation time:    0.01
-Elapsed wall time:     0.823
-Assembled linear system in:     0.150 s.
-Solved linear system in:     0.000 s.
-Updated wake in:     0.102 s.
-          10
-  -1.2601031329495527E-013
-           0
-           1
-   1.2601031329495527E-013
-           0
-
---> Step     3 of   101 simulation time:    0.01
-Elapsed wall time:     1.767
-Assembled linear system in:     0.133 s.
-Solved linear system in:     0.000 s.
-Updated wake in:     0.078 s.
-          10
-  -1.3777867735598193E-013
-           0
-           1
-   1.3777867735598193E-013
-           0
-
---> Step     4 of   101 simulation time:    0.01
-Elapsed wall time:     2.655
-Assembled linear system in:     0.108 s.
-Solved linear system in:     0.000 s.
-Updated wake in:     0.091 s.
-          10
-  -1.3833378886829450E-013
-           0
-           1
-   1.3833378886829450E-013
-           0
-
---> Step     5 of   101 simulation time:    0.02
-Elapsed wall time:     3.487
-Assembled linear system in:     0.121 s.
-Solved linear system in:     0.000 s.
-Updated wake in:     0.106 s.
-          10
-  -1.3811174426336947E-013
-           0
-           1
-   1.3811174426336947E-013
-           0
-
---> Step     6 of   101 simulation time:    0.03
-Elapsed wall time:     4.336
-Assembled linear system in:     0.112 s.
-Solved linear system in:     0.000 s.
-Updated wake in:     0.116 s.
-          10
-  -1.5265566588595902E-013
-           0
-           1
-   1.5265566588595902E-013
-           0
-
---> Step     7 of   101 simulation time:    0.03
-Elapsed wall time:     5.219
+Elapsed wall time:     0.737
+Assembled linear system in:     0.099 s.
