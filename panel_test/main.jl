@@ -124,9 +124,11 @@ for i = 1:size(wake_ends,1)
             case = 4
         end
         #checking only one side is enough, it is the opposite side for the other end
+        # due to possible duplicate rr points, will this cause te to break?
         if case == 1
             if lmin < tol
                 posp = (sp1.+sp1_1)./2
+                # TODO
             end
         elseif case == 2
             if lmin < tol
@@ -142,10 +144,12 @@ for i = 1:size(wake_ends,1)
         elseif case == 3
             if lmin < tol
                 posp = (sp2.+sp1_1)./2
+                # TODO
             end
         elseif case == 4
             if lmin < tol
                 posp = (sp2.+sp2_1)./2
+                # TODO
             end
         end
 
