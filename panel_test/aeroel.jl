@@ -203,9 +203,9 @@ end
 function read_components(fname, refs)
 
 # read references
-refs = []
+ref_keys = []
 for i = 1:size(refs,1)
-    refs = append!(refs, [refs[i].name])
+    append!(ref_keys, [refs[i].name])
 end
 
     # Read input file

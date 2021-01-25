@@ -47,7 +47,7 @@ if __name__=='__main__':
     options['NOctreeLevels'] = 6
     options['MinOctreePart'] = 5
     options['MultipoleDegree'] = 2
-    options['join_te'] = False
+    options['join_te'] = True
     options['Vortstretch'] = False
     options['Diffusion'] = False
     options['PenetrationAvoidance'] = False

@@ -17,7 +17,7 @@ vis_dir = "./wing/vis/"
 refs = []
 newRef = refFrame("test", "0", [], false, false, [0;0;0], [0.9961947 0.0 -0.0871557; 0.0 1.0 0.0; 0.0871557 0.0 0.9961947]', [0;0;0], zeros(3,3))
 # orient is defined as v_global = orient * v_local
-refs = append!(refs, [newRef])
+append!(refs, [newRef])
 
 # Read geometry
 @time begin
@@ -27,6 +27,14 @@ refs = append!(refs, [newRef])
 end
 
 function run(panels, rr_all, wake_panels, rr_wake, wake_particles, end_vorts)
+
+# Experimental stuff
+wake_ends = [] # indices of wake panel ends
+for i = 1:size(wake_panels,1)
+    if 0 in wake_panels[i].neigh_te
+        append!(wake_ends, i)
+    end
+end
 
 t = 0.0
 step_num = Int(1)
@@ -103,6 +111,22 @@ pts2 = zeros(3,nWakePan)
     #println("------")
 
 end
+
+# join te
+join_te_fact = 1
+for i = 1:size(wake_ends,1)
+    sp1 = rr_wake[:, wake_panels[wake_ends[i]].ee[1]]
+    sp2 = rr_wake[:, wake_panels[wake_ends[i]].ee[2]]
+    l1 = norm(sp1.-sp2)
+    for j = i+1:size(wake_ends,1)
+        sp1_1 = rr_wake[:, wake_panels[wake_ends[j]].ee[1]]
+        sp2_1 = rr_wake[:, wake_panels[wake_ends[j]].ee[2]]
+        l2 = norm(sp1_1.-sp2_1)
+        tol = join_te_fact * min(l1,l2)
+        # check which pair of nodes to be joined
+    end
+end
+
 
 for i = 1:size(wake_panels,1)
     partvec = zeros(3)
