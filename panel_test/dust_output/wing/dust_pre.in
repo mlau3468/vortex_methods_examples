@@ -1,9 +1,0 @@
-CompName = WingGeom_Surf0
-GeoFile = Model/wing_DegenGeom_WingGeom_Surf0.in
-RefTag = test
-
-CompName = WingGeom_Surf1
-GeoFile = Model/wing_DegenGeom_WingGeom_Surf1.in
-RefTag = test
-
-FileName = geo_input.h5
