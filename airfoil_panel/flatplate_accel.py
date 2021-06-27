@@ -3,11 +3,11 @@ from typing import Pattern
 import numpy as np
 import matplotlib.pyplot as plt
 
-dt = 1
+dt = 0.1
 alpha = 5 #angle of attack, degrees
 particles = []
 U = 1 # freestream velocity
-tsteps = 300
+tsteps = 500
 c = 1 #chord
 rho = 1
 
