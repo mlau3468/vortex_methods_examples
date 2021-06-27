@@ -1,5 +1,4 @@
 import math
-from typing import Pattern
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -7,7 +6,7 @@ dt = 0.1
 alpha = 5 #angle of attack, degrees
 particles = []
 U = 1 # freestream velocity
-tsteps = 500
+tsteps = 200
 c = 1 #chord
 rho = 1
 
