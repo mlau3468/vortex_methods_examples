@@ -6,7 +6,6 @@ from numpy.linalg import norm
 from numpy import cross, dot, mean
 import vtk
 from vtk.util import numpy_support
-#import pyvista as pv
 
 def vrtxline(p1, p2, p, gam=1):
     r1 = p-p1
@@ -137,6 +136,7 @@ class Panel:
         # place vortex ring at quarter chord, 2D kutta condition satisfid along the chord
         mcv = ((pts[3]-pts[0]) + (pts[2]-pts[1]))/2 # mean chord vector
         self.rpts = [p + 0.25*mcv for p in self.pts]# vortex ring points
+
     def new_gam(self, gamma):
         self.last_gam = self.gam
         self.gam = gamma
@@ -149,7 +149,6 @@ class WakePanel():
         self.ptvels = np.zeros((4,3))
 
 # -------------------------------------------------------
-
 nspan = 13
 nchord = 4
 
@@ -164,7 +163,7 @@ alpha = 5
 rho = 1.225
 
 dt = 1/16*chord/U
-tsteps = 8
+tsteps = 10
 
 U_inf = U*np.array([math.cos(math.radians(alpha)), 0, math.sin(math.radians(alpha))])
 
@@ -188,8 +187,6 @@ for i in range(nchord):
         if i+1 == nchord:
             te_idx.append(i*nspan+j)
 
-
-
 # -------------------------------------------------------
 # Initizalize matrices
 A = np.zeros([len(panels), len(panels)])
@@ -204,9 +201,6 @@ for i in range(len(panels)):
         vel =  vrtxring(*panels[j].rpts, panels[i].cpt)
         A[i,j] = dot(vel, panels[i].normal)
 
-        vel2 = vrtxringstreamwise(*panels[j].rpts, panels[i].cpt)
-        B[i,j] = dot(vel2, panels[i].normal)
-
 for t in range(tsteps):
     
     # build RHS vector
@@ -214,10 +208,7 @@ for t in range(tsteps):
     for i in range(len(panels)):
         RHS[i] = -dot(U_inf,panels[i].normal)
         RHS[i] = RHS[i] -dot(panels[i].wake_vel,panels[i].normal)
-        '''
-        for j in range(len(wake_rings)):
-            RHS[i] = RHS[i] - dot(vrtxring(*wake_rings[j].pts, panels[i].cpt, wake_rings[j].gam), panels[i].normal)
-        '''
+
     # solve matrix for panel gamma
     sol = np.linalg.solve(A,RHS)
     for i in range(len(panels)):
@@ -240,7 +231,6 @@ for t in range(tsteps):
             vel2 = vel2 + vrtxring(*p.rpts, p2, gam=p.gam)
         for p in wake_rings:
             vel2 = vel2 + vrtxring(*p.pts, p2, gam=p.gam)
-
         p3 = p2 + vel2*dt
         p4 = p1 + vel1*dt
         gam = panels[idx].last_gam
@@ -295,4 +285,4 @@ for t in range(tsteps):
     cl = cl/(1/2*rho*U**2*S)
     print("Timestep: {}, CL={}".format(t+1, cl))
 
-    writevtk(panels, wake_rings, '.airfoil_panel/viz/out_{}'.format(t))
+    writevtk(panels, wake_rings, './airfoil_panel/viz/out_{}'.format(t))
