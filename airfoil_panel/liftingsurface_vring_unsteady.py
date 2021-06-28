@@ -4,13 +4,16 @@ import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 from numpy.linalg import norm
 from numpy import cross, dot, mean
+import vtk
+from vtk.util import numpy_support
+#import pyvista as pv
 
 def vrtxline(p1, p2, p, gam=1):
     r1 = p-p1
     r2 = p-p2
-    r0 = r1 - r2
+    r0 = p2-p1
     # check for singular conditions
-    e = 0.001
+    e = 1e-8
     if norm(r1) < e or norm(r2) < e or norm(cross(r1,r2))**2 < e:
         vel = np.array([0,0,0])
     else:
@@ -31,6 +34,60 @@ def vrtxringstreamwise(p1, p2, p3, p4, p, gam=1):
     vel2 = vrtxline(p2, p3, p, gam=gam)
     vel4 = vrtxline(p4, p1, p, gam=gam)
     return vel2 + vel4
+
+def writevtk(panels, wake_rings, fname):
+    n = 0
+    points = vtk.vtkPoints()
+    quads = vtk.vtkCellArray()
+    pressures = np.zeros(len(panels))
+    for i,p in enumerate(panels):      
+        pressures[i] = p.dp
+        for pt in p.rpts:
+            points.InsertNextPoint(pt)
+        quad = vtk.vtkQuad()
+        quad.GetPointIds().SetId(0, n+0)
+        quad.GetPointIds().SetId(1, n+1)
+        quad.GetPointIds().SetId(2, n+2)
+        quad.GetPointIds().SetId(3, n+3)
+        quads.InsertNextCell(quad)
+        n = n + 4
+
+    polydata = vtk.vtkPolyData()
+    data = numpy_support.numpy_to_vtk(pressures)
+    data.SetName('Pressure')
+    polydata.SetPolys(quads)
+    polydata.SetPoints(points)
+    polydata.GetCellData().SetScalars(data)
+    writer = vtk.vtkPolyDataWriter()
+    writer.SetInputData(polydata)
+    writer.SetFileName(fname + '_panels.vtk')
+    writer.Write()
+
+
+    n = 0
+    points = vtk.vtkPoints()
+    quads = vtk.vtkCellArray()
+    for p in wake_rings:      
+        for pt in p.pts:
+            points.InsertNextPoint(pt)
+        quad = vtk.vtkQuad()
+        quad.GetPointIds().SetId(0, n+0)
+        quad.GetPointIds().SetId(1, n+1)
+        quad.GetPointIds().SetId(2, n+2)
+        quad.GetPointIds().SetId(3, n+3)
+        quads.InsertNextCell(quad)
+        n = n + 4
+    polydata = vtk.vtkPolyData()
+    polydata.SetPolys(quads)
+    polydata.SetPoints(points)
+    writer = vtk.vtkPolyDataWriter()
+    writer.SetInputData(polydata)
+    writer.SetFileName(fname + '_wake.vtk')
+    writer.Write()
+
+
+
+
 
 def view(panels, wake_rings):
     fig = plt.figure()
@@ -63,8 +120,18 @@ class Panel:
         self.pts = pts
         self.vel = vel
         A = pts[2] - pts[0]
-        B = pts[3] - pts[1]
+        B = pts[1] - pts[3]
+        self.area = norm(cross(pts[1]-pts[0],pts[3]-pts[0]))
+        self.tanj_vec = pts[1]-pts[0]
+        self.tanj_len = norm(self.tanj_vec)
+        self.tanj_uvec = self.tanj_vec/self.tanj_len
+        self.tani_vec = pts[3]-pts[0]
+        self.tani_len = norm(self.tani_vec)
+        self.tani_uvec = self.tani_vec/self.tani_len
         self.normal = cross(A,B)/norm(cross(A,B))
+        self.wake_vel = np.zeros(3) # wake induced velocity
+        self.dp = 0 # pressure differential
+        self.df = np.zeros(3) # force
         # place collocation point at 3 quarter chord
         self.cpt = 0.75*(pts[2]+pts[3])/2 + 0.25 * (pts[0]+pts[1])/2 # collocation point
         # place vortex ring at quarter chord, 2D kutta condition satisfid along the chord
@@ -79,7 +146,9 @@ class WakePanel():
     def __init__(self, pts, gam):
         self.pts = pts
         self.gam = gam
+        self.ptvels = np.zeros((4,3))
 
+# -------------------------------------------------------
 
 nspan = 13
 nchord = 4
@@ -87,13 +156,15 @@ nchord = 4
 chord = 1
 span = 8
 
+S = span*chord
+
 U = 1
 alpha = 5
 
+rho = 1.225
+
 dt = 1/16*chord/U
-tsteps = 100
-
-
+tsteps = 8
 
 U_inf = U*np.array([math.cos(math.radians(alpha)), 0, math.sin(math.radians(alpha))])
 
@@ -117,6 +188,8 @@ for i in range(nchord):
         if i+1 == nchord:
             te_idx.append(i*nspan+j)
 
+
+
 # -------------------------------------------------------
 # Initizalize matrices
 A = np.zeros([len(panels), len(panels)])
@@ -134,48 +207,92 @@ for i in range(len(panels)):
         vel2 = vrtxringstreamwise(*panels[j].rpts, panels[i].cpt)
         B[i,j] = dot(vel2, panels[i].normal)
 
-view(panels, wake_rings)
-
 for t in range(tsteps):
-    # move wake
-    for i in range(len(wake_rings)):
-        for j in [0,1,2,3]:
-            pt = wake_rings[i].pts[j]
-            vel = np.array([0,0,0])
-            for k in range(len(panels)):
-                vel = vel + vrtxring(*panels[k].rpts, pt, panels[k].gam)
-            for k in range(len(wake_rings)):
-                vel = vel + vrtxring(*wake_rings[k].pts, pt, wake_rings[k].gam)
-            wake_rings[i].pts[j] = wake_rings[i].pts[j] + vel*dt
-
+    
     # build RHS vector
     RHS = np.zeros(len(panels))
     for i in range(len(panels)):
         RHS[i] = -dot(U_inf,panels[i].normal)
+        RHS[i] = RHS[i] -dot(panels[i].wake_vel,panels[i].normal)
+        '''
         for j in range(len(wake_rings)):
             RHS[i] = RHS[i] - dot(vrtxring(*wake_rings[j].pts, panels[i].cpt, wake_rings[j].gam), panels[i].normal)
-    
+        '''
     # solve matrix for panel gamma
     sol = np.linalg.solve(A,RHS)
     for i in range(len(panels)):
         panels[i].new_gam(sol[i])
 
     # shed wake
+    new_wake = []
     for i, idx in enumerate(te_idx):
-        p1 = panels[idx].rpts[3]
-        p2 = panels[idx].rpts[2]
-        p3 = p2 + 0.3*U_inf
-        p4 = p1 + 0.3*U_inf
-        '''
-        if t == 0:
-            gam = panels[idx].gam
-            last_te_vort.append(gam)
-        else:
-            gam = last_te_vort[i]
-            last_te_vort[i]
-        '''
+        p1 = panels[idx].rpts[3] + 0.3*U_inf*dt
+        p2 = panels[idx].rpts[2] + 0.3*U_inf*dt
+
+        vel1 = np.copy(U_inf)
+        for p in panels:
+            vel1 = vel1 + vrtxring(*p.rpts, p1, gam=p.gam)
+        for p in wake_rings:
+            vel1 = vel1 + vrtxring(*p.pts, p1, gam=p.gam)
+
+        vel2 = np.copy(U_inf)
+        for p in panels:
+            vel2 = vel2 + vrtxring(*p.rpts, p2, gam=p.gam)
+        for p in wake_rings:
+            vel2 = vel2 + vrtxring(*p.pts, p2, gam=p.gam)
+
+        p3 = p2 + vel2*dt
+        p4 = p1 + vel1*dt
         gam = panels[idx].last_gam
         new_wake_pan = WakePanel([p1,p2,p3,p4], gam)
-        wake_rings.append(new_wake_pan)
+        new_wake.append(new_wake_pan)
 
-    view(panels, wake_rings)
+    # move wake
+    for i in range(len(wake_rings)):
+        for j in [0,1,2,3]:
+            pt = wake_rings[i].pts[j]
+            vel = np.copy(U_inf)
+            for k in range(len(panels)):
+                vel = vel + vrtxring(*panels[k].rpts, pt, panels[k].gam)
+            for k in range(len(wake_rings)):
+                vel = vel + vrtxring(*wake_rings[k].pts, pt, wake_rings[k].gam)
+            wake_rings[i].ptvels[j,:] = vel
+    for i in range(len(wake_rings)):
+        for j in [0,1,2,3]:
+            vel = wake_rings[i].ptvels[j,:]
+            wake_rings[i].pts[j] = wake_rings[i].pts[j] + vel*dt
+
+    wake_rings = wake_rings + new_wake
+
+    # calculate wake induced velocity at each panel
+    for i in range(len(panels)):
+        new_vel = np.zeros(3)
+        for j in range(len(wake_rings)):
+            new_vel = new_vel + vrtxring(*wake_rings[j].pts, panels[i].cpt, wake_rings[j].gam)
+        panels[i].wake_vel = new_vel
+    
+    # pressure calculation
+    for i in range(nchord):
+        for j in range(nspan):
+            idx = i*nspan+j
+            val = 0
+            if i > 0:
+                idx2 = (i-1)*nspan+j
+                val = val + dot(U_inf+panels[idx].wake_vel, panels[idx].tani_uvec)* (panels[idx].gam-panels[idx2].gam)/panels[idx].tani_len
+            if j > 0:
+                idx2 = i*nspan+(j-1)
+                val = val + dot(U_inf+panels[idx].wake_vel, panels[idx].tanj_uvec)* (panels[idx].gam-panels[idx2].gam)/panels[idx].tanj_len
+            val = val + panels[idx].dgdt
+            panels[idx].dp = rho*val
+            panels[idx].df = -panels[idx].dp*panels[idx].area*panels[idx].normal
+        
+    # total forces
+    total_force = np.zeros(3)
+    for i in range(len(panels)):
+        total_force = total_force + panels[i].df
+    # lift coefficient
+    cl = math.cos(math.radians(alpha))*total_force[2] - math.sin(math.radians(alpha))*total_force[0]
+    cl = cl/(1/2*rho*U**2*S)
+    print("Timestep: {}, CL={}".format(t+1, cl))
+
+    writevtk(panels, wake_rings, '.airfoil_panel/viz/out_{}'.format(t))
