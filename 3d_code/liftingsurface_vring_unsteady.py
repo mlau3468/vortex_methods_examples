@@ -172,7 +172,7 @@ alpha = 5
 rho = 1.225
 
 dt = 1/16*chord/U
-tsteps = 10
+tsteps = 100
 te_scale = 0.3
 
 U_inf = U*np.array([math.cos(math.radians(alpha)), 0, math.sin(math.radians(alpha))])
