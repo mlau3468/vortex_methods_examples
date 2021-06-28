@@ -143,6 +143,19 @@ class WakePanel():
         self.pts = pts
         self.gam = gam
         self.ptvels = np.zeros((4,3))
+        self.atTE = True
+    def step(self):
+        if not self.atTE:
+            for i in [0,1,2,3]:
+                self.pts[i] = self.pts[i] + self.ptvels[i,:]*dt
+        else:
+            for i in [0,1]:
+                self.pts[i] = self.pts[i] + te_scale*self.ptvels[i,:]*dt
+            for i in [2,3]:
+                self.pts[i] = self.pts[i] + self.ptvels[i,:]*dt
+            self.atTE = False
+
+
 
 # -------------------------------------------------------
 nspan = 13
@@ -160,6 +173,7 @@ rho = 1.225
 
 dt = 1/16*chord/U
 tsteps = 10
+te_scale = 0.3
 
 U_inf = U*np.array([math.cos(math.radians(alpha)), 0, math.sin(math.radians(alpha))])
 
@@ -213,8 +227,6 @@ for t in range(tsteps):
     # shed wake
     new_wake = []
     for i, idx in enumerate(te_idx):
-        #p1 = panels[idx].rpts[3] + 0.3*U_inf*dt
-        #p2 = panels[idx].rpts[2] + 0.3*U_inf*dt
         p1 = panels[idx].rpts[3]
         p2 = panels[idx].rpts[2]
 
@@ -229,9 +241,6 @@ for t in range(tsteps):
             vel2 = vel2 + vrtxring(*p.rpts, p2, gam=p.gam)
         for p in wake_rings:
             vel2 = vel2 + vrtxring(*p.pts, p2, gam=p.gam)
-        #p3 = p2 + vel2*dt
-        #p4 = p1 + vel1*dt
-        te_scale = 0.3
         p3 = p2 + te_scale*vel2*dt
         p4 = p1 + te_scale*vel1*dt
         gam = panels[idx].last_gam
@@ -251,12 +260,9 @@ for t in range(tsteps):
 
     # move the wake
     for i in range(len(wake_rings)):
-        for j in [0,1,2,3]:
-            vel = wake_rings[i].ptvels[j,:]
-            wake_rings[i].pts[j] = wake_rings[i].pts[j] + vel*dt
+        wake_rings[i].step()
 
     wake_rings = wake_rings + new_wake
-
 
     # calculate wake induced velocity at each panel
     for i in range(len(panels)):
