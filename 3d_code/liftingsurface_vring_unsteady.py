@@ -295,4 +295,4 @@ for t in range(tsteps):
     cl = cl/(1/2*rho*U**2*S)
     print("Timestep: {}, CL={}".format(t+1, cl))
 
-    writevtk(panels, wake_rings, './airfoil_panel/viz/out_{}'.format(t))
+    writevtk(panels, wake_rings, './3d_code/viz/out_{}'.format(t))
