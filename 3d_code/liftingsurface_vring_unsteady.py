@@ -159,6 +159,7 @@ class WakePanel():
 
 # -------------------------------------------------------
 nspan = 13
+nspan = 26
 nchord = 4
 n_wake = 100
 
@@ -224,16 +225,6 @@ for t in range(tsteps):
     sol = np.linalg.solve(A,RHS)
     for i in range(len(panels)):
         panels[i].new_gam(sol[i])
-    '''
-    # local velocity check
-    P0 = 1/2*rho*U**2
-    L = 0
-    for i in range(len(panels)):
-        pan_vel = panels[i].wake_vel + U_inf
-        for j in range(len(panels)):
-            pan_vel = pan_vel + vrtxring(*panels[j].rpts, panels[i].cpt, panels[j].gam)
-        print(pan_vel)
-    '''
 
     # shed wake
     new_wake = []
