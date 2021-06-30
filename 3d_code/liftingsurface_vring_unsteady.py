@@ -296,7 +296,8 @@ for t in range(tsteps):
             val = val + dot(U_inf+panels[idx].wake_vel, panels[idx].tanj_uvec)* (panels[idx].gam-gam2)/panels[idx].tanj_len
             val = val + panels[idx].dgdt
             panels[idx].dp = rho*val
-            panels[idx].df = -panels[idx].dp*panels[idx].area*panels[idx].normal
+            # negative sign changed from katz/plotin
+            panels[idx].df = panels[idx].dp*panels[idx].area*panels[idx].normal
         
     # total forces
     total_force = np.zeros(3)
