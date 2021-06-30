@@ -5,8 +5,8 @@ import matplotlib.pyplot as plt
 dt = 0.1
 alpha = 5 #angle of attack, degrees
 particles = []
-U = 1 # freestream velocity
-tsteps = 200
+U = 10 # freestream velocity
+tsteps = 300
 c = 1 #chord
 rho = 1
 
@@ -65,7 +65,7 @@ for i in range(tsteps):
     lifts.append(lift)
     gammas.append(panel.gamma)
 
-print('CL: {}'.format(lifts[-1]/c))
+print('CL: {}'.format(lifts[-1]/(1/2*rho*U**2)))
 
 plt.figure()
 plt.plot(range(tsteps), gammas)
