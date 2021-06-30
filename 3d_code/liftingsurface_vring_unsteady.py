@@ -159,7 +159,6 @@ class WakePanel():
 
 # -------------------------------------------------------
 nspan = 13
-nspan = 26
 nchord = 4
 n_wake = 100
 
@@ -173,7 +172,7 @@ alpha = 5
 
 rho = 1.225
 
-dt = 1/16*chord/U
+dt = chord/U/0.1
 tsteps = 50
 te_scale = 0.3
 
