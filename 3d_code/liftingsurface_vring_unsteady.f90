@@ -329,6 +329,7 @@ COMMON/NO3/ IW
 !NOTE; INDUCED DRAG CALCULATION INCREASES COMPUTATION TIME AND
 !CAN BE DISCONNECTED.
 !INPUT DATA
+! paneling numbers defined for semi-span?
 IB=4
 JB=13
 NSTEPS=50
@@ -343,8 +344,8 @@ RO=1.
 BH=0.0
 OM=0.0
 VT=50.0
-    C=1.
-    B=2 !semi span
+    C=1. !chord
+    B=4 !semi span
     DX=C/IB
     DY=B/JB
     CH=1000000.*C
@@ -360,6 +361,7 @@ VT=50.0
     ALAMDA(1)=90.*PAY/180.
     ALAMDA(2)=ALAMDA(1)
     !ALAMDA(I) ARE SWEP BACK ANGLES. (ALAMDA < 90, SWEEP BACKWARD).
+    !DT=DX/DT/4
     DT=DX/VT/16
     T=-DT
     !TIME IN SECONDS
