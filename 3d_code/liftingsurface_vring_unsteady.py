@@ -177,6 +177,7 @@ dt = chord/U/0.1
 # for dt=chord/U/1, fortran converges to 0.4047 at 50 tstep
 # for dt=chord/U/4, fortran converges to 0.3791 at 50 tstep
 # for dt=chord/U/16, fortran converges to 0.3275 at 50 tstep
+# avl steady state converges to 0.4164
 tsteps = 50
 te_scale = 0.3
 
