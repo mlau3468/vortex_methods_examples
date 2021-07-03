@@ -46,6 +46,7 @@ pan_pts, c_pts, thetas, norms, tangents, dists = procPanels(pan_pts)
 U = 1
 chord = 1
 rho = 1.225
+alpha = 5
 
 # Initialize solver matrix
 num_pan = size(pan_pts,1)

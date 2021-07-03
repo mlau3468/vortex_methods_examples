@@ -47,6 +47,7 @@ pan_pts = [pan_pts; [pan_pts[end,3], pan_pts[end,4], NaN, NaN]']
 U = 1
 chord = 1
 rho = 1.225
+alpha = 5
 
 # Initialize solver matrix
 num_pan = size(pan_pts,1) -1
