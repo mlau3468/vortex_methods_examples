@@ -28,6 +28,7 @@ end
 function writeAF(pan_pts, filename)
     open(filename, "w") do io
         writedlm(io, pan_pts[:, 1:2], ' ')
+        writedlm(io, pan_pts[end,3:4]', ' ')
     end
 end
 
