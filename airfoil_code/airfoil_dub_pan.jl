@@ -47,7 +47,6 @@ pan_pts = [pan_pts; [pan_pts[end,3], pan_pts[end,4], NaN, NaN]']
 U = 1
 chord = 1
 rho = 1.225
-alpha = 5
 
 # Initialize solver matrix
 num_pan = size(pan_pts,1) -1
@@ -102,7 +101,7 @@ for i in 1:num_pan
     else
          v_pan = 0.5*(mu[i+1]-mu[i-1])/ptDist(c_pts[i-1,:], c_pts[i+1,:])
     end
-    pan_vels[i, :] = pan_vels[i,:] +  coordRot2D([v_pan, 0], thetas[i], [0,0])
+    pan_vels[i, :] = pan_vels[i,:] +  coordRot2D([v_pan, 0], -thetas[i], [0,0])
     
     # influence of other panels
     for j in 1:num_pan+1
@@ -129,7 +128,8 @@ end
 pan_pts = readAF("airfoil.csv", true)
 writeAF(pan_pts, "airfoil.dat")
 #pan_pts = repanel(pan_pts, 50, 1, true)
-cl, cpPlot = airfoil_constDub(pan_pts, alpha)
+aoa = 5
+cl, cpPlot = airfoil_constDub(pan_pts, aoa)
 
 println("CL: $cl")
 display(cpPlot)
