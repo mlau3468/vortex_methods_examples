@@ -34,7 +34,7 @@ def dubPot(p1, p2, p, mu=1):
         x1 = 0
         x = p_new[0]
         z = p_new[1]
-        return -mu/(2*math.pi) * (-math.pi/2-np.arctan(z/(x-x1)))
+        return -mu/(2*math.pi) * (-np.arctan(z/(x-x1)))
     else:
         # rotate to panel frame
         theta = -np.arctan((p2[1]-p1[1])/(p2[0]-p1[0]))
@@ -71,11 +71,6 @@ def proc_panels(pts, debug=False):
     norms = np.transpose(np.array([np.sin(theta), np.cos(theta)]))
     tans = np.transpose(np.array([np.cos(theta), -np.sin(theta)]))
 
-    
-    orients = [math.atan2( (pts[i+1,1]-pts[i,1])  ,  (pts[i+1, 0]-pts[i, 0]))   for i in range(pts.shape[0]-1)]
-    #tangent vector but aligned with free stream
-    tan_fs = [np.array([math.cos(a), -math.sin(a)]) for a in orients]
-    tan_fs = np.array(tan_fs)
     lens = np.sqrt(dx**2 + dz**2)
     if debug:
         # DEBUG: show normals and tangents
@@ -88,7 +83,7 @@ def proc_panels(pts, debug=False):
         plt.gca().set_aspect('equal', adjustable='box')
         plt.show()
 
-    return co_pts, norms, tans, tan_fs, lens, theta
+    return co_pts, norms, tans, lens, theta
 
 U = 1
 chord = 1
@@ -97,7 +92,7 @@ alfa = math.radians(alfa)
 u_vec = U * np.array([math.cos(alfa), math.sin(alfa)])
 roh = 1.225
 pts = read_dat('airfoil.dat')
-co_pts, norms, tans,  tan_fs, lens, thetas = proc_panels(pts, debug=True)
+co_pts, norms, tans, lens, thetas = proc_panels(pts, debug=True)
 num_pan = pts.shape[0]-1
 
 U = 1
@@ -113,6 +108,7 @@ for i in range(num_pan):
             c = 1/2
         else:
             c = dubPot(pts[j], pts[j+1], co_pts[i], mu=1)
+
         if j == 0:
             ciw = dubPot(pts[0], None, co_pts[i], mu=1)
             A[i,j] = c - ciw
@@ -129,7 +125,7 @@ for i in range(num_pan):
 
 source_strenghts = np.zeros(num_pan)
 for i in range(num_pan):
-    source_strenghts[i] = np.dot(norms[i], Uinf)
+    source_strenghts[i] = np.dot(-norms[i], Uinf)
 
 RHS = -np.matmul(B, source_strenghts)
 

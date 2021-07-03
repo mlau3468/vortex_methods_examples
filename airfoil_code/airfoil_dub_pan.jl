@@ -102,6 +102,7 @@ for i in 1:num_pan
          v_pan = 0.5*(mu[i+1]-mu[i-1])/ptDist(c_pts[i-1,:], c_pts[i+1,:])
     end
     pan_vels[i, :] = pan_vels[i,:] +  coordRot2D([v_pan, 0], -thetas[i], [0,0])
+    # note, tangent direction has angle -theta with x-axis as per panel orientation defintion
     
     # influence of other panels
     for j in 1:num_pan+1
