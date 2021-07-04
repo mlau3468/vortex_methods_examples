@@ -52,7 +52,15 @@ SUBROUTINE MATRX(A,N,G)
 REAL EP(400,2),PT1(400,2),PT2(400,2),TH(400)
 REAL CO(400,2),A(400,400),B(400,400),G(400)
 REAL EPT(400,2),SIG(400),PHI(400),DL(400)
-OPEN(8,FILE='CPSD.DAT',STATUS='NEW')
+OPEN(8,FILE='CPLV.DAT',STATUS='REPLACE')
+OPEN(11, FILE='A.txt', STATUS='REPLACE')
+OPEN(12, FILE='G.txt', STATUS='REPLACE')
+OPEN(13, FILE='CO.txt', STATUS='REPLACE')
+OPEN(14, FILE='RHS.txt', STATUS='REPLACE')
+OPEN(15, FILE='THETAS.txt', STATUS='REPLACE')
+OPEN(16, FILE='B.txt', STATUS='REPLACE')
+OPEN(17, FILE='sig.txt', STATUS='REPLACE')
+OPEN(8,FILE='CPSD.DAT',STATUS='REPLACE')
 OPEN(9,FILE='AFOIL2.DAT',STATUS='OLD')
 WRITE(6,*) 'ENTER NUMBER OF PANELS'
 READ(5,*) M
@@ -91,6 +99,23 @@ DO I=1,M
 CO(I,1)=(PT2(I,1)-PT1(I,1))/2+PT1(I,1)
 CO(I,2)=(PT2(I,2)-PT1(I,2))/2+PT1(I,2)
 END DO
+
+! DEBUG:
+!Write Thetas
+DO I=1,M
+    WRITE(15,*) TH(I)
+END DO
+! Write colocation points
+do, i=1,m
+    WRITE(13,*) CO(I,1),' ,',CO(I,2)
+enddo
+!Write source strengths
+DO I=1,M
+    WRITE(17,*) SIG(I)
+END DO
+
+
+
 !ESTABLISH INFLUENCE COEFFICIENTS
 DO I=1,M
 TEMP=0
@@ -135,6 +160,7 @@ XW=CO(I,1)-PT2(M,1)
 ZW=CO(I,2)-PT2(M,2)
 DTHW=-ATAN(ZW/XW)
 A(I,N)=-0.15916*(DTHW)
+
 A(I,N+1)=TEMP
 END DO
 !ADD AN EXPLICIT KUTTA CONDITION
@@ -144,6 +170,30 @@ END DO
 A(N,1)=-1
 A(N,M)=1
 A(N,N)=-1
+
+! Write A matrix
+DO I=1,N
+    DO J=1,N + 1
+       write(11, '(F16.10)', advance='no') A(I,J)
+    end do
+    write(11, *) ''  ! this gives you the line break
+ end do
+
+ ! Write B matrix
+DO I=1,M
+   DO J=1,N
+      write(16, '(F16.10)', advance='no') B(I,J)
+   end do
+   write(16, *) ''  ! this gives you the line break
+end do
+
+
+
+ ! WRITE RHS vector
+ DO I=1,N
+    WRITE(14, '(F16.10)') A(I,N+1)
+ END DO
+
 ! SOLVE FOR THE SOLUTION VECTOR OF DOUBLET STRENGTHS
 
 N=N+1
