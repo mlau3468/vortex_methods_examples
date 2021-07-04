@@ -21,12 +21,17 @@ def sourcePot(p1, p2, p, sig=1):
 
     x = p_new[0]
     z = p_new[1]
+    if z == 0:
+        a = (x-x1)*np.log((x-x1)**2)
+        b = (x-x2)*np.log((x-x2)**2)
+        return sig/(4*math.pi)*(a-b)
+    else:
 
-    a = (x-x1)*np.log((x-x1)**2+z**2)
-    b = (x-x2)*np.log((x-x2)**2+z**2)
-    c = np.arctan(z/(x-x2))-np.arctan(z/(x-x1))
+        a = (x-x1)*np.log((x-x1)**2+z**2)
+        b = (x-x2)*np.log((x-x2)**2+z**2)
+        c = np.arctan(z/(x-x2))-np.arctan(z/(x-x1))
 
-    return sig/(4*math.pi)*(a-b+2*z*c)
+        return sig/(4*math.pi)*(a-b+2*z*c)
 
 def dubPot(p1, p2, p, mu=1):
     if p2 is None: # means the panel is wake, with p2 at infinity:
@@ -131,6 +136,7 @@ RHS = -np.matmul(B, source_strenghts)
 
 sol = np.linalg.solve(A,  RHS)
 
+
 cps = np.zeros(num_pan-1)
 cl_s = np.zeros(num_pan-1)
 
@@ -138,10 +144,10 @@ qtj = np.zeros(num_pan-1)
 for i in range(num_pan-1):
     dl = ptDist(co_pts[i], co_pts[i+1])
     qtj[i] = (sol[i]-sol[i+1])/dl + np.dot(Uinf, tans[i])
-    cps[i] = 1 - qtj[i]**2/np.linalg.norm(Uinf)
+    cps[i] = 1 - qtj[i]**2/U**2
     cl_s[i] = -cps[i]*dl*math.cos(thetas[i])/c
 
-
+print(cps)
 print('Cl: {}'.format(np.sum(cl_s)))
 plt.plot(co_pts[1:,0], cps)
 plt.show()
