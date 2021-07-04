@@ -264,7 +264,7 @@ for i in range(num_pan):
         b[i,j] = np.matmul(np.transpose(uw), tans[i])
 # Remove one panel
 
-rem_idx = int(num_pan/2 - 4)
+rem_idx = int(round(num_pan/2)) -1
 rhs = np.delete(rhs, rem_idx)
 a = np.delete(a, rem_idx, 0)
 a = np.delete(a, rem_idx, 1)
@@ -308,10 +308,14 @@ for i in range(num_pan):
     #q_ti[i] = q_ti[i] + np.dot(u_vec, tan_fs[i])
 # calculate Cps
 print(q_ti)
+cl = 0
 cp = 1 - q_ti**2/U**2
-# Use kutta joukowski and kelvin's circulation to get lift:
-#L = -roh*U*mu[-1]
-cl = roh*mu[-1]/chord
+ps = cp*0.5*roh*U**2
+fs = 0
+for i in range(len(ps)):
+    f = ps[i]*lens[i]*-1*norms[i,1]
+    fs = fs + f
+cl = np.sum(fs)/(1/2*roh*chord*U**2)
 print('Cl: {:.6f}'.format(cl))
 
 plt.plot(co_pts[:,0], cp)
