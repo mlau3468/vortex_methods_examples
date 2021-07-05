@@ -295,14 +295,6 @@ for i in range(num_pan):
     else:
          v_pan = 0.5*(mu[i+1]-mu[i-1])/pt_dist(co_pts[i-1], co_pts[i+1])
     
-    '''
-    if i == 0:  # First panel
-        v_pan = 0.5*(mu[i+1]-mu[i])/lens[i]
-    elif i == num_pan - 1:  # last panel
-        v_pan = 0.5*(mu[i]-mu[i-1])/lens[i]
-    else:
-         v_pan = 0.5*(mu[i+1]-mu[i-1])/lens[i]
-    '''
     q_ti[i] = q_ti[i] + v_pan + np.dot(u_vec, tan_fs[i])
     
     #q_ti[i] = q_ti[i] + np.dot(u_vec, tan_fs[i])

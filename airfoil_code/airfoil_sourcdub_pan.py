@@ -233,7 +233,7 @@ alfa = math.radians(alfa)
 u_vec = U * np.array([math.cos(alfa), math.sin(alfa)])
 roh = 1.225
 pts = read_dat('airfoil.dat')
-pts = repanel(pts,100, chord_dist = 'cosine', cos_wgt=0.8, show=True)
+#pts = repanel(pts,100, chord_dist = 'cosine', cos_wgt=0.8, show=True)
 co_pts, norms, tans, lens, thetas = proc_panels(pts, debug=True)
 num_pan = pts.shape[0]-1
 
