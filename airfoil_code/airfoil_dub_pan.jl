@@ -129,7 +129,7 @@ end
 #pan_pts = readAF("airfoil.csv", true)
 pan_pts = readAF("4521.csv", true)
 #pan_pts = repanel(pan_pts, 50, 1, true)
-aoa = 5
+aoa = 2
 cl, cpPlot = airfoil_constDub(pan_pts, aoa)
 
 println("CL: $cl")

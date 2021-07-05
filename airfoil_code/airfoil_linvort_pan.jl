@@ -46,7 +46,6 @@ pan_pts, c_pts, thetas, norms, tangents, dists = procPanels(pan_pts)
 U = 1
 chord = 1
 rho = 1.225
-alpha = 5
 
 # Initialize solver matrix
 num_pan = size(pan_pts,1)
@@ -119,6 +118,6 @@ end
 pan_pts = readAF("4521.csv", true)
 #pan_pts = repanel(pan_pts, 80, 0.75, true)
 
-cl, cpPlot = airfoil_linVort(pan_pts, 5)
+cl, cpPlot = airfoil_linVort(pan_pts, 2)
 display(cpPlot)
 println("CL: $cl")

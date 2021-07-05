@@ -16,20 +16,18 @@ def sourcePot(p1, p2, p, sig=1):
     x = p_new[0]
     z = p_new[1]
 
-    r1 = math.sqrt(x**2+z**2)
-    r2 = math.sqrt((x-x2)**2+z**2)
+    r12 = x**2+z**2
+    r22 = (x-x2)**2+z**2
     th1 = math.atan2(z,x)
     th2 = math.atan2(z,x-x2)
-
-    return sig/(2*math.pi)*(x*log(r1)* -(x-x2)*log(r2) +z*(th2-th1))
+    f = x*log(r12) - (x-x2)*log(r22) + 2*z*(th2-th1)
+    return sig/(math.pi*4) * f
 
 def dubPot(p1, p2, p, mu=1):
     if p2 is None: # means the panel is wake, with p2 at infinity:
-        p_new = p-p1
-        x1 = 0
-        x = p_new[0]
-        z = p_new[1]
-        return -mu/(2*math.pi) * (-math.atan(z/(x-x1)))
+        theta1 = math.atan2(p[1]-p1[1],p[0]-p1[0])
+        theta2 = math.atan2(p[1]-p1[1],p[0]-10000000*p1[0])
+        return mu/(2*math.pi) * (theta1-theta2)
     else:
         # rotate to panel frame
         theta = -math.atan2((p2[1]-p1[1]),(p2[0]-p1[0]))
@@ -41,15 +39,16 @@ def dubPot(p1, p2, p, mu=1):
         x = p_new[0]
         z = p_new[1]
 
-        return -mu/(2*math.pi)*(math.atan2(z,(x-x2))-math.atan2(z,(x-x1)))
+        eta1 = math.atan2(z,x)
+        eta2 = math.atan2(z,x-x2)
 
-
+        return -mu/(2*math.pi)*(eta2-eta1)
 
 U = 1
 chord = 1
-alfa = 5
+alfa = 2
 alfa = math.radians(alfa)
-u_vec = U * np.array([math.cos(alfa), math.sin(alfa)])
+Uinf = U * np.array([math.cos(alfa), math.sin(alfa)])
 roh = 1.225
 #pts = read_csv('airfoil.csv')
 pts = read_csv('4521.csv')
@@ -57,26 +56,22 @@ pts = read_csv('4521.csv')
 co_pts, norms, tans, lens, thetas = proc_panels(pts, debug=True)
 num_pan = pts.shape[0]-1
 
-U = 1
-alpha = 5
-alpha = math.radians(alpha)
-Uinf = U*np.array([math.cos(alpha), math.sin(alpha)])
 
-
-A = np.zeros((num_pan+1,num_pan+1))
+A = np.zeros((num_pan,num_pan))
 for i in range(num_pan):
     for j in range(num_pan):
         if i == j:
             c = 1/2
         else:
             c = dubPot(pts[j], pts[j+1], co_pts[i], mu=1)
+        if j == 0:
+            ciw = dubPot(pts[0], None, co_pts[i], mu=1)
+            c = c - ciw
+        elif j == num_pan-1:
+            ciw = dubPot(pts[0], None, co_pts[i], mu=1)
+            c = c + ciw
 
         A[i,j] = c
-
-A[num_pan,0] = -1
-A[num_pan,num_pan] = 1
-A[num_pan,num_pan-1] = -1 
-
 
 B = np.zeros((num_pan,num_pan))
 for j in range(num_pan):
@@ -89,28 +84,24 @@ for i in range(num_pan):
 
 RHS = np.matmul(B, source_strenghts)
 
-RHS = np.append(RHS, 0)
-
-for i in range(num_pan):
-    A[i,num_pan] = dubPot(pts[0], None, co_pts[i], mu=1)
-
 sol = np.linalg.solve(A,  RHS)
 
 cps = np.zeros(num_pan-1)
-cl_s = np.zeros(num_pan-1)
 
 phi = np.zeros(num_pan)
 for i in range(num_pan):
-    phi[i] = co_pts[i,0]*math.cos(alfa) + co_pts[i,1]*math.sin(alfa)+sol[i]
+    phi[i] = co_pts[i,0]*U*math.cos(alfa) + co_pts[i,1]*U*math.sin(alfa)+sol[i]
 
+cl = 0
 for i in range(num_pan-1):
     dl = pt_dist(co_pts[i], co_pts[i+1])
-    vel = (phi[i]-phi[i+1])/dl
-    cps[i] = 1 - vel**2
-    cl_s[i] = -cps[i]*dl*math.cos(thetas[i])/chord
+    qti = (phi[i]-phi[i+1])/dl
+    cps[i] = 1 - qti**2/U**2
+    ps = cps[i]*1/2*roh*U**2
+    f = -ps*dl*norms[i,1]
+    cl = cl + f/(1/2*roh*U**2*chord)
 
-print('Cl: {}'.format(np.sum(cl_s)))
-print('Cl: {}'.format(U*sol[-1]))
+print('CL= {}'.format(cl))
 plt.plot(pts[1:-1,0], cps)
 plt.gca().invert_yaxis()
 plt.show()

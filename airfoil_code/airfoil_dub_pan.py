@@ -47,7 +47,7 @@ def dub2D(mu, p1, p2, p):
 
 U = 1
 chord = 1
-alfa = 5
+alfa = 2
 alfa = math.radians(alfa)
 u_vec = U * np.array([math.cos(alfa), math.sin(alfa)])
 roh = 1.225
