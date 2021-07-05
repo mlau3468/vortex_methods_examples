@@ -3,40 +3,6 @@ import matplotlib.pyplot as plt
 import math
 from airfoil_util import *
 
-
-def proc_panels(pts, debug=False):
-    # Processes panels, gives collocation points, orientations, tangents, and normals
-    # Points must be numpy array
-    # Computes collocation points for panels defined by list of points
-    co_pts = np.array([np.mean(pts[i:i+2,:], axis=0) for i in range(pts.shape[0]-1)])
-    # computes panel orientation angles a for panels defined by list of points
-    # positive going clockwise, starting at -x axis
-    dz = np.diff(pts[:,1])
-    dx = np.diff(pts[:,0])
-    theta = np.arctan2(dz, dx)
-    s_theta = -np.sin(theta)
-    c_theta = np.cos(theta)
-    norms = np.transpose(np.array([s_theta, c_theta]))
-    tans = np.transpose(np.array([c_theta, -s_theta]))
-
-    #tangent vector but aligned with free stream
-    orients = [math.atan2( (pts[i,1]-pts[i+1,1])  ,  (pts[i+1, 0]-pts[i, 0]))   for i in range(pts.shape[0]-1)]
-    tan_fs = [np.array([math.cos(a), -math.sin(a)]) for a in orients]
-    tan_fs = np.array(tan_fs)
-    lens = np.sqrt(dx**2 + dz**2)
-    if debug:
-        # DEBUG: show normals and tangents
-        plt.plot(pts[:,0], pts[:,1], 'k', marker='o')
-        plt.plot(co_pts[:,0], co_pts[:,1], marker='x')
-        for i in range(len(pts)-1):
-            m = 0.1
-            plt.plot([co_pts[i][0],co_pts[i][0]+norms[i][0]*m], [co_pts[i][1],co_pts[i][1]+norms[i][1]*m], 'r')
-            plt.plot([co_pts[i][0],co_pts[i][0]+tans[i][0]*m], [co_pts[i][1],co_pts[i][1]+tans[i][1]*m], 'b')
-        plt.gca().set_aspect('equal', adjustable='box')
-        plt.show()
-
-    return co_pts, norms, tans, tan_fs, lens
-
 def dub2D(mu, p1, p2, p):
     # p1 is set as the coordinate for doublet origin
     # p2 then rotated to land on the doublet x axis
@@ -53,8 +19,7 @@ def dub2D(mu, p1, p2, p):
         uw = np.array([u,w])
     else:
         # coordinate transform
-        theta = math.atan2(p2[1]-p1[1] , p2[0]-p1[0])
-        theta = -theta
+        theta = -math.atan2(p2[1]-p1[1] , p2[0]-p1[0])
         t1 = np.array([[math.cos(theta), -math.sin(theta)], [math.sin(theta), math.cos(theta)]])
         # take p1 as coordinate of the origin of the dublet
         t2 = p - p1
@@ -80,17 +45,16 @@ def dub2D(mu, p1, p2, p):
 
     return uw
 
-
 U = 1
 chord = 1
 alfa = 5
 alfa = math.radians(alfa)
 u_vec = U * np.array([math.cos(alfa), math.sin(alfa)])
 roh = 1.225
-#pts = read_dat('airfoil.dat')
-pts = read_csv('airfoil.csv')
+#pts = read_csv('airfoil.csv')
+pts = read_csv('4521.csv')
 #pts = repanel(pts, 50, chord_dist = 'cosine', cos_wgt=1.0, show=True)
-co_pts, norms, tans,  tan_fs, lens = proc_panels(pts, debug=False)
+co_pts, norms, tans, lens, thetas = proc_panels(pts, debug=True)
 
 # Initialize matrices
 num_pan = len(pts) - 1
@@ -122,7 +86,6 @@ b = np.delete(b, rem_idx, 0)
 b = np.delete(b, rem_idx, 1)
 norms = np.delete(norms, rem_idx, 0)
 tans = np.delete(tans, rem_idx, 0)
-tan_fs = np.delete(tan_fs, rem_idx, 0)
 pts = np.delete(pts, rem_idx, 0)
 co_pts = np.delete(co_pts, rem_idx, 0)
 lens = np.delete(lens, rem_idx, 0)
@@ -145,9 +108,8 @@ for i in range(num_pan):
     else:
          v_pan = 0.5*(mu[i+1]-mu[i-1])/pt_dist(co_pts[i-1], co_pts[i+1])
     
-    q_ti[i] = q_ti[i] + v_pan + np.dot(u_vec, tan_fs[i])
+    q_ti[i] = q_ti[i] + v_pan + np.dot(u_vec, tans[i])
     
-    #q_ti[i] = q_ti[i] + np.dot(u_vec, tan_fs[i])
 # calculate Cps
 cl = 0
 cp = 1 - q_ti**2/U**2

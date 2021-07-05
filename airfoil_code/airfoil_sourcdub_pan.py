@@ -43,32 +43,7 @@ def dubPot(p1, p2, p, mu=1):
 
         return -mu/(2*math.pi)*(math.atan2(z,(x-x2))-math.atan2(z,(x-x1)))
 
-def proc_panels(pts, debug=False):
-    # Processes panels, gives collocation points, orientations, tangents, and normals
-    # Points must be numpy array
-    # Computes collocation points for panels defined by list of points
-    co_pts = np.array([np.mean(pts[i:i+2,:], axis=0) for i in range(pts.shape[0]-1)])
-    # computes panel orientation angles a for panels defined by list of points
-    # positive going clockwise, starting at -x axis
-    dz = np.diff(pts[:,1])
-    dx = np.diff(pts[:,0])
-    theta = -np.arctan2(dz, dx) #panel orientation. 
-    norms = np.transpose(np.array([np.sin(theta), np.cos(theta)]))
-    tans = np.transpose(np.array([np.cos(theta), -np.sin(theta)]))
 
-    lens = np.sqrt(dx**2 + dz**2)
-    if debug:
-        # DEBUG: show normals and tangents
-        plt.plot(pts[:,0], pts[:,1], 'k', marker='o')
-        plt.plot(co_pts[:,0], co_pts[:,1], marker='x')
-        for i in range(len(pts)-1):
-            m = 0.1
-            plt.plot([co_pts[i][0],co_pts[i][0]+norms[i][0]*m], [co_pts[i][1],co_pts[i][1]+norms[i][1]*m], 'r')
-            plt.plot([co_pts[i][0],co_pts[i][0]+tans[i][0]*m], [co_pts[i][1],co_pts[i][1]+tans[i][1]*m], 'b')
-        plt.gca().set_aspect('equal', adjustable='box')
-        plt.show()
-
-    return co_pts, norms, tans, lens, theta
 
 U = 1
 chord = 1
@@ -76,8 +51,8 @@ alfa = 5
 alfa = math.radians(alfa)
 u_vec = U * np.array([math.cos(alfa), math.sin(alfa)])
 roh = 1.225
-#pts = read_dat('airfoil.dat')
-pts = read_csv('airfoil.csv')
+#pts = read_csv('airfoil.csv')
+pts = read_csv('4521.csv')
 #pts = repanel(pts,100, chord_dist = 'cosine', cos_wgt=0.8, show=True)
 co_pts, norms, tans, lens, thetas = proc_panels(pts, debug=True)
 num_pan = pts.shape[0]-1
