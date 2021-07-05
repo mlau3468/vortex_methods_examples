@@ -115,8 +115,8 @@ end
 
 
 # Testing
-pan_pts = readAF("airfoil.csv", true)
-writeAF(pan_pts, "airfoil.dat")
+#pan_pts = readAF("airfoil.csv", true)
+pan_pts = readAF("4521.csv", true)
 #pan_pts = repanel(pan_pts, 80, 0.75, true)
 
 cl, cpPlot = airfoil_linVort(pan_pts, 5)
