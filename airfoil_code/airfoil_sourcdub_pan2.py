@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 import math
 from math import log
 from airfoil_util import *
+from scipy.optimize import minimize
 
 def sourc2D(p1, p2, p, sig=1):
     theta = -math.atan2(p2[1]-p1[1] , p2[0]-p1[0])
@@ -201,13 +202,78 @@ plt.plot(pts[1:-1,0], cps)
 plt.gca().invert_yaxis()
 plt.show()
 
-residual = np.zeros((num_pan+1,3))
+# --------------------------------------------------------
+
+nu = 1.46e-5
+
+# matrices to tangent velocity influence
+Cmat = np.zeros((num_pan+1, num_pan+1))
+for i in range(num_pan):
+    for j in range(num_pan):
+        vel = dub2D(pts[j], pts[j+1], co_pts[i],mu=1)
+        Cmat[i,j] = np.dot(vel, tans[i])
+
+Amat = np.zeros((num_pan+1, num_pan+1))
+for i in range(num_pan):
+    for j in range(num_pan):
+        vel = sourc2D(pts[j], pts[j+1], co_pts[i],sig=1)
+        Amat[i,j] = np.dot(vel, tans[i])
+
+a = np.zeros((num_pan+1, num_pan+1))
+for i in range(num_pan):
+    for j in range(num_pan):
+        if j > 0:
+            a[i,j] = (B[i,j]-B[i,j-1])/pt_dist(pts[j], pts[j-1])
+        else:
+            a[i,j] = (B[i,j])/pt_dist(pts[0], co_pts[j])
+
 mu = sol # doublet strength
 th = 0.01*np.ones(num_pan+1) # momentum thickness
 m = 0.01*np.ones(num_pan+1) # mass defect
 
-nu = 1.46e-5
+x0 = np.concatenate([mu, th, m])
 
-for i in range(num_pan):
-    if i > 1:
-        pass
+def calcResidual(in_vec):
+    mu = in_vec[:num_pan+1]
+    th = in_vec[num_pan+1:2*(num_pan+1)]
+    m = in_vec[2*(num_pan+1):3*(num_pan+1)]
+    Uelast = None
+    Hlast = None
+    residual = np.zeros((num_pan+1,3))
+    for i in range(num_pan):
+            Uei = np.dot(Uinf,tans[i]) + np.matmul(Amat[i,:],m) + np.matmul(Cmat[i,:], mu)
+            deli = m[i]/Uei
+            Hi = deli/th[i]
+            Hi_star = f1(Hi)
+            cf2 = nu/(Uei*th[i])*f2(Hi)
+            cf2H = nu/(Uei*th[i])*f3(Hi)
+            if i > 0:
+                del_th = th[i] - th[i-1]
+                th_avg = 1/2*(th[i] + th[i-1])
+                del_Ue = Uei-Uelast
+                del_x = pt_dist(pts[i+1], pts[i])
+                # del_x = pt_dist(co_pts[i+1], co_pts[i])
+                del_h = Hi-Hlast
+            else:
+                del_th = th[i]
+                th_avg = th[i]/2
+                del_Ue = Uei
+                del_x = pt_dist(pts[i+1], pts[i])
+                # del_X = pt_dist(pts[0], co_pts[i])
+                del_h = Hi
+            Uelast = Uei
+            Hlast = Hi
+            # residuals
+            R1 = del_th/th_avg + (Hi+2)*del_Ue/Uei - cf2*del_x/th_avg
+            R2 = del_h/Hi_star + (1-Hi)*del_Ue/Uei + (cf2-cf2H)*del_x/th_avg
+            R3 = np.matmul(a[i,:],m) + np.matmul(A[i,:], mu) - RHS[i]
+            residual[i,:] = [R1, R2, R3]
+        
+    res_sum = np.sum(np.sum(np.abs(residual.flatten())))
+    print(res_sum)
+    return res_sum
+
+
+options_dict = {'maxiter': 5000, 'disp': True}
+result = minimize(calcResidual, x0, tol=1e-5, method='Nelder-Mead', options=options_dict)
+
