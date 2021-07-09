@@ -152,7 +152,7 @@ pts = read_csv('airfoil.csv')
 co_pts, norms, tans, lens, thetas = proc_panels(pts, debug=False)
 num_pan = pts.shape[0]-1
 
-A = np.zeros((num_pan+1,num_pan+1))
+Cpot = np.zeros((num_pan+1,num_pan+1)) # doublet influence coefficients
 for i in range(num_pan):
     for j in range(num_pan+1):
         if j < num_pan:
@@ -162,31 +162,31 @@ for i in range(num_pan):
                 c = dubPot(pts[j], pts[j+1], co_pts[i], mu=1)
         else:
             c = dubPot(pts[0], None, co_pts[i], mu=1)
-        A[i,j] = c
+        Cpot[i,j] = c
 
 # kutta condition
-A[num_pan,0] = 1
-A[num_pan, num_pan] = 1
-A[num_pan, num_pan-1] = -1
+Cpot[num_pan,0] = 1
+Cpot[num_pan, num_pan] = 1
+Cpot[num_pan, num_pan-1] = -1
 
-B = np.zeros((num_pan+1,num_pan+1))
+Bpot = np.zeros((num_pan+1,num_pan+1))
 for j in range(num_pan):
     for i in range(num_pan):
-        B[i,j] = sourcePot(pts[j], pts[j+1], co_pts[i], sig=1)
+        Bpot[i,j] = sourcePot(pts[j], pts[j+1], co_pts[i], sig=1)
 
 source_strenghts = np.zeros(num_pan+1)
 for i in range(num_pan):
     source_strenghts[i] = np.dot(-norms[i], Uinf)
 
-RHS = np.matmul(B, source_strenghts)
+RHS = np.matmul(Bpot, source_strenghts)
 
-sol = np.linalg.solve(A,  RHS)
+invSol = np.linalg.solve(Cpot,  RHS) # inviscid solution
 
 cps = np.zeros(num_pan-1)
 
 phi = np.zeros(num_pan)
 for i in range(num_pan):
-    phi[i] = co_pts[i,0]*U*math.cos(alfa) + co_pts[i,1]*U*math.sin(alfa)+sol[i]
+    phi[i] = co_pts[i,0]*U*math.cos(alfa) + co_pts[i,1]*U*math.sin(alfa)+invSol[i]
 
 cl = 0
 for i in range(num_pan-1):
@@ -206,28 +206,36 @@ plt.show()
 
 nu = 1.46e-5
 
-# matrices to tangent velocity influence
-Cmat = np.zeros((num_pan+1, num_pan+1))
+# matrices for tangent velocity influence
+Ctan = np.zeros((num_pan+1, num_pan+1)) # doublet panel tangent influence
 for i in range(num_pan):
-    for j in range(num_pan):
-        vel = dub2D(pts[j], pts[j+1], co_pts[i],mu=1)
-        Cmat[i,j] = np.dot(vel, tans[i])
+    for j in range(num_pan+1):
+        if j < num_pan:
+            vel = dub2D(pts[j], pts[j+1], co_pts[i],mu=1)
+            Ctan[i,j] = np.dot(vel, tans[i])
+        else: # wake
+            vel = dub2D(pts[0], [1e12,0], co_pts[i], mu=1)
+            Ctan[i,j] = np.dot(vel, tans[i])
 
-Amat = np.zeros((num_pan+1, num_pan+1))
-for i in range(num_pan):
-    for j in range(num_pan):
-        vel = sourc2D(pts[j], pts[j+1], co_pts[i],sig=1)
-        Amat[i,j] = np.dot(vel, tans[i])
-
-a = np.zeros((num_pan+1, num_pan+1))
-for i in range(num_pan):
-    for j in range(num_pan):
-        if j > 0:
-            a[i,j] = (B[i,j]-B[i,j-1])/pt_dist(pts[j], pts[j-1])
+Atan = np.zeros((num_pan+1, num_pan+1)) # source panel tangent influence
+for i in range(num_pan): 
+    for j in range(num_pan + 1):
+        if j < num_pan:
+            vel = sourc2D(pts[j], pts[j+1], co_pts[i],sig=1)
+            Atan[i,j] = np.dot(vel, tans[i])
         else:
-            a[i,j] = (B[i,j])/pt_dist(pts[0], co_pts[j])
+            vel = sourc2D(pts[0], [1e12,0], co_pts[i], sig=1)
+            Atan[i,j] = np.dot(vel, tans[i])
 
-mu = sol # doublet strength
+Apot2 = np.zeros((num_pan+1, num_pan+1)) # Modified source potential influence
+for i in range(num_pan):
+    for j in range(num_pan+1):
+        if j > 0:
+            Apot2[i,j] = (Bpot[i,j]-Bpot[i,j-1])/pt_dist(pts[j], pts[j-1])
+        else:
+            Apot2[i,j] = (Bpot[i,j])/pt_dist(pts[0], co_pts[j])
+
+mu = invSol # doublet strength
 th = 0.01*np.ones(num_pan+1) # momentum thickness
 m = 0.01*np.ones(num_pan+1) # mass defect
 
@@ -241,7 +249,7 @@ def calcResidual(in_vec):
     Hlast = None
     residual = np.zeros((num_pan+1,3))
     for i in range(num_pan):
-            Uei = np.dot(Uinf,tans[i]) + np.matmul(Amat[i,:],m) + np.matmul(Cmat[i,:], mu)
+            Uei = np.dot(Uinf,tans[i]) + np.matmul(Atan[i,:],m) + np.matmul(Ctan[i,:], mu)
             deli = m[i]/Uei
             Hi = deli/th[i]
             Hi_star = f1(Hi)
@@ -266,7 +274,7 @@ def calcResidual(in_vec):
             # residuals
             R1 = del_th/th_avg + (Hi+2)*del_Ue/Uei - cf2*del_x/th_avg
             R2 = del_h/Hi_star + (1-Hi)*del_Ue/Uei + (cf2-cf2H)*del_x/th_avg
-            R3 = np.matmul(a[i,:],m) + np.matmul(A[i,:], mu) - RHS[i]
+            R3 = np.matmul(Apot2[i,:],m) + np.matmul(Cpot[i,:], mu) - RHS[i]
             residual[i,:] = [R1, R2, R3]
         
     res_sum = np.sum(np.sum(np.abs(residual.flatten())))
