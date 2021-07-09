@@ -46,12 +46,12 @@ def dubPot(p1, p2, p, mu=1):
 
 U = 1
 chord = 1
-alfa = 2
+alfa = 5
 alfa = math.radians(alfa)
 Uinf = U * np.array([math.cos(alfa), math.sin(alfa)])
 roh = 1.225
-#pts = read_csv('airfoil.csv')
-pts = read_csv('4521.csv')
+pts = read_csv('airfoil.csv')
+#pts = read_csv('4521.csv')
 #pts = repanel(pts,100, chord_dist = 'cosine', cos_wgt=0.8, show=True)
 co_pts, norms, tans, lens, thetas = proc_panels(pts, debug=True)
 num_pan = pts.shape[0]-1
