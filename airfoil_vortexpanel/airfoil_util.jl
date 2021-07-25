@@ -28,6 +28,7 @@ end
 function writeAF(pan_pts, filename)
     open(filename, "w") do io
         writedlm(io, pan_pts[:, 1:2], ' ')
+        writedlm(io, pan_pts[end,3:4]', ' ')
     end
 end
 
@@ -36,9 +37,9 @@ function procPanels(pan_pts)
     # collocation pts
     c_pts = (pts[1:end-1, :] + pts[2:end, :])./2;
     # normal vectors
-    thetas = atan.(pts[2:end, 2] - pts[1:end-1, 2], pts[2:end, 1] - pts[1:end-1, 1])
-    norms = [-sin.(thetas)'; cos.(thetas)']'
-    tangents = [cos.(thetas)'; sin.(thetas)']'
+    thetas = -atan.(pts[2:end, 2] - pts[1:end-1, 2], pts[2:end, 1] - pts[1:end-1, 1])
+    norms = [sin.(thetas)'; cos.(thetas)']'
+    tangents = [cos.(thetas)'; -sin.(thetas)']'
     #panel lengths
     dists = zeros(size(c_pts, 1))
     for i in 1:size(c_pts,1)

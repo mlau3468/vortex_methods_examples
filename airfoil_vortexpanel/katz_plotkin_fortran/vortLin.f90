@@ -189,7 +189,7 @@ DO I=1,N
     write(11, *) ''  ! this gives you the line break
  end do
 
- ! Write A matrix
+ ! Write B matrix
 DO I=1,M
    DO J=1,N
       write(16, '(F16.10)', advance='no') B(I,J)

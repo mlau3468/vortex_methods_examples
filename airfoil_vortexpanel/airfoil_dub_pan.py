@@ -1,192 +1,7 @@
-from shapely.geometry import LineString, Point
 import numpy as np
 import matplotlib.pyplot as plt
 import math
-
-class Plotter:
-    def __init__(self):
-        pass
-
-    def plot(self, item, marker=False):
-        if type(item) is list or type(item) is tuple:
-            for it in item:
-                self.plot(it)
-        else:
-            if item.geom_type == 'MultiLineString':
-                for string in item:
-                    coord = list(string.coords)
-                    x = [coord[i][0] for i in range(len(coord))]
-                    y = [coord[i][1] for i in range(len(coord))]
-                    if marker:
-                        plt.plot(x, y, marker='o')
-                    else:
-                        plt.plot(x, y)
-            elif item.geom_type == 'Polygon':
-                plt.plot(*item.exterior.xy)
-            elif item.geom_type == 'LineString':
-                coord = list(item.coords)
-                x = [coord[i][0] for i in range(len(coord))]
-                y = [coord[i][1] for i in range(len(coord))]
-                if marker:
-                    plt.plot(x, y, marker='o')
-                else:
-                   plt.plot(x, y)
-            elif item.geom_type == 'Point':
-                plt.plot(item.x, item.y, 'ro', markersize=1)
-            elif item.geom_type == 'MultiPolygon':
-                for poly in item:
-                    plt.plot(*poly.exterior.xy)
-            elif item.geom_type == 'MultiPoint':
-                for i in item:
-                    plt.plot(i.x, i.y, 'ro', markersize=1)
-
-    def show_plot(self, title=None):
-        plt.gca().set_aspect('equal', adjustable='box')
-        if title is not None:
-            plt.title(title)
-        plt.show()
-
-def read_dat(filename):
-    with open(filename, 'r') as fh:
-        points = []
-        lines = fh.readlines()
-        for l in lines:
-            l = l.split()
-            l = [float(x) for x in l]
-            points.append(np.array(l))
-    return np.array(points)
-
-def repanel(points, n_chord, chord_dist='cosine', cos_wgt=1, show=False):
-
-    # check if we have sharp trailing edge
-    sharp_Te = points[0][0] == points[-1][0] and  points[0][1] == points[-1][1]
-    # find index of trailing edge:
-    anc_idx = np.argmax(points[:,0])
-    # check that anc_idx is either the first or last point
-    if anc_idx != 0 and anc_idx != len(points) - 1:
-        raise Exception('Error: Provdie a dat file with start or end point at the trailing edge')
-
-    if sharp_Te: # If trailing edge ends at a singular point
-        # Find which way to wrap
-        if points[1,1] > points[-2,1]:
-            points = points[::-1]
-        else:
-            pass
-    else: # If the trailing edge is open
-        if points[0,1] > points[-1,1]:
-            points = points[::-1]
-        else:
-            pass
-
-    # Note: Point Data ALWAYS goes downwards (loops in positive cartesian direction)
-    # Get LE Point
-    LE_x = min(points[:,0])
-    LE_ys = [points[i,1] for i in range(len(points)) if points[i,0] == LE_x]
-    LE_y = np.mean(LE_ys)
-    LE_coords = [LE_x, LE_y]
-
-    # Resample
-    line = LineString(points)
-    LE_point = Point(LE_x, LE_y)
-    d1 = line.project(LE_point) # Bottom sec full distance
-    d2 = line.length - d1 # Top sec full distance
-
-    if chord_dist == 'uniform':
-        dists_bot = list(np.linspace(0, d1, num=n_chord + 1))
-        dists_top = list(np.linspace(d1, line.length, num=n_chord + 1))
-        dists = dists_bot + dists_top[1:-1] + [dists_bot[0]]  # Enforce end where we start
-    elif chord_dist == 'cosineLE':
-        x = np.linspace(0, math.pi/2*cos_wgt, num=n_chord + 1)
-        s = np.sin(x)
-        s = (s - min(s)) 
-        s = s / max(s)
-        dists_bot = list(np.multiply(s, d1))
-
-        x = np.linspace(-math.pi/2*cos_wgt, 0, num=n_chord + 1)
-        s = np.sin(x)
-        s = (s - min(s)) 
-        s = s / max(s)
-        dists_top = np.multiply(s, d2)
-        dists_top = list(np.add(dists_top, d1))
-        dists = dists_bot + dists_top[1:-1] + [dists_bot[0]]
-    elif chord_dist == 'cosineTE':
-        x = np.linspace(-math.pi/2*cos_wgt, 0, num=n_chord + 1)
-        s = np.sin(x)
-        s = (s - min(s)) 
-        s = s / max(s)
-        dists_bot = list(np.multiply(s, d1))
-
-        x = np.linspace(0, math.pi/2*cos_wgt, num=n_chord + 1)
-        s = np.sin(x)
-        s = (s - min(s)) 
-        s = s / max(s)
-        dists_top = np.multiply(s, d2)
-        dists_top = list(np.add(dists_top, d1))
-        dists = dists_bot + dists_top[1:-1] + [dists_bot[0]]
-    elif chord_dist == 'cosine':
-        x = np.linspace(-math.pi/2*cos_wgt, math.pi/2*cos_wgt, num=n_chord + 1)
-        s = np.sin(x)
-        s = (s - min(s)) 
-        s = s / max(s)
-        dists_bot = list(np.multiply(s, d1))
-        dists_top = np.multiply(s, d2)
-        dists_top = list(np.add(dists_top, d1))
-        dists = dists_bot + dists_top[1:-1] + [dists_bot[0]]
-
-    points_rsmpl = []
-    for j in range(len(dists)):
-        new_pt = line.interpolate(dists[j])
-        new_pt = [new_pt.x, new_pt.y]
-        points_rsmpl.append(new_pt)
-
-    line_rsmpl = LineString(points_rsmpl)
-    if show:
-        p = Plotter()
-        p.plot(line)
-        p.plot(line_rsmpl, marker=True)
-        p.plot(LE_point)
-        p.show_plot()
-
-    return np.array(points_rsmpl)
-
-def pt_dist(pt1, pt2):
-    return math.sqrt( (pt2[0] - pt1[0])**2 + (pt2[1] - pt1[1])**2)
-
-def proc_panels(pts, debug=False):
-    # Processes panels, gives collocation points, orientations, tangents, and normals
-    # Points must be numpy array
-    # Computes collocation points for panels defined by list of points
-    co_pts = np.array([np.mean(pts[i:i+2,:], axis=0) for i in range(pts.shape[0]-1)])
-    # computes panel orientation angles a for panels defined by list of points
-    # positive going clockwise, starting at -x axis
-    dz = np.diff(pts[:,1])
-    dx = np.diff(pts[:,0])
-    theta = np.arctan2(dz, dx)
-    s_theta = -np.sin(theta)
-    c_theta = np.cos(theta)
-    norms = np.transpose(np.array([s_theta, c_theta]))
-    tans = np.transpose(np.array([c_theta, -s_theta]))
-
-    #tangent vector but aligned with free stream
-    orients = [math.atan2( (pts[i,1]-pts[i+1,1])  ,  (pts[i+1, 0]-pts[i, 0]))   for i in range(pts.shape[0]-1)]
-    tan_fs = [np.array([math.cos(a), -math.sin(a)]) for a in orients]
-    tan_fs = np.array(tan_fs)
-    lens = np.sqrt(dx**2 + dz**2)
-    if debug:
-        # DEBUG: show normals and tangents
-        plt.plot(pts[:,0], pts[:,1], 'k', marker='o')
-        plt.plot(co_pts[:,0], co_pts[:,1], marker='x')
-        for i in range(len(pts)-1):
-            m = 0.1
-            plt.plot([co_pts[i][0],co_pts[i][0]+norms[i][0]*m], [co_pts[i][1],co_pts[i][1]+norms[i][1]*m], 'r')
-            plt.plot([co_pts[i][0],co_pts[i][0]+tans[i][0]*m], [co_pts[i][1],co_pts[i][1]+tans[i][1]*m], 'b')
-        plt.gca().set_aspect('equal', adjustable='box')
-        plt.show()
-
-    return co_pts, norms, tans, tan_fs, lens
-
-def pt_dist(pt1, pt2):
-    return math.sqrt( (pt2[0] - pt1[0])**2 + (pt2[1] - pt1[1])**2)
+from airfoil_util import *
 
 def dub2D(mu, p1, p2, p):
     # p1 is set as the coordinate for doublet origin
@@ -204,8 +19,7 @@ def dub2D(mu, p1, p2, p):
         uw = np.array([u,w])
     else:
         # coordinate transform
-        theta = math.atan2(p2[1]-p1[1] , p2[0]-p1[0])
-        theta = -theta
+        theta = -math.atan2(p2[1]-p1[1] , p2[0]-p1[0])
         t1 = np.array([[math.cos(theta), -math.sin(theta)], [math.sin(theta), math.cos(theta)]])
         # take p1 as coordinate of the origin of the dublet
         t2 = p - p1
@@ -231,16 +45,16 @@ def dub2D(mu, p1, p2, p):
 
     return uw
 
-
 U = 1
 chord = 1
-alfa = 5
+alfa = 2
 alfa = math.radians(alfa)
 u_vec = U * np.array([math.cos(alfa), math.sin(alfa)])
 roh = 1.225
-pts = read_dat('airfoil.dat')
+#pts = read_csv('airfoil.csv')
+pts = read_csv('4521.csv')
 #pts = repanel(pts, 50, chord_dist = 'cosine', cos_wgt=1.0, show=True)
-co_pts, norms, tans,  tan_fs, lens = proc_panels(pts, debug=False)
+co_pts, norms, tans, lens, thetas = proc_panels(pts, debug=True)
 
 # Initialize matrices
 num_pan = len(pts) - 1
@@ -264,7 +78,7 @@ for i in range(num_pan):
         b[i,j] = np.matmul(np.transpose(uw), tans[i])
 # Remove one panel
 
-rem_idx = int(num_pan/2 - 4)
+rem_idx = int(round(num_pan/2)) -1
 rhs = np.delete(rhs, rem_idx)
 a = np.delete(a, rem_idx, 0)
 a = np.delete(a, rem_idx, 1)
@@ -272,7 +86,6 @@ b = np.delete(b, rem_idx, 0)
 b = np.delete(b, rem_idx, 1)
 norms = np.delete(norms, rem_idx, 0)
 tans = np.delete(tans, rem_idx, 0)
-tan_fs = np.delete(tan_fs, rem_idx, 0)
 pts = np.delete(pts, rem_idx, 0)
 co_pts = np.delete(co_pts, rem_idx, 0)
 lens = np.delete(lens, rem_idx, 0)
@@ -295,23 +108,17 @@ for i in range(num_pan):
     else:
          v_pan = 0.5*(mu[i+1]-mu[i-1])/pt_dist(co_pts[i-1], co_pts[i+1])
     
-    '''
-    if i == 0:  # First panel
-        v_pan = 0.5*(mu[i+1]-mu[i])/lens[i]
-    elif i == num_pan - 1:  # last panel
-        v_pan = 0.5*(mu[i]-mu[i-1])/lens[i]
-    else:
-         v_pan = 0.5*(mu[i+1]-mu[i-1])/lens[i]
-    '''
-    q_ti[i] = q_ti[i] + v_pan + np.dot(u_vec, tan_fs[i])
+    q_ti[i] = q_ti[i] + v_pan + np.dot(u_vec, tans[i])
     
-    #q_ti[i] = q_ti[i] + np.dot(u_vec, tan_fs[i])
 # calculate Cps
-print(q_ti)
+cl = 0
 cp = 1 - q_ti**2/U**2
-# Use kutta joukowski and kelvin's circulation to get lift:
-#L = -roh*U*mu[-1]
-cl = roh*mu[-1]/chord
+ps = cp*0.5*roh*U**2
+fs = 0
+for i in range(len(ps)):
+    f = ps[i]*lens[i]*-1*norms[i,1]
+    fs = fs + f
+cl = np.sum(fs)/(1/2*roh*chord*U**2)
 print('Cl: {:.6f}'.format(cl))
 
 plt.plot(co_pts[:,0], cp)
