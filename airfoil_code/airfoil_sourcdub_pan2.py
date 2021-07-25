@@ -137,6 +137,9 @@ def f1Wake(H):
     else:
         return 1.50 + 0.015*(H-3.5)**2/H
 
+def f2Wake(H):
+    return 0
+
 def f3Wake(H):
     return 1.52*(H-1)**2/(3+H**3)
 
@@ -241,6 +244,10 @@ m = 0.01*np.ones(num_pan+1) # mass defect
 
 x0 = np.concatenate([mu, th, m])
 
+lens = np.append(lens, 1e12)
+pts = np.vstack([pts, [1e12,0]])
+tans = np.vstack([tans, [1,0]])
+
 def calcResidual(in_vec):
     mu = in_vec[:num_pan+1]
     th = in_vec[num_pan+1:2*(num_pan+1)]
@@ -248,13 +255,20 @@ def calcResidual(in_vec):
     Uelast = None
     Hlast = None
     residual = np.zeros((num_pan+1,3))
-    for i in range(num_pan):
-            Uei = np.dot(Uinf,tans[i]) + np.matmul(Atan[i,:],m) + np.matmul(Ctan[i,:], mu)
+    for i in range(num_pan+1):
+            Uei = np.dot(Uinf,tans[i]) + np.matmul(Atan[i,:],np.divide(m, lens)) + np.matmul(Ctan[i,:], mu)
             deli = m[i]/Uei
             Hi = deli/th[i]
-            Hi_star = f1(Hi)
-            cf2 = nu/(Uei*th[i])*f2(Hi)
-            cf2H = nu/(Uei*th[i])*f3(Hi)
+
+            if i == num_pan: #wake panel
+                Hi_star = f1Wake(Hi)
+                cf2 = nu/(Uei*th[i])*f2Wake(Hi)
+                cf2H = nu/(Uei*th[i])*f3Wake(Hi)
+            else:
+                Hi_star = f1(Hi)
+                cf2 = nu/(Uei*th[i])*f2(Hi)
+                cf2H = nu/(Uei*th[i])*f3(Hi)
+
             if i > 0:
                 del_th = th[i] - th[i-1]
                 th_avg = 1/2*(th[i] + th[i-1])
@@ -269,6 +283,7 @@ def calcResidual(in_vec):
                 del_x = pt_dist(pts[i+1], pts[i])
                 # del_X = pt_dist(pts[0], co_pts[i])
                 del_h = Hi
+                
             Uelast = Uei
             Hlast = Hi
             # residuals
@@ -282,6 +297,6 @@ def calcResidual(in_vec):
     return res_sum
 
 
-options_dict = {'maxiter': 5000, 'disp': True}
+options_dict = {'maxiter': 2000, 'disp': True}
 result = minimize(calcResidual, x0, tol=1e-5, method='Nelder-Mead', options=options_dict)
 
