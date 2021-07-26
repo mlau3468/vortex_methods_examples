@@ -29,9 +29,9 @@ inputs = [2.0, 4.0, 1.0, 2.0]
 #display(test(inputs))
 results = rand(gradShape...)
 
-#jacobian(test, inputs)
+jacobian(test, inputs)
 
-
+#=
 # pre-record JacobianTapes for `f` and `g` using inputs of shape 10x10 with Float64 elements
 const f_tape = JacobianTape(test, similar(inputs))
 
@@ -44,3 +44,4 @@ const compiled_f_tape = compile(f_tape)
 # these should be the fastest methods, and non-allocating
 jac = jacobian!(results, compiled_f_tape, inputs)
 display(jac)
+=#

@@ -43,26 +43,30 @@ function f(a)
     test[1,1] = 1
     return sum(test.^2)
 end
-
-inputs = rand(10, 10)
-results = similar(inputs)
+a = rand(10, 10)
+inputs = (a,)
+results = (similar(a),)
 
 # pre-record a GradientTape for `f` using inputs of shape 100x100 with Float64 elements
-const f_tape = GradientTape(f, (similar(inputs)))
+const f_tape = GradientTape(f, (rand(10,10),))
 
 # compile `f_tape` into a more optimized representation
 const compiled_f_tape = compile(f_tape)
 
 # some inputs and work buffers to play around with
 
-
-all_results = map(DiffResults.GradientResult, [results])
+all_results = map(DiffResults.GradientResult, results)
 cfg = GradientConfig(inputs)
+
 
 # Take gradients with pre-recorded/compiled tapes (generated in the setup above) #
 #-----------------------------------------------------------------#
 
 # this should be the fastest method, and non-allocating
-grad = gradient!(results, compiled_f_tape, inputs)
-display(inputs)
-display(grad)
+display(inputs[1])
+result = gradient!(results, compiled_f_tape, inputs)
+display(result[1])
+result = gradient!(all_results, compiled_f_tape, inputs)
+display(DiffResults.value(result[1]))
+display(DiffResults.gradient(result[1]))
+#gradient!(results, f_tape, inputs)
