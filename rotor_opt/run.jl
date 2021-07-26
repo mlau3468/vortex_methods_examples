@@ -6,18 +6,26 @@ using ReverseDiff: GradientTape, GradientConfig, gradient, gradient!, compile, D
 using ReverseDiff: JacobianTape, JacobianConfig, jacobian, jacobian!, compile
 include("airfoilTools.jl")
 include("ibl.jl")
-
+#=
+nacaNum = [2.0, 4.0, 1.0, 2.0]
+pts = genNACA(nacaNum, 75)
+res = airfoilCalc(pts, 30, 2)
+display(res)
+=#
 
 function test(nacaNum)
     pts = genNACA(nacaNum, 75)
-    return pts
+    res = airfoilCalc(pts, 30, 2)
+    return res
 end
 
 inputShape = [4, 1]
-outputShape = [(75)*2+1, 2]
+#outputShape = [(75)*2+1, 2]
+outputShape = [2, 1]
 gradShape = [prod(outputShape), prod(inputShape)]
 
 inputs = [2.0, 4.0, 1.0, 2.0]
+#display(test(inputs))
 results = rand(gradShape...)
 
 # pre-record JacobianTapes for `f` and `g` using inputs of shape 10x10 with Float64 elements

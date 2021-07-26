@@ -2,7 +2,7 @@ using ReverseDiff: JacobianTape, JacobianConfig, jacobian, jacobian!, compile
 
 # some objective functions to work with
 function f(a)
-    return a^2
+    return inv(a)
 end
 
 inputShape = [10 10]

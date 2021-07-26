@@ -2,6 +2,100 @@ using DelimitedFiles
 using LinearAlgebra
 
 
+function panelMethod(xb, yb, alpha, bc)
+    npts = length(xb)
+    npan = npts - 1
+    x = similar(xb, npan)
+    y = similar(xb, npan)
+    s = similar(xb, npan)
+    theta = similar(xb, npan)
+    sine = similar(xb, npan)
+    cosine = similar(xb, npan)
+    rhs = similar(xb, npan+1)
+
+    for i = 1:npan
+        ip1 = i+1
+        x[i] = 0.5*(xb[i]+xb[ip1])
+        y[i] = 0.5*(yb[i]+yb[ip1])
+        s[i] = sqrt((xb[ip1]-xb[i])^2 + (yb[ip1]-yb[i])^2)
+        theta[i] = atan(yb[ip1]-yb[i], xb[ip1]-xb[i])
+        sine[i] = sin(theta[i])
+        cosine[i] = cos(theta[i])
+        rhs[i] = sin(theta[i]-alpha)
+        
+    end
+
+    cn1 = similar(xb, npan, npan)
+    cn2 = similar(xb, npan, npan)
+    ct1 = similar(xb, npan, npan)
+    ct2 = similar(xb, npan, npan)
+    
+    for i = 1:npan
+        for j = 1:npan
+            if i == j
+                # kutta condition
+                cn1[i,j] = -1
+                cn2[i,j] = 1
+                ct1[i,j] = pi/2
+                ct2[i,j] = pi/2
+            else
+                a = -(x[i]-xb[j])*cosine[j] - (y[i]-yb[j])*sine[j];
+                b = (x[i]-xb[j])^2 + (y[i]-yb[j])^2;
+                c = sin(theta[i]-theta[j]);
+                d = cos(theta[i]-theta[j]);
+                e = (x[i]-xb[j])*sine[j] - (y[i]-yb[j])*cosine[j];
+                f = log(1+s[j]*(s[j]+2*a)/b);
+                g = atan(e*s[j],b+a*s[j]); 
+                p = (x[i]-xb[j])*sin(theta[i]-2*theta[j]) + (y[i]-yb[j])*cos(theta[i]-2*theta[j])        
+                q = (x[i]-xb[j])*cos(theta[i]-2*theta[j]) - (y[i]-yb[j])*sin(theta[i]-2*theta[j])
+                cn2[i,j] = d+0.5*q*f/s[j] - (a*c+d*e)*g/s[j]
+                cn1[i,j] = 0.5*d*f +c*g -cn2[i,j]
+                ct2[i,j] = c+0.5*p*f/s[j] + (a*d-c*e)*g/s[j]
+                ct1[i,j] = 0.5*c*f-d*g-ct2[i,j]
+            end
+        end
+    end
+    # compute influence coefficients
+    an = similar(xb, npan+1, npan+1)
+    at = similar(xb, npan+1, npan+1)
+    for i = 1:npan
+        an[i,1] = cn1[i,1]
+        an[i,npts] = cn2[i,npan]
+        at[i,1] = ct1[i,1]
+        at[i,npts] = ct2[i,npan]
+        for j = 2:npan
+            an[i,j] = cn1[i,j] + cn2[i,j-1]
+            at[i,j] = ct1[i,j] + ct2[i, j-1]
+        end
+    end
+    an[npts, 1] = 1
+    an[npts, npts] = 1
+    for j = 2:npan
+        an[npts,j] = 0
+    end
+    rhs[npts] = 0
+    test = zeros(151, 151)
+    for k in 1:151
+        for l in 1:151
+            test[k,l] = an[k,l].value
+        end
+    end
+    display(test)
+    gamma = inv(an)*(rhs+bc)
+
+    v = similar(xb, npan)
+    c_p = similar(xb, npan)
+    for i = 1:npan
+        v[i] = cos(theta[i] - alpha)
+        for j = 1:npts
+            v[i] = v[i] + at[i,j]*gamma[j]
+            c_p[i] = (1-v[i]^2)
+        end
+    end
+    return x, y, gamma, v, c_p
+    
+end
+
 function airfoilCalc(pts, uinf, alf)
     a = deg2rad(alf)
     xb = pts[:,1]
@@ -19,22 +113,24 @@ function airfoilCalc(pts, uinf, alf)
     max_iter = 100
 
     # initialization
-    deltas = zeros(npan)
-    thetas = zeros(npan)
-    cf = zeros(npan)
-    old_dels = zeros(npan, 1)
-    g = zeros(npan+1, 1)
-    c_p = zeros(npan)
-    vtan = zeros(npan)
-    x = zeros(npan)
-    y = zeros(npan)
+    deltas = similar(pts, npan)
+    thetas = similar(pts, npan)
+    cf = similar(pts, npan)
+    old_dels = similar(pts, npan)
+    g = similar(pts, npan+1)
+    c_p = similar(pts, npan)
+    vtan = similar(pts, npan)
+    x = similar(pts, npan)
+    y = similar(pts, npan)
     stag = 0
     trans = [0 0]
     sp = [0 0]
 
+    g[:] .= 0.0
+
     
     while err >= threshold && iter < max_iter
-        x, y, gamma, vtan, c_p = panelMethod(xb, yb, npan, npan+1, a, g)
+        x, y, gamma, vtan, c_p = panelMethod(xb, yb, a, g)
         ue = abs.(uinf*vtan)
         # get stagnation point
         stag = argmin(abs.(ue))
@@ -133,91 +229,6 @@ function rungeKutta(theta0, x0, xStop, cf, H, ue, due)
     return theta
 end
 
-function panelMethod(xb, yb, npan, npts, alpha, bc)
-    x = zeros(npan)
-    y = zeros(npan)
-    s = zeros(npan)
-    theta = zeros(npan)
-    sine = zeros(npan)
-    cosine = zeros(npan)
-    rhs = zeros(npan+1)
-
-    for i = 1:npan
-        ip1 = i+1
-        x[i] = 0.5*(xb[i]+xb[ip1])
-        y[i] = 0.5*(yb[i]+yb[ip1])
-        s[i] = sqrt((xb[ip1]-xb[i])^2 + (yb[ip1]-yb[i])^2)
-        theta[i] = atan(yb[ip1]-yb[i], xb[ip1]-xb[i])
-        sine[i] = sin(theta[i])
-        cosine[i] = cos(theta[i])
-        rhs[i] = sin(theta[i]-alpha)
-        
-    end
-
-    cn1 = zeros(npan, npan)
-    cn2 = zeros(npan, npan)
-    ct1 = zeros(npan, npan)
-    ct2 = zeros(npan, npan)
-    
-    for i = 1:npan
-        for j = 1:npan
-            if i == j
-                # kutta condition
-                cn1[i,j] = -1
-                cn2[i,j] = 1
-                ct1[i,j] = pi/2
-                ct2[i,j] = pi/2
-            else
-                a = -(x[i]-xb[j])*cosine[j] - (y[i]-yb[j])*sine[j];
-                b = (x[i]-xb[j])^2 + (y[i]-yb[j])^2;
-                c = sin(theta[i]-theta[j]);
-                d = cos(theta[i]-theta[j]);
-                e = (x[i]-xb[j])*sine[j] - (y[i]-yb[j])*cosine[j];
-                f = log(1+s[j]*(s[j]+2*a)/b);
-                g = atan(e*s[j],b+a*s[j]); 
-                p = (x[i]-xb[j])*sin(theta[i]-2*theta[j]) + (y[i]-yb[j])*cos(theta[i]-2*theta[j])        
-                q = (x[i]-xb[j])*cos(theta[i]-2*theta[j]) - (y[i]-yb[j])*sin(theta[i]-2*theta[j])
-                cn2[i,j] = d+0.5*q*f/s[j] - (a*c+d*e)*g/s[j]
-                cn1[i,j] = 0.5*d*f +c*g -cn2[i,j]
-                ct2[i,j] = c+0.5*p*f/s[j] + (a*d-c*e)*g/s[j]
-                ct1[i,j] = 0.5*c*f-d*g-ct2[i,j]
-            end
-        end
-    end
-    # compute influence coefficients
-    an = zeros(npan+1, npan+1)
-    at = zeros(npan+1, npan+1)
-    for i = 1:npan
-        an[i,1] = cn1[i,1]
-        an[i,npts] = cn2[i,npan]
-        at[i,1] = ct1[i,1]
-        at[i,npts] = ct2[i,npan]
-        for j = 2:npan
-            an[i,j] = cn1[i,j] + cn2[i,j-1]
-            at[i,j] = ct1[i,j] + ct2[i, j-1]
-        end
-    end
-    an[npts, 1] = 1
-    an[npts, npts] = 1
-    for j = 2:npan
-        an[npts,j] = 0
-    end
-    rhs[npts] = 0
-    gamma = an\(rhs+bc)
-
-    v = zeros(npan)
-    c_p = zeros(npan)
-    for i = 1:npan
-        v[i] = cos(theta[i] - alpha)
-        for j = 1:npts
-            v[i] = v[i] + at[i,j]*gamma[j]
-            c_p[i] = (1-v[i]^2)
-        end
-    end
-    return x, y, gamma, v, c_p
-    
-end
-
 function fa(PI)
     kapa = 0.41
     return (2 + 3.179*PI + 1.5*PI^2)/(kapa*(1 + PI))
@@ -240,9 +251,9 @@ function boundaryLayer(ue, xp, yp, c, nu)
     trans = NaN
     sp = NaN
     m = length(xp)
-    thetas = zeros(m)
+    thetas = similar(xp, m)
     # calcualte due/dx
-    due = zeros(m)
+    due = similar(xp, m)
     rex = 0
     for i =1:length(due)
         if i != length(ue)
@@ -254,7 +265,7 @@ function boundaryLayer(ue, xp, yp, c, nu)
     
     # calcualte ds for integration
     rp = [xp yp]
-    ds = zeros(m-1)
+    ds = similar(xp, m-1)
     for i =1:m-1
         ds[i] = abs(norm(rp[i+1,:] - rp[i,:]))
     end
@@ -289,8 +300,8 @@ function boundaryLayer(ue, xp, yp, c, nu)
     # calculate lambda (pressure gradient parameter)
     lambda = (thetas.^2).*due/nu
     # calcualte tau_wall (wall shear stress) and deltas (disp. thickness)
-    L = zeros(m)
-    H = zeros(m)
+    L = similar(xp, m)
+    H = similar(xp, m)
     for i = 1:m
         z = 0.25 - lambda[i]
         if lambda[i] < 0.1 && lambda[i] > 0
