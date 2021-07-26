@@ -145,7 +145,6 @@ function airfoilCalc(pts, uinf, alf)
         err = sum(abs.((deltas-old_dels)./old_dels)*100)
         old_dels[:] = deltas
         iter = iter + 1
-        println(iter)
     end
     
     if iter < max_iter

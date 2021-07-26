@@ -7,11 +7,12 @@ using ReverseDiff: JacobianTape, JacobianConfig, jacobian, jacobian!, compile
 include("airfoilTools.jl")
 include("ibl.jl")
 
+#=
 nacaNum = [2.0, 4.0, 1.0, 2.0]
 pts = genNACA(nacaNum, 75)
 res = airfoilCalc(pts, 30, 2)
 display(res)
-
+=#
 function test(nacaNum)
     pts = genNACA(nacaNum, 75)
     res = airfoilCalc(pts, 30, 2)
