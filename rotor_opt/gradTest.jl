@@ -33,12 +33,14 @@ display(grad)
 
 # some objective function to work with
 function f(a)
-    test = Array{TrackedReal}(undef,size(a))
+    #test = Array{TrackedReal}(undef,size(a))
+    test = similar(a, size(a))
     for i = 1:size(a,1)
         for j =1:size(a,2)
             test[i,j] = a[i,j]
         end
     end
+    test[1,1] = 1
     return sum(test.^2)
 end
 

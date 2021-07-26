@@ -125,3 +125,12 @@ function genNACA(n, nPts=100)
     return pts
 end
 
+function showTrackedArr(tarr)
+    test = zeros(size(tarr)...)
+    for k = 1:size(tarr,1)
+        for l=1:size(tarr, 2)
+            test[k,l] = tarr[k,l].value
+        end
+    end
+    display(test)
+end

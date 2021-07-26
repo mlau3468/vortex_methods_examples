@@ -2,34 +2,13 @@ using DelimitedFiles
 using LinearAlgebra
 
 
-function panelMethod(xb, yb, alpha, bc)
+function panelMethod(x, y, s, theta, sine, cosine, rhs, xb, yb, alpha, bc)
     npts = length(xb)
     npan = npts - 1
-    x = similar(xb, npan)
-    y = similar(xb, npan)
-    s = similar(xb, npan)
-    theta = similar(xb, npan)
-    sine = similar(xb, npan)
-    cosine = similar(xb, npan)
-    rhs = similar(xb, npan+1)
-
-    for i = 1:npan
-        ip1 = i+1
-        x[i] = 0.5*(xb[i]+xb[ip1])
-        y[i] = 0.5*(yb[i]+yb[ip1])
-        s[i] = sqrt((xb[ip1]-xb[i])^2 + (yb[ip1]-yb[i])^2)
-        theta[i] = atan(yb[ip1]-yb[i], xb[ip1]-xb[i])
-        sine[i] = sin(theta[i])
-        cosine[i] = cos(theta[i])
-        rhs[i] = sin(theta[i]-alpha)
-        
-    end
-
     cn1 = similar(xb, npan, npan)
     cn2 = similar(xb, npan, npan)
     ct1 = similar(xb, npan, npan)
     ct2 = similar(xb, npan, npan)
-    
     for i = 1:npan
         for j = 1:npan
             if i == j
@@ -39,13 +18,13 @@ function panelMethod(xb, yb, alpha, bc)
                 ct1[i,j] = pi/2
                 ct2[i,j] = pi/2
             else
-                a = -(x[i]-xb[j])*cosine[j] - (y[i]-yb[j])*sine[j];
-                b = (x[i]-xb[j])^2 + (y[i]-yb[j])^2;
-                c = sin(theta[i]-theta[j]);
-                d = cos(theta[i]-theta[j]);
-                e = (x[i]-xb[j])*sine[j] - (y[i]-yb[j])*cosine[j];
-                f = log(1+s[j]*(s[j]+2*a)/b);
-                g = atan(e*s[j],b+a*s[j]); 
+                a = -(x[i]-xb[j])*cosine[j] - (y[i]-yb[j])*sine[j]
+                b = (x[i]-xb[j])^2 + (y[i]-yb[j])^2
+                c = sin(theta[i]-theta[j])
+                d = cos(theta[i]-theta[j])
+                e = (x[i]-xb[j])*sine[j] - (y[i]-yb[j])*cosine[j]
+                f = log(1+s[j]*(s[j]+2*a)/b)
+                g = atan(e*s[j],b+a*s[j])
                 p = (x[i]-xb[j])*sin(theta[i]-2*theta[j]) + (y[i]-yb[j])*cos(theta[i]-2*theta[j])        
                 q = (x[i]-xb[j])*cos(theta[i]-2*theta[j]) - (y[i]-yb[j])*sin(theta[i]-2*theta[j])
                 cn2[i,j] = d+0.5*q*f/s[j] - (a*c+d*e)*g/s[j]
@@ -74,13 +53,6 @@ function panelMethod(xb, yb, alpha, bc)
         an[npts,j] = 0
     end
     rhs[npts] = 0
-    test = zeros(151, 151)
-    for k in 1:151
-        for l in 1:151
-            test[k,l] = an[k,l].value
-        end
-    end
-    display(test)
     gamma = inv(an)*(rhs+bc)
 
     v = similar(xb, npan)
@@ -92,12 +64,12 @@ function panelMethod(xb, yb, alpha, bc)
             c_p[i] = (1-v[i]^2)
         end
     end
-    return x, y, gamma, v, c_p
+    return gamma, v, c_p
     
 end
 
 function airfoilCalc(pts, uinf, alf)
-    a = deg2rad(alf)
+    alf = deg2rad(alf)
     xb = pts[:,1]
     yb = pts[:,2]
     npan = size(pts)[1]-1
@@ -113,24 +85,44 @@ function airfoilCalc(pts, uinf, alf)
     max_iter = 100
 
     # initialization
+    x = similar(pts, npan)
+    y = similar(pts, npan)
+    s = similar(xb, npan)
+    theta = similar(xb, npan)
+    sine = similar(xb, npan)
+    cosine = similar(xb, npan)
+    rhs = similar(xb, npan+1)
+
     deltas = similar(pts, npan)
     thetas = similar(pts, npan)
     cf = similar(pts, npan)
     old_dels = similar(pts, npan)
+    old_dels[:] .= 0
     g = similar(pts, npan+1)
     c_p = similar(pts, npan)
     vtan = similar(pts, npan)
-    x = similar(pts, npan)
-    y = similar(pts, npan)
+
     stag = 0
     trans = [0 0]
     sp = [0 0]
 
     g[:] .= 0.0
 
+    # calculate panel properties
+    for i = 1:npan
+        ip1 = i+1
+        x[i] = 0.5*(xb[i]+xb[ip1])
+        y[i] = 0.5*(yb[i]+yb[ip1])
+        s[i] = sqrt((xb[ip1]-xb[i])^2 + (yb[ip1]-yb[i])^2)
+        theta[i] = atan(yb[ip1]-yb[i], xb[ip1]-xb[i])
+        sine[i] = sin(theta[i])
+        cosine[i] = cos(theta[i])
+        rhs[i] = sin(theta[i]-alf)
+    end
+
     
     while err >= threshold && iter < max_iter
-        x, y, gamma, vtan, c_p = panelMethod(xb, yb, a, g)
+        gamma, vtan, c_p = panelMethod(x, y, s, theta, sine, cosine, rhs, xb, yb, alf, g)
         ue = abs.(uinf*vtan)
         # get stagnation point
         stag = argmin(abs.(ue))
@@ -153,6 +145,7 @@ function airfoilCalc(pts, uinf, alf)
         err = sum(abs.((deltas-old_dels)./old_dels)*100)
         old_dels[:] = deltas
         iter = iter + 1
+        println(iter)
     end
     
     if iter < max_iter
@@ -171,26 +164,27 @@ function airfoilCalc(pts, uinf, alf)
         cd_turb = 0
         # upper airfoil
         for i = stag:npan-1
-            cp_u = cp_u + (c_p[i+1] + c_p[i])*(x[i+1]-x[i])/2;
+            cp_u = cp_u + (c_p[i+1] + c_p[i])*(x[i+1]-x[i])/2
             if i < trans[1]
-                cd_lam = cd_lam + (cf[i+1] + cf[i])*(x[i+1]-x[i])/2;
+                cd_lam = cd_lam + (cf[i+1] + cf[i])*(x[i+1]-x[i])/2
             else
-                cd_turb = cd_turb + (cf[i+1] + cf[i])*(x[i+1]-x[i])/2;
+                cd_turb = cd_turb + (cf[i+1] + cf[i])*(x[i+1]-x[i])/2
             end
         end
         # lower airfoil
             for i = stag:-1:2
-                cp_l = cp_l + (c_p[i-1] + c_p[i])*(x[i-1]-x[i])/2;
+                cp_l = cp_l + (c_p[i-1] + c_p[i])*(x[i-1]-x[i])/2
                 if i > trans[2]
-                    cd_lam = cd_lam + (cf[i-1] + cf[i])*(x[i-1]-x[i])/2;
+                    cd_lam = cd_lam + (cf[i-1] + cf[i])*(x[i-1]-x[i])/2
                 else
-                    cd_turb = cd_turb + (cf[i-1] + cf[i])*(x[i-1]-x[i])/2;
+                    cd_turb = cd_turb + (cf[i-1] + cf[i])*(x[i-1]-x[i])/2
                 end
             end
 
-        cl = (cp_l-cp_u)*cos(a)
+        cl = (cp_l-cp_u)*cos(alf)
         cd = (cd_lam + cd_turb)
     else
+        println("Convergence Failed.")
         cl = NaN
         cd = NaN
     end
@@ -301,7 +295,9 @@ function boundaryLayer(ue, xp, yp, c, nu)
     lambda = (thetas.^2).*due/nu
     # calcualte tau_wall (wall shear stress) and deltas (disp. thickness)
     L = similar(xp, m)
+    L[:] .= 0
     H = similar(xp, m)
+    H[:] .= 0
     for i = 1:m
         z = 0.25 - lambda[i]
         if lambda[i] < 0.1 && lambda[i] > 0
@@ -322,8 +318,8 @@ function boundaryLayer(ue, xp, yp, c, nu)
             H[i] = H[i-1]
         end
     end
-    cf = complex(2*nu*L./(ue.*thetas))
-    thetas = complex(thetas)
+    cf = 2*nu*L./(ue.*thetas)
+    thetas = thetas
     cf[thetas .== 0] .= 0
     # turbulent regime
     e = 1
@@ -331,7 +327,7 @@ function boundaryLayer(ue, xp, yp, c, nu)
         PI = 0.43
         cf0 = cf[i-1]
         temp = 1
-        lam = sqrt(Complex(2/cf0))
+        lam = sqrt(2/cf0)
         thetat = 0.0
         cft = 0.0
         while temp > eps
