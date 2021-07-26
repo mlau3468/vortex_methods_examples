@@ -1,6 +1,7 @@
 using Base: Float64
 using ReverseDiff: GradientTape, GradientConfig, gradient, gradient!, compile, DiffResults, TrackedArray, TrackedReal
 
+
 #=
 # some objective function to work with
 f(a, b) = sum(a' * b + a * b')
@@ -56,11 +57,7 @@ const compiled_f_tape = compile(f_tape)
 all_results = map(DiffResults.GradientResult, [results])
 cfg = GradientConfig(inputs)
 
-####################
-# taking gradients #
-####################
-
-# with pre-recorded/compiled tapes (generated in the setup above) #
+# Take gradients with pre-recorded/compiled tapes (generated in the setup above) #
 #-----------------------------------------------------------------#
 
 # this should be the fastest method, and non-allocating

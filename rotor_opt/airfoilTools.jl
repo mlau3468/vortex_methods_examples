@@ -30,10 +30,8 @@ function genNACA(n, nPts=100)
     end
 
     # camber
-    #y_c = zeros(nPts)
-    #dyc_dx = zeros(nPts)
-    y_c = Array{TrackedReal}(undef,nPts)
-    dyc_dx = Array{TrackedReal}(undef,nPts)
+    y_c = similar(n, nPts)
+    dyc_dx = similar(n, nPts)
     if ndig == 4 # NACA 4 series
         m = n[1]/100 # max camber
         p = n[2]/10 # lcoation of max camber
