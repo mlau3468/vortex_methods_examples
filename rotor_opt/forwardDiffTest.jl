@@ -8,9 +8,9 @@ include("ibl.jl")
 
 function test!(output,nacaNum)
     pts = genNACA(nacaNum, 75)
-    alphas = 1:2
+    alphas = -5:10
     for a = 1:length(alphas)
-        res = airfoilCalc(pts, 30, a)
+        res = airfoilCalc(pts, 5000000, alphas[a])
         output[a,1] = res[1]
         output[a,2] = res[2]
     end
@@ -18,7 +18,7 @@ function test!(output,nacaNum)
 end
 
 inputShape = [4, 1]
-outputShape = [2, 2]
+outputShape = [16, 2]
 gradShape = [prod(outputShape), prod(inputShape)]
 
 inputs = [2.0, 4.0, 1.0, 2.0]

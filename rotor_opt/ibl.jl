@@ -68,7 +68,7 @@ function panelMethod(x, y, s, theta, sine, cosine, rhs, xb, yb, alpha, bc)
     
 end
 
-function airfoilCalc(pts, uinf, alf)
+function airfoilCalc(pts, re, alf)
     alf = deg2rad(alf)
     xb = pts[:,1]
     yb = pts[:,2]
@@ -77,8 +77,9 @@ function airfoilCalc(pts, uinf, alf)
     mu = 1.81206e-5
     rho = 1.225
     nu = mu/rho
+    uinf = re/c*nu
     q = 1.2*rho*uinf^2
-    re = uinf*c/nu
+    #re = uinf*c/nu
     threshold = 1e-5
     err = 1000
     iter = 0
@@ -320,6 +321,7 @@ function boundaryLayer(ue, xp, yp, c, nu)
     cf = 2*nu*L./(ue.*thetas)
     thetas = thetas
     cf[thetas .== 0] .= 0
+    #cf[cf .< 0] .= -cf[cf .< 0]
     # turbulent regime
     e = 1
     for i = trans+1:m

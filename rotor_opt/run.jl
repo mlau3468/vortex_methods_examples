@@ -15,7 +15,7 @@ display(res)
 =#
 function test(nacaNum)
     pts = genNACA(nacaNum, 75)
-    res = airfoilCalc(pts, 30, 2)
+    res = airfoilCalc(pts, 500000, 2)
     res = [res[1] res[2]]
     return res
 end
