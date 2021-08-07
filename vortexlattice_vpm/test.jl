@@ -405,15 +405,6 @@ for t = 1:tsteps
         wakelines[i].gam[1] = panels[idx].gam[1]
     end
 
-    # move wake
-    for i = 1:length(particles)
-        vel = elemVel(panels, particles, wakelines, particles[i].cpt) .+ uinf
-        particles[i].vel[:] = vel
-    end
-    
-    for i = 1:length(particles)
-        particles[i].cpt[:] = particles[i].cpt .+ particles[i].vel .*dt
-    end
 
     # update panel wake_vel
     for i =1:length(panels)
@@ -460,5 +451,15 @@ for t = 1:tsteps
     cl = cos(deg2rad(alpha))*total_force[3] - sin(deg2rad(alpha)) * total_force[1]
     cl = cl/(1/2*rho*U^2*S)
     println("Step: $t, CL=$cl")
+
+    # move wake
+    for i = 1:length(particles)
+        vel = elemVel(panels, particles, wakelines, particles[i].cpt) .+ uinf
+        particles[i].vel[:] = vel
+    end
+    
+    for i = 1:length(particles)
+        particles[i].cpt[:] = particles[i].cpt .+ particles[i].vel .*dt
+    end
 end
 
