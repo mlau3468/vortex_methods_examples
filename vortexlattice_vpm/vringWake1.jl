@@ -1,50 +1,8 @@
 using LinearAlgebra
-using WriteVTK
 using DelimitedFiles
+include("geotools.jl")
+include("vis.jl")
 
-function samePt(pt1, pt2)
-    tol = 1e-6
-    return norm(pt1.-pt2) < tol
-end
-
-function getNeighbors!(panels)
-    idx = [1 2 3 4 1]
-    for i = 1:length(panels)
-        pan1 = panels[i]
-        for ii=1:4
-            if pan1.neigh[ii] == 0 # if currently no neighbor, check
-                p1 = pan1.pts[:,idx[ii]]
-                p2 = pan1.pts[:,idx[ii+1]]
-                for j = 1:length(panels)
-                    if i != j
-                        pan2 = panels[j]
-                        for jj = 1:4
-                            p11 = pan2.pts[:,idx[jj]]
-                            p22 = pan2.pts[:,idx[jj+1]]
-                            if (samePt(p1,p22) && samePt(p2,p11))
-                                # is neighbor
-                                panels[i].neigh[ii] = j
-                                panels[j].neigh[jj] = i
-                                panels[i].neigh_side[ii] = jj
-                                panels[j].neigh_side[jj] = ii
-                                panels[i].neigh_dir[ii] = -1
-                                panels[j].neigh_dir[jj] = -1
-                            elseif (samePt(p1,p11) && samePt(p2,p22))
-                                # is neighbor
-                                panels[i].neigh[ii] = j
-                                panels[j].neigh[jj] = i
-                                panels[i].neigh_side[ii] = jj
-                                panels[j].neigh_side[jj] = ii
-                                panels[i].neigh_dir[ii] = 1
-                                panels[j].neigh_dir[jj] = 1
-                            end
-                        end
-                    end
-                end
-            end
-        end
-    end
-end
 
 function elemVel(panels, particles, wakelines, wakerings, loc)
     vel = [0;0;0]
@@ -91,8 +49,8 @@ function vrtxring(pts, p, gam)
     return vel1 + vel2 + vel3 + vel4
 end
 
-function velVortRing(panel, loc)
-    return vrtxring(panel.pts, loc, panel.gam[1])
+function velVortRing(vring, loc)
+    return vrtxring(vring.pts, loc, vring.gam[1])
 end
 
 function velVortPart(particle, loc)
@@ -105,8 +63,8 @@ function velVortPart(particle, loc)
     return vel
 end
 
-function velVortLine(line, loc)
-    vel = vrtxline(line.pts[:,1], line.pts[:,2], loc, line.gam[1])
+function velVortLine(vline, loc)
+    vel = vrtxline(vline.pts[:,1], vline.pts[:,2], loc, vline.gam[1])
     return vel
 end
 
@@ -126,10 +84,6 @@ end
 struct wakeLine
     pts :: Array{Float64,2}
     cpt ::Array{Float64,1}
-    edgeVec ::Array{Float64,1}
-    edgeUni ::Array{Float64,1}
-    edgeLen :: Float64
-    vel :: Array{Float64,1} 
     gam :: Array{Float64,1} # magnitude
     ptsvel :: Array{Float64,2}
 end
@@ -164,92 +118,11 @@ struct vortRing
     neigh_dir :: Array{Int64,1} # relative direction of neighboring segment. 1 or -1
 end
 
-function particles2vtk(particles_list, fname)
-
-    npoints = size(particles_list, 1)
-    if npoints > 0
-        x = zeros(size(particles_list, 1))
-        y = zeros(size(particles_list, 1))
-        z = zeros(size(particles_list, 1))
-        mag = zeros(size(particles_list, 1))
-        for i = 1:size(particles_list, 1)
-            x[i] = particles_list[i].cpt[1]
-            y[i] = particles_list[i].cpt[2]
-            z[i] = particles_list[i].cpt[3]
-            mag[i] = particles_list[i].gam[1]
-        end
-    else
-        npoints = 1
-        x = [NaN]
-        y = [NaN]
-        z = [NaN]
-        mag = [NaN]
-    end
-
-    cells = [MeshCell(VTKCellTypes.VTK_VERTEX, (i, )) for i = 1:npoints]
-
-    vtk_grid(fname, x, y, z, cells) do vtk
-        vtk["mag", VTKPointData()] = mag
-    end
-end
-
-function panels2vtk(panel_list, fname)
-    pts = zeros(3,length(panel_list)*4)
-    for i = 1:length(panel_list)
-        for j=1:4
-            pts[:,(i-1)*4+j] = panel_list[i].pts[:,j]
-        end
-    end
-
-    celltype = VTKCellTypes.VTK_QUAD
-    cells = MeshCell[]
-    mag = zeros(size(panel_list,1))
-    #velmag = zeros(size(panel_list,1))
-    pres = zeros(size(panel_list,1))
-    inds = [1;2;3;4]
-    for i =1:size(panel_list,1)
-        c = MeshCell(celltype, inds)
-        push!(cells, c)
-        mag[i] = panel_list[i].gam[1]
-        pres[i] = panel_list[i].dp[1]
-        inds = inds .+ 4
-    end
-    outfile = vtk_grid(fname, pts, cells, compress=2) do vtk
-        vtk["mag"] = mag
-        #vtk["velmag"] = velmag
-        vtk["pres"] = pres
-    end
-end
-
-function wakepanels2vtk(panel_list, fname)
-    pts = zeros(3,length(panel_list)*4)
-    for i = 1:length(panel_list)
-        for j=1:4
-            pts[:,(i-1)*4+j] = panel_list[i].pts[:,j]
-        end
-    end
-
-    celltype = VTKCellTypes.VTK_QUAD
-    cells = MeshCell[]
-    inds = [1;2;3;4]
-    for i =1:size(panel_list,1)
-        c = MeshCell(celltype, inds)
-        push!(cells, c)
-        inds = inds .+ 4
-    end
-    outfile = vtk_grid(fname, pts, cells, compress=2) do vtk
-    end
-end
-
 function createWakeLine(pts)
     cpt =  (pts[:,1] .+ pts[:,2])/2
-    edge_vec = pts[:,2] .- pts[:,1]
-    edge_len = norm(edge_vec)
-    edge_uni = edge_vec ./ edge_len
-    vel = [0;0;0]
     ptsvel = zeros(3,2)
     gam = [0]
-    return wakeLine(pts, cpt, edge_vec, edge_uni, edge_len, vel, gam, ptsvel)
+    return wakeLine(pts, cpt, gam, ptsvel)
 end
 
 function createVortRing(pts, vel)
