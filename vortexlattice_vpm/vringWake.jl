@@ -49,7 +49,7 @@ end
 function elemVel(panels, particles, wakelines, wakerings, loc)
     vel = [0;0;0]
     for i = 1:length(panels)
-        vel = vel .+ velPanel(panels[i], loc)
+        vel = vel .+ velVortRing(panels[i], loc)
     end
     for i = 1:length(particles)
         vel = vel .+ velVortPart(particles[i], loc)
@@ -58,7 +58,7 @@ function elemVel(panels, particles, wakelines, wakerings, loc)
         vel = vel .+ velVortLine(wakelines[i], loc)
     end
     for i =1:length(wakerings)
-        vel = vel .+ velPanel(wakerings[i], loc)
+        vel = vel .+ velVortRing(wakerings[i], loc)
     end
     return vel
 end
@@ -91,7 +91,7 @@ function vrtxring(pts, p, gam)
     return vel1 + vel2 + vel3 + vel4
 end
 
-function velPanel(panel, loc)
+function velVortRing(panel, loc)
     return vrtxring(panel.pts, loc, panel.gam[1])
 end
 
@@ -415,7 +415,7 @@ for t = 1:tsteps
             vel = vel .+ velVortPart(particles[j], panels[i].cpt)
         end
         for j = 1:length(wakerings)
-            vel = vel .+ velPanel(wakerings[j], panels[i].cpt)
+            vel = vel .+ velVortRing(wakerings[j], panels[i].cpt)
         end
         panels[i].wake_vel[:] = vel
     end
