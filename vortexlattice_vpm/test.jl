@@ -102,31 +102,8 @@ function velVortPart(particle, loc)
     return vel
 end
 
-function velVortLine(panel, loc)
-    #=
-    av = loc.-panel.pts[:,1]
-    ai = dot(av,panel.edgeUni)
-    R1 = norm(av)
-    R2 = norm(loc.-panel.pts[:,2])
-    hv = av .- ai.*panel.edgeUni
-    hi = norm(hv)
-    r_rankine = 0.1
-    r_cutoff = 0.001
-    if hi > panel.edgeLen.*r_rankine
-        vdou = ((panel.edgeLen.-ai)./R2 .+ai./R1) ./ (hi.^2) .* cross(panel.edgeUni, hv)
-    else
-        if R1 > panel.edgeLen.*r_cutoff && R2 > panel.edgeLen.*r_cutoff
-            r_ran = r_rankine .* panel.edgeLen
-            vdou = ((panel.edgeLen.-ai)./R2 .+ai./R1) ./ (r_ran.^2) .* cross(panel.edgeUni, hv)
-        else
-            vdou = 0.0
-        end
-    end
-    vel = vdou .* panel.gam[1]
-    vel = vel/4/pi
-    =#
-    
-    vel = vrtxline(panel.pts[:,1], panel.pts[:,2], loc, panel.gam[1])
+function velVortLine(line, loc)
+    vel = vrtxline(line.pts[:,1], line.pts[:,2], loc, line.gam[1])
     return vel
 end
 
@@ -284,8 +261,8 @@ chord = 1
 span = 8
 
 S = span*chord
-U = 10
-alpha = 8
+U = 30
+alpha = 5
 
 rho = 1.225
 
@@ -371,11 +348,12 @@ for t = 1:tsteps
 
         #left side
         dir = pt1.- pt4
+        #dir = - dir
         # if has neighboring panel
         n = panels[idx].neigh[4]
         nd = panels[idx].neigh_dir[4]
         if  n > 0
-            ave = panels[idx].gam[1] -  nd*panels[n].gam[1]
+            ave = panels[idx].gam[1] +  nd*panels[n].gam[1]
             #ave = panels[idx].gam[1] +  panels[n].gam[1]
             ave = ave/2
         else
@@ -385,11 +363,12 @@ for t = 1:tsteps
 
         # right side
         dir = pt3 .- pt2
+        #dir = - dir
         # if has neighboring panel
         n = panels[idx].neigh[2]
         nd = panels[idx].neigh_dir[2]
         if n > 0
-            ave = panels[idx].gam[1] -  nd*panels[n].gam[1]
+            ave = panels[idx].gam[1] +  nd*panels[n].gam[1]
             #ave = panels[idx].gam[1] +  panels[n].gam[1]
             ave = ave/2
         else
@@ -437,9 +416,16 @@ for t = 1:tsteps
     for i = 1:length(particles)
         particles[i].cpt[:] = particles[i].cpt .+ particles[i].vel .*dt
     end
+
     # update panel wake_vel
     for i =1:length(panels)
-        vel = elemVel(panels, particles, wakelines, panels[i].cpt)
+        vel = [0;0;0]
+        for j = 1:length(wakelines)
+            vel = vel .+ velVortLine(wakelines[j], panels[i].cpt)
+        end
+        for j = 1:length(particles)
+            vel = vel .+ velVortPart(particles[j], panels[i].cpt)
+        end
         panels[i].wake_vel[:] = vel
     end
 
@@ -453,7 +439,6 @@ for t = 1:tsteps
             else
                 gam2 = 0.0
                 val = val .+ dot(uinf+panels[idx].wake_vel, panels[idx].tani_uvec).* (panels[idx].gam[1]-gam2)./panels[idx].tani_len
-
             end
 
             if j > 1
@@ -463,11 +448,8 @@ for t = 1:tsteps
             end
             val = val .+ dot(uinf+panels[idx].wake_vel, panels[idx].tanj_uvec).* (panels[idx].gam[1]-gam2)/panels[idx].tanj_len
             val = val .+ panels[idx].dgdt[1]
-            panels[idx].dp[1] = rho*val[1]
-            # negative sign changed from katz/plotin
-            panels[idx].df[:] = panels[idx].dp*panels[idx].area[1].*panels[idx].normal
-        
-            
+            panels[idx].dp[1] = -rho*val[1]
+            panels[idx].df[:] = -panels[idx].dp*panels[idx].area[1].*panels[idx].normal            
         end
     end
 end
