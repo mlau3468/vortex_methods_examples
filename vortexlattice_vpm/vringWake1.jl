@@ -228,6 +228,7 @@ for t = 1:tsteps
     for i = 1:length(panels)
         newPanGam(panels[i], sol[i], dt)
     end
+
     # shed wake
     new_particles = []
     new_wakelines = []
@@ -244,12 +245,7 @@ for t = 1:tsteps
         p4 = p1 .+ te_scale.*vel1.*dt
         new_wakering = wakeRing([gam], [p1 p2 p3 p4], zeros(3,4), [1])
         push!(new_wakerings, new_wakering)
-        
     end
-
-    panels2vtk(panels, prefix * "_panels_$t.vtu")
-    particles2vtk(particles, prefix * "_particles_$t.vtu")
-    wakepanels2vtk(wakerings, prefix * "_wakerings_$t.vtu")
 
     # calculate induced velocities at wake points
     for i = 1:length(wakerings)
@@ -277,6 +273,10 @@ for t = 1:tsteps
     end
 
     global wakerings = cat(wakerings, new_wakerings, dims=1)
+
+    panels2vtk(panels, prefix * "_panels_$t.vtu")
+    particles2vtk(particles, prefix * "_particles_$t.vtu")
+    wakepanels2vtk(wakerings, prefix * "_wakerings_$t.vtu")
 
     # update panel wake_vel
     for i =1:length(panels)

@@ -343,8 +343,6 @@ for t = 1:tsteps
 
     # solve matrix for panel gamma
     sol = A\RHS
-    display(RHS)
-    quit()
     for i = 1:length(panels)
         newPanGam(panels[i], sol[i], dt)
     end
