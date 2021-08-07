@@ -216,7 +216,6 @@ for i in range(len(panels)):
         # influence of jth panel on ith collcation point
         vel =  vrtxring(*panels[j].rpts, panels[i].cpt)
         A[i,j] = dot(vel, panels[i].normal)
-
 for t in range(tsteps):
     
     # build RHS vector
