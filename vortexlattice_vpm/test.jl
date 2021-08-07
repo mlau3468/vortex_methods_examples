@@ -255,13 +255,12 @@ end
 
 nspan = 13
 nchord = 4
-n_wake = 100
 
 chord = 1
 span = 8
 
 S = span*chord
-U = 30
+U = 50
 alpha = 5
 
 rho = 1.225
@@ -270,7 +269,6 @@ dt = 0.1
 
 tsteps = 20
 te_scale = 0.3
-
 prefix = "test/_wing"
 
 uinf = [U*cos(deg2rad(alpha)); 0; U*sin(deg2rad(alpha))]
@@ -452,5 +450,15 @@ for t = 1:tsteps
             panels[idx].df[:] = -panels[idx].dp*panels[idx].area[1].*panels[idx].normal            
         end
     end
+
+    # total forces
+    total_force = [0;0;0]
+    for i=1:length(panels)
+        total_force = total_force .+ panels[i].df
+    end
+    # lift coefficient
+    cl = cos(deg2rad(alpha))*total_force[3] - sin(deg2rad(alpha)) * total_force[1]
+    cl = cl/(1/2*rho*U^2*S)
+    println("Step: $t, CL=$cl")
 end
 
