@@ -226,6 +226,8 @@ for t in range(tsteps):
 
     # solve matrix for panel gamma
     sol = np.linalg.solve(A,RHS)
+    print(sol)
+    quit()
     for i in range(len(panels)):
         panels[i].new_gam(sol[i])
 
