@@ -255,7 +255,7 @@ for t = 1:tsteps
         end
     end
 
-    # move wake
+    # move existing wake
     for i = 1:length(wakerings)
         if wakerings[i].atTE[1] == 1
             for j = 1:2
