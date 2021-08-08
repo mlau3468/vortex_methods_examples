@@ -5,7 +5,7 @@ include("vis.jl")
 
 
 function elemVel(panels, particles, wakelines, wakerings, loc)
-    vel = [0;0;0]
+    vel = [0.0;0.0;0.0]
     for i = 1:length(panels)
         vel = vel .+ velVortRing(panels[i], loc)
     end
@@ -19,6 +19,21 @@ function elemVel(panels, particles, wakelines, wakerings, loc)
         vel = vel .+ velVortRing(wakerings[i], loc)
     end
     return vel
+end
+
+function wakeElemVel(particles, wakelines, wakerings, loc)
+    vel = [0.0;0.0;0.0]
+    for j = 1:length(wakelines)
+        vel = vel .+ velVortLine(wakelines[j], loc)
+    end
+    for j = 1:length(particles)
+        vel = vel .+ velVortPart(particles[j], loc)
+    end
+    for j = 1:length(wakerings)
+        vel = vel .+ velVortRing(wakerings[j], loc)
+    end
+    return vel
+
 end
 
 function vrtxline(p1, p2, p, gam)
@@ -214,7 +229,6 @@ for i = 0:nchord-1
             push!(te_idx, i*nspan + j + 1)
         end
     end
-   
 end
 
 getNeighbors!(panels)
@@ -391,17 +405,7 @@ for t = 1:tsteps
 
     # update panel wake_vel
     for i =1:length(panels)
-        vel = [0;0;0]
-        for j = 1:length(wakelines)
-            vel = vel .+ velVortLine(wakelines[j], panels[i].cpt)
-        end
-        for j = 1:length(particles)
-            vel = vel .+ velVortPart(particles[j], panels[i].cpt)
-        end
-        for j = 1:length(wakerings)
-            vel = vel .+ velVortRing(wakerings[j], panels[i].cpt)
-        end
-        panels[i].wake_vel[:] = vel
+        panels[i].wake_vel[:] = wakeElemVel(particles, wakelines, wakerings, panels[i].cpt)
     end
 
     # pressure calculation
