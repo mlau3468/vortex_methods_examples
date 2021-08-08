@@ -21,19 +21,32 @@ dt = chord/U/0.1
 
 tewidth = nspan
 tsteps = 100
-te_scale = 0.3
-maxwakelen = 2
 prefix = "test/_wing"
 
 uinf = [U*cos(deg2rad(alpha)); 0; U*sin(deg2rad(alpha))]
 
-# create geometry
+# element variables
 panels = []
+panels_neigh = []
+panels_neighdir = []
+panels_neighside = []
+
+
 particles = []
 wakelines = []
 wakerings = []
+
+# trailing edge variables
 te_idx = []
+te_neigh = []
+te_neighdir = []
+te_neighside = []
+te_rings = []
+te_scale = 0.3
+maxwakelen = 2
 wakelen = 0
+
+# create geometry
 for i = 0:nchord-1
     for j = 0:nspan-1
         p1 = [i*chord/nchord; j*span/nspan; 0]
@@ -50,10 +63,12 @@ for i = 0:nchord-1
     end
 end
 
-getNeighbors!(panels)
+panels_neigh, panels_neighside, panels_neighdir = calcneighbors(panels)
 
 A = zeros(length(panels), length(panels))
 RHS = zeros(length(panels))
+
+# initialize the system
 
 for i = 1:length(panels)
     for j = 1:length(panels)
@@ -63,7 +78,35 @@ for i = 1:length(panels)
     end
 end
 
+# build rhs vector
+RHS[:] .= 0.0
+for i = 1:length(panels)
+    RHS[i] = -dot(uinf, panels[i].normal)
+    RHS[i] = RHS[i] - dot(panels[i].wake_vel, panels[i].normal)
+end
+
+# solve matrix for panel gamma
+init_sol = A\RHS
+for i = 1:length(panels)
+    newPanGam(panels[i], init_sol[i], dt)
+end
+
+panels2vtk(panels, prefix * "_panels_0.vtu")
+particles2vtk(particles, prefix * "_particles_0.vtu")
+wakepanels2vtk(wakerings, prefix * "_wakerings_0.vtu")
+
+
+# timestep
 for t = 1:tsteps
+
+    # calculate influence coefficients
+    for i = 1:length(panels)
+        for j = 1:length(panels)
+            # influence of jth panel on ith collocation point
+            vel = vrtxring(panels[j].pts, panels[i].cpt, 1)
+            A[i,j] = dot(vel, panels[i].normal)
+        end
+    end
 
     # build rhs vector
     RHS[:] .= 0.0
@@ -139,7 +182,9 @@ for t = 1:tsteps
     if wakelen > maxwakelen
         wakeend = wakerings[tewidth*(wakelen-1)+1:end]
         for j = 1:length(wakeend)
-            getNeighbors!(wakeend)
+            if length(te_neigh) == 0
+                global te_neigh, te_neighside, te_neighdir = calcneighbors(wakeend)
+            end
 
             pt1 = wakeend[j].pts[:,1]
             pt2 = wakeend[j].pts[:,2]
@@ -149,8 +194,8 @@ for t = 1:tsteps
 
             # left side
             dir = -pt1.+pt4
-            n = wakeend[j].neigh[4]
-            nd = wakeend[j].neigh_dir[4]
+            n = te_neigh[4,j]
+            nd = te_neighdir[4,j]
             if n > 0
                 ave = wakeend[j].gam[1] -  nd*wakeend[n].gam[1]
                 ave = ave/2
@@ -162,8 +207,8 @@ for t = 1:tsteps
             # right side
             dir = -pt3 .+ pt2
             # if has neighboring panel
-            n = wakeend[j].neigh[2]
-            nd = wakeend[j].neigh_dir[2]
+            n = te_neigh[2,j]
+            nd = te_neighdir[2,j]
             if n > 0
                 ave = wakeend[j].gam[1] -  nd*wakeend[n].gam[1]
                 ave = ave/2
@@ -228,16 +273,16 @@ for t = 1:tsteps
     for i = 1:length(panels)
         val = 0.0
         # i side, towards te
-        if panels[i].neigh[1] > 0
-            gam2 = panels[panels[i].neigh[1]].gam[1]
+        if panels_neigh[1,i] > 0
+            gam2 = panels[panels_neigh[1,i]].gam[1]
         else
             gam2 = 0.0
         end
         val = val .+ dot(uinf+panels[i].wake_vel, panels[i].tani_uvec).* (panels[i].gam[1]-gam2)./panels[i].tani_len
 
         # j side, perpendicular to te direction
-        if panels[i].neigh[4] > 0
-            gam2 = panels[panels[i].neigh[4]].gam[1]
+        if panels_neigh[4,i] > 0
+            gam2 = panels[panels_neigh[4,i]].gam[1]
         else
             gam2 = 0.0
         end

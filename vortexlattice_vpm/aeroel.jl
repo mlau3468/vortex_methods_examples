@@ -17,9 +17,6 @@ struct wakeRing
     pts :: Array{Float64,2}
     ptvel :: Array{Float64,2}
     atTE :: Array{Int64,1}
-    neigh :: Array{Int64,1} # neighboring panel index
-    neigh_side :: Array{Int64,1} # neighboring panel side index
-    neigh_dir :: Array{Int64,1} # relative direction of neighboring segment. 1 or -1
 end
 
 struct vortRing
@@ -40,9 +37,6 @@ struct vortRing
     dp :: Array{Float64,1} # pressure differential
     df :: Array{Float64,1} # force
     cpt :: Array{Float64,1} # collocation point
-    neigh :: Array{Int64,1} # neighboring panel index
-    neigh_side :: Array{Int64,1} # neighboring panel side index
-    neigh_dir :: Array{Int64,1} # relative direction of neighboring segment. 1 or -1
 end
 
 function createWakeLine(pts)
@@ -56,10 +50,7 @@ function createWakeRing(pts)
     gam = [0.0]
     ptvel = zeros(3,4)
     atTE = [1]
-    neigh = [0,0,0,0]
-    neigh_side = [0,0,0,0]
-    neigh_dir = [0,0,0,0]
-    return wakeRing(gam, pts, ptvel, atTE, neigh, neigh_side,neigh_dir)
+    return wakeRing(gam, pts, ptvel, atTE)
 end
 
 function createVortRing(pts, vel)
@@ -84,14 +75,11 @@ function createVortRing(pts, vel)
     # place vortex ring at quarter chord, 2D kutta condition satisfid along the chord
     mcv = ((pts[:,4]-pts[:,1]) .+ (pts[:,3]-pts[:,2]))/2 # mean chord vector
     vrpts = zeros(3,4) # vortex ring points
-    neigh = [0;0;0;0]
-    neigh_side = [0;0;0;0]
-    neigh_dir = [0;0;0;0]
     for i = 1:size(pts,2)
         vrpts[:,i] = pts[:,i] + 0.25*mcv
     end
 
-    return vortRing(gam, last_gam, dgdt, vrpts, vel, area, tanj_vec, tanj_len, tanj_uvec, tani_vec, tani_len, tani_uvec, normal, wake_vel, dp, df, cpt, neigh, neigh_side,neigh_dir)
+    return vortRing(gam, last_gam, dgdt, vrpts, vel, area, tanj_vec, tanj_len, tanj_uvec, tani_vec, tani_len, tani_uvec, normal, wake_vel, dp, df, cpt)
 end
 
 function elemVel(panels, particles, wakelines, wakerings, loc)
