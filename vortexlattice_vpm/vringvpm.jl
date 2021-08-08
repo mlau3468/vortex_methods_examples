@@ -219,10 +219,6 @@ for t = 1:tsteps
         
     end
 
-    panels2vtk(panels, prefix * "_panels_$t.vtu")
-    particles2vtk(particles, prefix * "_particles_$t.vtu")
-    wakepanels2vtk(wakerings, prefix * "_wakerings_$t.vtu")
-
     # update panel wake_vel
     for i =1:length(panels)
         panels[i].wake_vel[:] = wakeElemVel(particles, wakelines, wakerings, panels[i].cpt)
@@ -262,6 +258,10 @@ for t = 1:tsteps
     cl = cos(deg2rad(alpha))*total_force[3] - sin(deg2rad(alpha)) * total_force[1]
     cl = cl/(1/2*rho*U^2*S)
     println("Step: $t, CL=$cl")
+
+    panels2vtk(panels, prefix * "_panels_$t.vtu")
+    particles2vtk(particles, prefix * "_particles_$t.vtu")
+    wakepanels2vtk(wakerings, prefix * "_wakerings_$t.vtu")
 
 
 end
