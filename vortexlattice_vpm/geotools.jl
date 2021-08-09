@@ -46,3 +46,62 @@ function calcneighbors(panels)
     end
     return neigh_idx, neigh_side, neigh_dir
 end
+
+function stepRotMat(omega_body, dt)
+    rotation = zeros(Float64, 3,3)
+    if norm(omega_body) > 0
+        #source: https://sites.google.com/site/glennmurray/Home/rotation-matrices-and-formulas/rotation-about-an-arbitrary-axis-in-3-dimensions
+        theta = norm(omega_body) .* dt # radians
+        rvec = omega_body./norm(omega_body)
+        u = rvec[1]
+        v = rvec[2]
+        w = rvec[3]
+        a11 = u^2 + (v^2+w^2)*cos(theta)
+        a12 = u*v*(1-cos(theta))-w*sin(theta)
+        a13 = u*w*(1-cos(theta))+v*sin(theta)
+        a21 = u*v*(1-cos(theta))+w*sin(theta)
+        a22 = v^2 + (u^2+w^2)*cos(theta)
+        a23 = v*w*(1-cos(theta))-u*sin(theta)
+        a31 = u*w*(1-cos(theta))-v*sin(theta)
+        a32 = v*w*(1-cos(theta))+u*sin(theta)
+        a33 = w^2 + (u^2+v^2)*cos(theta)
+
+        rotation = [a11 a12 a13; a21 a22 a23; a31 a32 a33]
+    else
+        rotation = [1.0 0.0 0.0; 0.0 1.0 0.0; 0.0 0.0 1.0]
+    end
+    return rotation
+end
+
+function createRect(span, chord, nspan, nchord, origin, twist)
+    twist = deg2rad(twist)
+    twist_loc = [0.25*chord; 0; 0]
+    rot = [cos(twist) 0 sin(twist); 0 1 0; -sin(twist) 0 cos(twist)]
+    # create geometry
+    te_idx = []
+    panels = []
+    for i = 0:nchord-1
+        for j = 0:nspan-1
+            p1 = [i*chord/nchord; j*span/nspan; 0]
+            p2 = [i*chord/nchord; (j+1)*span/nspan; 0]
+            p3 = [(i+1)*chord/nchord; (j+1)*span/nspan; 0]
+            p4 = [(i+1)*chord/nchord; j*span/nspan; 0]
+            pts = [p1 p2 p3 p4]
+            for k=1:4
+                p = pts[:,k]
+                p = p .- twist_loc
+                p = rot * p
+                p = p + twist_loc
+                pts[:,k] = p .+ origin
+            end
+            vel = [0; 0; 0]
+            new_pan = initVortRing(pts, vel)
+            push!(panels, new_pan)
+            if i+1==nchord
+                push!(te_idx, i*nspan + j + 1)
+            end
+        end
+    end
+    
+    return panels, te_idx
+end
