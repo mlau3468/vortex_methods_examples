@@ -7,10 +7,10 @@ include("vis.jl")
 nspan = 13
 nchord = 4
 
-chord = 1
-span = 8
+chord = 0.125
+span = 1
 
-panels, te_idx = createRect(span, chord, nspan, nchord, [0;1;0], 5)
+panels, te_idx = createRect(span, chord, nspan, nchord, [0;3;0], 15)
 
 S = span*chord
 
@@ -27,7 +27,7 @@ prefix = "test/_wing"
 # component variables
 origin = [0;0;0]
 vbody = [0;0;0] 
-ombody = [0;0;100]
+ombody = [0;0;50]
 dt = 2*pi/100/12
 #dt = chord/U/0.1
 rotm = stepRotMat(ombody, dt)
@@ -118,7 +118,7 @@ for t = 1:tsteps
         new_wakering.gam[1] = gam
         push!(new_wakerings, new_wakering)
     end
-
+    
     # calculate induced velocities at existing wake points
     for i = 1:length(wakerings)
         for j = 1:4
@@ -126,10 +126,15 @@ for t = 1:tsteps
             wakerings[i].ptvel[:,j] = vel
         end
     end
-
+    
+    test = []
     for i = 1:length(particles)
         vel = elemVel(panels, particles, wakelines, wakerings, particles[i].cpt) .+ uinf
         particles[i].vel[:] = vel
+        push!(test, norm(vel))
+    end
+    if length(test) > 0
+        println(maximum(test))
     end
 
     # move existing wake

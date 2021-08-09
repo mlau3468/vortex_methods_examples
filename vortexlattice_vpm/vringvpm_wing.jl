@@ -127,10 +127,17 @@ for t = 1:tsteps
         end
     end
 
+    #test = []
     for i = 1:length(particles)
         vel = elemVel(panels, particles, wakelines, wakerings, particles[i].cpt) .+ uinf
         particles[i].vel[:] = vel
+        #push!(test, norm(vel))
     end
+    #=
+    if length(test) > 0
+        println(maximum(test))
+    end
+    =#
 
     # move existing wake
     for i = 1:length(wakerings)
