@@ -11,7 +11,7 @@ chord = 1
 span = 8
 
 S = span*chord
-U = 50
+
 alpha = 5
 
 rho = 1.225
@@ -23,12 +23,14 @@ tewidth = nspan
 tsteps = 100
 prefix = "test/_wing"
 
+U = 25
 uinf = [U*cos(deg2rad(alpha)); 0; U*sin(deg2rad(alpha))]
+#uinf = [0;0;0]
 
-vbody = -1*copy(uinf)
+vbody = -[U*cos(deg2rad(alpha)); 0; U*sin(deg2rad(alpha))]
+#vbody = [0;0;0]
 
-uinf = [0;0;0]
-
+U = 50
 
 # element variables
 panels = []
@@ -315,6 +317,7 @@ for t = 1:tsteps
     panels2vtk(panels, prefix * "_panels_$t.vtu")
     particles2vtk(particles, prefix * "_particles_$t.vtu")
     wakepanels2vtk(wakerings, prefix * "_wakerings_$t.vtu")
+
 
 
 end
