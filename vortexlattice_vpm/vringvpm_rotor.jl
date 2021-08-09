@@ -19,18 +19,19 @@ U = 50
 uinf = [U*cos(deg2rad(alpha)); 0; U*sin(deg2rad(alpha))]
 uinf = [0;0;0]
 rho = 1.225
-vbody = [-50;0;0] 
-ombody = [0;0;0]
-
-#dt = 0.1
-dt = chord/U/0.1
 
 tewidth = nspan
-tsteps = 100
+tsteps = 96
 prefix = "test/_wing"
 
 # component variables
+origin = [0;0;0]
+vbody = [0;0;0] 
+ombody = [0;0;100]
+dt = 2*pi/100/12
+#dt = chord/U/0.1
 rotm = stepRotMat(ombody, dt)
+
 
 # element variables
 panels_neigh = []
@@ -45,19 +46,22 @@ wakerings = []
 te_neigh = []
 te_neighdir = []
 te_neighside = []
-maxwakelen = 2
+maxwakelen = 1
 wakelen = 0
+
+test_geo(panels, origin, vbody, ombody)
+
+panels_neigh, panels_neighside, panels_neighdir = calcneighbors(panels)
 
 # calculate intial geometry velocities
 for i = 1:length(panels)
     for j = 1:4
-        panels[i].vpts[:,j] = cross(panels[i].pts[:,j], ombody) .+ vbody
+        panels[i].vpts[:,j] = cross(ombody, panels[i].pts[:,j]) .+ vbody
     end
-    panels[i].vcpt[:] = cross(panels[i].cpt[:], ombody) .+ vbody
+    panels[i].vcpt[:] = cross(ombody, panels[i].cpt[:]) .+ vbody
 end
 
 
-panels_neigh, panels_neighside, panels_neighdir = calcneighbors(panels)
 
 A = zeros(length(panels), length(panels))
 RHS = zeros(length(panels))
@@ -66,10 +70,9 @@ panels2vtk(panels, prefix * "_panels_0.vtu")
 particles2vtk(particles, prefix * "_particles_0.vtu")
 wakepanels2vtk(wakerings, prefix * "_wakerings_0.vtu")
 
-
 # timestep
 for t = 1:tsteps
-
+    
     # calculate influence coefficients
     for i = 1:length(panels)
         for j = 1:length(panels)
@@ -103,8 +106,8 @@ for t = 1:tsteps
         p2 = panels[idx].pts[:,3]
 
         # calculate where the points will be next
-        p1_new = p1 .+ vbody.*dt
-        p2_new = p2 .+ vbody.*dt
+        p1_new = rotm*p1 .+ vbody.*dt
+        p2_new = rotm*p2 .+ vbody.*dt
 
         vel1 = elemVel(panels, particles, wakelines, wakerings, p1) .+ uinf 
         vel2 = elemVel(panels, particles, wakelines, wakerings,p2) .+ uinf 
@@ -139,23 +142,26 @@ for t = 1:tsteps
     for i = 1:length(particles)
         particles[i].cpt[:] = particles[i].cpt .+ particles[i].vel .*dt
     end
-
+    
     # move geometry
+    global origin = origin .+ vbody.*dt
     for i = 1:length(panels)
         # update point positions
         for j =1:4
-            panels[i].pts[:,j] = panels[i].pts[:,j] .+ vbody.*dt
+            panels[i].pts[:,j] = rotm*(panels[i].pts[:,j] .+ vbody.*dt.-origin) .+ origin
         end
+    end
+    for i = 1:length(panels)
         panels[i].cpt[:] = (panels[i].pts[:,1] .+ panels[i].pts[:,2] .+ panels[i].pts[:,3] .+ panels[i].pts[:,4])./4
         panels[i].normal[:] = quadNorm(panels[i].pts)
 
         # update point velocities
         for j = 1:4
-            panels[i].vpts[:,j] = cross(panels[i].pts[:,j], ombody) .+ vbody
+            panels[i].vpts[:,j] = cross(ombody, panels[i].pts[:,j].-origin,) .+ vbody
         end
-        panels[i].vcpt[:] = cross(panels[i].cpt[:], ombody) .+ vbody
+        panels[i].vcpt[:] = cross(ombody, panels[i].cpt[:].-origin) .+ vbody
     end
-
+    
     # add new wakerings
     global wakerings = cat(new_wakerings, wakerings, dims=1)
 
@@ -246,7 +252,6 @@ for t = 1:tsteps
         global particles = cat(particles, new_particles, dims=1)
         
     end
-    
 
     # update panel wake_vel
     for i =1:length(panels)
@@ -284,11 +289,15 @@ for t = 1:tsteps
         total_force = total_force .+ panels[i].df
     end
 
+    Fz = total_force[3]
+    println("Step: $t, Fz=$Fz")
+    #=
     # lift coefficient
     cl = cos(deg2rad(alpha))*total_force[3] - sin(deg2rad(alpha)) * total_force[1]
     cl = cl/(1/2*rho*U^2*S)
     println("Step: $t, CL=$cl")
-
+    =#
+    
     panels2vtk(panels, prefix * "_panels_$t.vtu")
     particles2vtk(particles, prefix * "_particles_$t.vtu")
     wakepanels2vtk(wakerings, prefix * "_wakerings_$t.vtu")

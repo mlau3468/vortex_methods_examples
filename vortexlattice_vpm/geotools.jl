@@ -120,9 +120,9 @@ function test_geo(panelsin, origin, vbody, ombody)
     # calculate intial geometry velocities
     for i = 1:length(panels)
         for j = 1:4
-            panels[i].vpts[:,j] = cross(panels[i].pts[:,j], ombody) .+ vbody
+            panels[i].vpts[:,j] = cross(ombody, panels[i].pts[:,j]) .+ vbody
         end
-        panels[i].vcpt[:] = cross(panels[i].cpt[:], ombody) .+ vbody
+        panels[i].vcpt[:] = cross(ombody, panels[i].cpt[:]) .+ vbody
     end
 
     panels2vtk(panels, prefix * "_test_panels_0.vtu")

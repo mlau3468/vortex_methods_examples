@@ -10,19 +10,15 @@ nchord = 4
 chord = 1
 span = 8
 
-panels, te_idx = createRect(span, chord, nspan, nchord, [0;1;0], 5)
+panels, te_idx = createRect(span, chord, nspan, nchord, [0;4;0], 5)
 
 S = span*chord
 
 alpha = 0
 U = 50
 uinf = [U*cos(deg2rad(alpha)); 0; U*sin(deg2rad(alpha))]
-uinf = [50;0;0]
+uinf = [0;0;0]
 rho = 1.225
-
-
-#dt = 0.1
-dt = chord/U/0.1
 
 tewidth = nspan
 tsteps = 100
@@ -30,9 +26,12 @@ prefix = "test/_wing"
 
 # component variables
 origin = [0;0;0]
-vbody = [0;0;0] 
+vbody = [-50;0;0] 
 ombody = [0;0;0]
+#dt = 2*pi/100/12
+dt = chord/U/0.1
 rotm = stepRotMat(ombody, dt)
+
 
 # element variables
 panels_neigh = []
@@ -57,9 +56,9 @@ panels_neigh, panels_neighside, panels_neighdir = calcneighbors(panels)
 # calculate intial geometry velocities
 for i = 1:length(panels)
     for j = 1:4
-        panels[i].vpts[:,j] = cross(panels[i].pts[:,j], ombody) .+ vbody
+        panels[i].vpts[:,j] = cross(ombody, panels[i].pts[:,j]) .+ vbody
     end
-    panels[i].vcpt[:] = cross(panels[i].cpt[:], ombody) .+ vbody
+    panels[i].vcpt[:] = cross(ombody, panels[i].cpt[:]) .+ vbody
 end
 
 
@@ -158,9 +157,9 @@ for t = 1:tsteps
 
         # update point velocities
         for j = 1:4
-            panels[i].vpts[:,j] = cross(panels[i].pts[:,j], ombody) .+ vbody
+            panels[i].vpts[:,j] = cross(ombody, panels[i].pts[:,j].-origin,) .+ vbody
         end
-        panels[i].vcpt[:] = cross(panels[i].cpt[:], ombody) .+ vbody
+        panels[i].vcpt[:] = cross(ombody, panels[i].cpt[:].-origin) .+ vbody
     end
     
     # add new wakerings
@@ -253,7 +252,6 @@ for t = 1:tsteps
         global particles = cat(particles, new_particles, dims=1)
         
     end
-    
 
     # update panel wake_vel
     for i =1:length(panels)
@@ -291,6 +289,8 @@ for t = 1:tsteps
         total_force = total_force .+ panels[i].df
     end
 
+    Fz = total_force[3]
+    println("Step: $t, Fz=$Fz")
     # lift coefficient
     cl = cos(deg2rad(alpha))*total_force[3] - sin(deg2rad(alpha)) * total_force[1]
     cl = cl/(1/2*rho*U^2*S)
