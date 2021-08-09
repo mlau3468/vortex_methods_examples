@@ -102,6 +102,13 @@ function createRect(span, chord, nspan, nchord, origin, twist)
             end
         end
     end
-    
+
     return panels, te_idx
+end
+
+function quadNorm(pts)
+    A = pts[:,3] .- pts[:,1]
+    B = pts[:,2] .- pts[:,4]
+    normal = cross(A,B)/norm(cross(A,B))
+    return normal
 end

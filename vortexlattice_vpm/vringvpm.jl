@@ -10,11 +10,17 @@ nchord = 4
 chord = 1
 span = 8
 
+panels, te_idx = createRect(span, chord, nspan, nchord, [0;1;0], 5)
+
 S = span*chord
 
-alpha = 5
-
+alpha = 0
+U = 50
+uinf = [U*cos(deg2rad(alpha)); 0; U*sin(deg2rad(alpha))]
+uinf = [0;0;0]
 rho = 1.225
+vbody = [-50;0;0] 
+ombody = [0;0;0]
 
 #dt = 0.1
 dt = chord/U/0.1
@@ -23,79 +29,38 @@ tewidth = nspan
 tsteps = 100
 prefix = "test/_wing"
 
-U = 25
-uinf = [U*cos(deg2rad(alpha)); 0; U*sin(deg2rad(alpha))]
-#uinf = [0;0;0]
-
-vbody = -[U*cos(deg2rad(alpha)); 0; U*sin(deg2rad(alpha))]
-#vbody = [0;0;0]
-
-U = 50
+# component variables
+rotm = stepRotMat(ombody, dt)
 
 # element variables
-panels = []
 panels_neigh = []
 panels_neighdir = []
 panels_neighside = []
-
 
 particles = []
 wakelines = []
 wakerings = []
 
 # trailing edge variables
-te_idx = []
 te_neigh = []
 te_neighdir = []
 te_neighside = []
 maxwakelen = 2
 wakelen = 0
 
-# create geometry
-for i = 0:nchord-1
-    for j = 0:nspan-1
-        p1 = [i*chord/nchord; j*span/nspan; 0]
-        p2 = [i*chord/nchord; (j+1)*span/nspan; 0]
-        p3 = [(i+1)*chord/nchord; (j+1)*span/nspan; 0]
-        p4 = [(i+1)*chord/nchord; j*span/nspan; 0]
-        pts = [p1 p2 p3 p4]
-        vel = [0, 0, 0]
-        new_pan = initVortRing(pts, vel)
-        push!(panels, new_pan)
-        if i+1==nchord
-            push!(te_idx, i*nspan + j + 1)
-        end
+# calculate intial geometry velocities
+for i = 1:length(panels)
+    for j = 1:4
+        panels[i].vpts[:,j] = cross(panels[i].pts[:,j], ombody) .+ vbody
     end
+    panels[i].vcpt[:] = cross(panels[i].cpt[:], ombody) .+ vbody
 end
+
 
 panels_neigh, panels_neighside, panels_neighdir = calcneighbors(panels)
 
 A = zeros(length(panels), length(panels))
 RHS = zeros(length(panels))
-
-# initialize the system
-
-for i = 1:length(panels)
-    for j = 1:length(panels)
-        # influence of jth panel on ith collocation point
-        vel = vrtxring(panels[j].pts, panels[i].cpt, 1)
-        A[i,j] = dot(vel, panels[i].normal)
-    end
-end
-
-# build rhs vector
-RHS[:] .= 0.0
-for i = 1:length(panels)
-    RHS[i] = -dot(uinf, panels[i].normal)
-    RHS[i] = RHS[i] - dot(panels[i].wake_vel, panels[i].normal)
-    RHS[i] = RHS[i] + dot(vbody, panels[i].normal)
-end
-
-# solve matrix for panel gamma
-init_sol = A\RHS
-for i = 1:length(panels)
-    newPanGam(panels[i], init_sol[i], dt)
-end
 
 panels2vtk(panels, prefix * "_panels_0.vtu")
 particles2vtk(particles, prefix * "_particles_0.vtu")
@@ -119,7 +84,7 @@ for t = 1:tsteps
     for i = 1:length(panels)
         RHS[i] = -dot(uinf, panels[i].normal)
         RHS[i] = RHS[i] - dot(panels[i].wake_vel, panels[i].normal)
-        RHS[i] = RHS[i] + dot(vbody, panels[i].normal)
+        RHS[i] = RHS[i] + dot(panels[i].vcpt, panels[i].normal)
     end
 
     # solve matrix for panel gamma
@@ -137,6 +102,7 @@ for t = 1:tsteps
         p1 = panels[idx].pts[:,4]
         p2 = panels[idx].pts[:,3]
 
+        # calculate where the points will be next
         p1_new = p1 .+ vbody.*dt
         p2_new = p2 .+ vbody.*dt
 
@@ -176,10 +142,18 @@ for t = 1:tsteps
 
     # move geometry
     for i = 1:length(panels)
+        # update point positions
         for j =1:4
             panels[i].pts[:,j] = panels[i].pts[:,j] .+ vbody.*dt
         end
-        panels[i].cpt[:] = panels[i].cpt[:] .+ vbody.*dt
+        panels[i].cpt[:] = (panels[i].pts[:,1] .+ panels[i].pts[:,2] .+ panels[i].pts[:,3] .+ panels[i].pts[:,4])./4
+        panels[i].normal[:] = quadNorm(panels[i].pts)
+
+        # update point velocities
+        for j = 1:4
+            panels[i].vpts[:,j] = cross(panels[i].pts[:,j], ombody) .+ vbody
+        end
+        panels[i].vcpt[:] = cross(panels[i].cpt[:], ombody) .+ vbody
     end
 
     # add new wakerings
@@ -288,7 +262,8 @@ for t = 1:tsteps
         else
             gam2 = 0.0
         end
-        val = val .+ dot(uinf.-vbody+panels[i].wake_vel, panels[i].tani_uvec).* (panels[i].gam[1]-gam2)./panels[i].tani_len
+        vcpt = panels[i].vcpt[:]
+        val = val .+ dot(uinf.-vcpt+panels[i].wake_vel, panels[i].tani_uvec).* (panels[i].gam[1]-gam2)./panels[i].tani_len
 
         # j side, perpendicular to te direction
         if panels_neigh[4,i] > 0
@@ -296,7 +271,7 @@ for t = 1:tsteps
         else
             gam2 = 0.0
         end
-        val = val .+ dot(uinf.-vbody+panels[i].wake_vel, panels[i].tanj_uvec).* (panels[i].gam[1]-gam2)./panels[i].tanj_len
+        val = val .+ dot(uinf.-vcpt+panels[i].wake_vel, panels[i].tanj_uvec).* (panels[i].gam[1]-gam2)./panels[i].tanj_len
 
         val = val .+ panels[i].dgdt[1]
         panels[i].dp[1] = -rho*val[1]

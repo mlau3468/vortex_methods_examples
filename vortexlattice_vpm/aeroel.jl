@@ -1,3 +1,5 @@
+using Statistics
+
 struct wakePart
     dir :: Array{Float64, 1}
     gam :: Array{Float64,1} # magnitude
@@ -36,6 +38,8 @@ struct vortRing
     dp :: Array{Float64,1} # pressure differential
     df :: Array{Float64,1} # force
     cpt :: Array{Float64,1} # collocation point
+    vcpt :: Array{Float64,1} # collocatiopn point velocity
+    vpts :: Array{Float64,2} # velocity of vertices
 end
 
 function initWakeLine(pts)
@@ -55,8 +59,6 @@ function initVortRing(pts, vel)
     gam = [0.0]
     last_gam = [0.0]
     dgdt = [0.0]
-    A = pts[:,3] .- pts[:,1]
-    B = pts[:,2] .- pts[:,4]
     area = [norm(cross(pts[:,2].-pts[:,1],pts[:,4].-pts[:,1]))]
     tanj_vec = pts[:,2]-pts[:,1]
     tanj_len = [norm(tanj_vec)]
@@ -64,20 +66,15 @@ function initVortRing(pts, vel)
     tani_vec = pts[:,4]-pts[:,1]
     tani_len = [norm(tani_vec)]
     tani_uvec = tani_vec./tani_len
-    normal = cross(A,B)/norm(cross(A,B))
+    normal = quadNorm(pts)
     wake_vel = zeros(3) # wake induced velocity
     dp = [0.0] # pressure differential
     df = zeros(3) # force
-    # place collocation point at 3 quarter chord
-    cpt = 0.75.*(pts[:,3]+pts[:,4])/2 .+ 0.25 .* (pts[:,1]+pts[:,2])/2 # collocation point
-    # place vortex ring at quarter chord, 2D kutta condition satisfid along the chord
-    mcv = ((pts[:,4]-pts[:,1]) .+ (pts[:,3]-pts[:,2]))/2 # mean chord vector
-    vrpts = zeros(3,4) # vortex ring points
-    for i = 1:size(pts,2)
-        vrpts[:,i] = pts[:,i] + 0.25*mcv
-    end
+    vcpt = zeros(3)
+    vpts = zeros(3,4)
+    cpt = (pts[:,1] .+ pts[:,2] .+ pts[:,3] .+ pts[:,4])./4
 
-    return vortRing(gam, last_gam, dgdt, vrpts, vel, area, tanj_vec, tanj_len, tanj_uvec, tani_vec, tani_len, tani_uvec, normal, wake_vel, dp, df, cpt)
+    return vortRing(gam, last_gam, dgdt, pts, vel, area, tanj_vec, tanj_len, tanj_uvec, tani_vec, tani_len, tani_uvec, normal, wake_vel, dp, df, cpt, vcpt, vpts)
 end
 
 function elemVel(panels, particles, wakelines, wakerings, loc)
