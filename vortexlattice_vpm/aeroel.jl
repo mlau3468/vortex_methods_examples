@@ -16,7 +16,6 @@ struct wakeRing
     gam :: Array{Float64,1}
     pts :: Array{Float64,2}
     ptvel :: Array{Float64,2}
-    atTE :: Array{Int64,1}
 end
 
 struct vortRing
@@ -39,21 +38,20 @@ struct vortRing
     cpt :: Array{Float64,1} # collocation point
 end
 
-function createWakeLine(pts)
+function initWakeLine(pts)
     cpt =  (pts[:,1] .+ pts[:,2])/2
     ptsvel = zeros(3,2)
     gam = [0]
     return wakeLine(pts, cpt, gam, ptsvel)
 end
 
-function createWakeRing(pts)
+function initWakeRing(pts)
     gam = [0.0]
     ptvel = zeros(3,4)
-    atTE = [1]
-    return wakeRing(gam, pts, ptvel, atTE)
+    return wakeRing(gam, pts, ptvel)
 end
 
-function createVortRing(pts, vel)
+function initVortRing(pts, vel)
     gam = [0.0]
     last_gam = [0.0]
     dgdt = [0.0]

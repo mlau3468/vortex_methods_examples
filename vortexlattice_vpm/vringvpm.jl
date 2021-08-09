@@ -41,8 +41,6 @@ te_idx = []
 te_neigh = []
 te_neighdir = []
 te_neighside = []
-te_rings = []
-te_scale = 0.3
 maxwakelen = 2
 wakelen = 0
 
@@ -55,7 +53,7 @@ for i = 0:nchord-1
         p4 = [(i+1)*chord/nchord; j*span/nspan; 0]
         pts = [p1 p2 p3 p4]
         vel = [0, 0, 0]
-        new_pan = createVortRing(pts, vel)
+        new_pan = initVortRing(pts, vel)
         push!(panels, new_pan)
         if i+1==nchord
             push!(te_idx, i*nspan + j + 1)
@@ -131,11 +129,11 @@ for t = 1:tsteps
         p2 = panels[idx].pts[:,3]
 
         vel1 = elemVel(panels, particles, wakelines, wakerings, p1) .+ uinf
-        vel2 = elemVel(panels, particles, wakelines, wakerings, p2) .+ uinf
+        vel2 = elemVel(panels, particles, wakelines, wakerings,p2) .+ uinf
         gam = panels[idx].last_gam[1]
-        p3 = p2 .+ te_scale.*vel2.*dt
-        p4 = p1 .+ te_scale.*vel1.*dt
-        new_wakering = createWakeRing([p1 p2 p3 p4])
+        p3 = p2 .+ vel2.*dt
+        p4 = p1 .+ vel1.*dt
+        new_wakering = initWakeRing([p1 p2 p3 p4])
         new_wakering.gam[1] = gam
         push!(new_wakerings, new_wakering)
     end
@@ -143,7 +141,7 @@ for t = 1:tsteps
     # calculate induced velocities at existing wake points
     for i = 1:length(wakerings)
         for j = 1:4
-            vel = elemVel(panels, particles, wakelines, wakerings, wakerings[i].pts[:,j]) .+ uinf
+            vel = elemVel(panels, particles, wakelines, wakerings,wakerings[i].pts[:,j]) .+ uinf
             wakerings[i].ptvel[:,j] = vel
         end
     end
@@ -155,18 +153,8 @@ for t = 1:tsteps
 
     # move existing wake
     for i = 1:length(wakerings)
-        if wakerings[i].atTE[1] == 1
-            for j = 1:2
-            wakerings[i].pts[:,j] = wakerings[i].pts[:,j] .+ wakerings[i].ptvel[:,j].*dt.*te_scale
-            end
-            for j = 3:4
-                wakerings[i].pts[:,j] = wakerings[i].pts[:,j] .+ wakerings[i].ptvel[:,j].*dt
-                end
-            wakerings[i].atTE[1] = 0
-        else
-            for j = 1:4
-                wakerings[i].pts[:,j] = wakerings[i].pts[:,j] .+ wakerings[i].ptvel[:,j].*dt
-            end
+        for j = 1:4
+            wakerings[i].pts[:,j] = wakerings[i].pts[:,j] .+ wakerings[i].ptvel[:,j].*dt
         end
     end
 
@@ -178,6 +166,7 @@ for t = 1:tsteps
     global wakerings = cat(new_wakerings, wakerings, dims=1)
 
     global wakelen = wakelen + 1
+    
      # convert end wake rings into particles
     if wakelen > maxwakelen
         wakeend = wakerings[tewidth*(wakelen-1)+1:end]
@@ -240,7 +229,7 @@ for t = 1:tsteps
     
             # new wake line left over from wake panel to particle conversion.
             # inject downstream for the next iteration
-            new_wakeline = createWakeLine([pt4 pt3])
+            new_wakeline = initWakeLine([pt4 pt3])
             new_wakeline.gam[1] = wakeend[j].gam[1]
     
             push!(new_particles, new_part)
@@ -263,6 +252,7 @@ for t = 1:tsteps
         global particles = cat(particles, new_particles, dims=1)
         
     end
+    
 
     # update panel wake_vel
     for i =1:length(panels)
