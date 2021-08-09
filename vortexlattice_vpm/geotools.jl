@@ -112,3 +112,40 @@ function quadNorm(pts)
     normal = cross(A,B)/norm(cross(A,B))
     return normal
 end
+
+function test_geo(panelsin, origin, vbody, ombody)
+    rotm = stepRotMat(ombody, dt)
+    panels = deepcopy(panelsin)
+
+    # calculate intial geometry velocities
+    for i = 1:length(panels)
+        for j = 1:4
+            panels[i].vpts[:,j] = cross(panels[i].pts[:,j], ombody) .+ vbody
+        end
+        panels[i].vcpt[:] = cross(panels[i].cpt[:], ombody) .+ vbody
+    end
+
+    panels2vtk(panels, prefix * "_test_panels_0.vtu")
+
+    for t = 1:tsteps
+        # move geometry
+        origin = origin .+ vbody.*dt
+        for i = 1:length(panels)
+            # update point positions
+            for j =1:4
+                panels[i].pts[:,j] = rotm*(panels[i].pts[:,j] .+ vbody.*dt.-origin) .+ origin
+            end
+        end
+        for i = 1:length(panels)
+            panels[i].cpt[:] = (panels[i].pts[:,1] .+ panels[i].pts[:,2] .+ panels[i].pts[:,3] .+ panels[i].pts[:,4])./4
+            panels[i].normal[:] = quadNorm(panels[i].pts)
+
+            # update point velocities
+            for j = 1:4
+                panels[i].vpts[:,j] = cross(panels[i].pts[:,j], ombody) .+ vbody
+            end
+            panels[i].vcpt[:] = cross(panels[i].cpt[:], ombody) .+ vbody
+        end
+        panels2vtk(panels, prefix * "_test_panels_$t.vtu")
+    end
+end

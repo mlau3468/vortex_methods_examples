@@ -17,7 +17,7 @@ S = span*chord
 alpha = 0
 U = 50
 uinf = [U*cos(deg2rad(alpha)); 0; U*sin(deg2rad(alpha))]
-uinf = [1;0;0]
+uinf = [50;0;0]
 rho = 1.225
 
 
@@ -29,10 +29,10 @@ tsteps = 100
 prefix = "test/_wing"
 
 # component variables
-rotm = stepRotMat(ombody, dt)
 origin = [0;0;0]
-vbody = [-1;0;0] 
-ombody = [0;0;1]
+vbody = [0;0;0] 
+ombody = [0;0;0]
+rotm = stepRotMat(ombody, dt)
 
 # element variables
 panels_neigh = []
@@ -50,6 +50,10 @@ te_neighside = []
 maxwakelen = 2
 wakelen = 0
 
+test_geo(panels, origin, vbody, ombody)
+
+panels_neigh, panels_neighside, panels_neighdir = calcneighbors(panels)
+
 # calculate intial geometry velocities
 for i = 1:length(panels)
     for j = 1:4
@@ -59,7 +63,6 @@ for i = 1:length(panels)
 end
 
 
-panels_neigh, panels_neighside, panels_neighdir = calcneighbors(panels)
 
 A = zeros(length(panels), length(panels))
 RHS = zeros(length(panels))
@@ -67,35 +70,6 @@ RHS = zeros(length(panels))
 panels2vtk(panels, prefix * "_panels_0.vtu")
 particles2vtk(particles, prefix * "_particles_0.vtu")
 wakepanels2vtk(wakerings, prefix * "_wakerings_0.vtu")
-
-function test_geo()
-    for t = 1:tsteps
-        # move geometry
-        global origin = origin .+ vbody.*dt
-        for i = 1:length(panels)
-            # update point positions
-            for j =1:4
-                panels[i].pts[:,j] = rotm*(panels[i].pts[:,j] .+ vbody.*dt.-origin) .+ origin
-            end
-        end
-        for i = 1:length(panels)
-            panels[i].cpt[:] = (panels[i].pts[:,1] .+ panels[i].pts[:,2] .+ panels[i].pts[:,3] .+ panels[i].pts[:,4])./4
-            panels[i].normal[:] = quadNorm(panels[i].pts)
-
-            # update point velocities
-            for j = 1:4
-                panels[i].vpts[:,j] = cross(panels[i].pts[:,j], ombody) .+ vbody
-            end
-            panels[i].vcpt[:] = cross(panels[i].cpt[:], ombody) .+ vbody
-        end
-        panels2vtk(panels, prefix * "_panels_$t.vtu")
-        particles2vtk(particles, prefix * "_particles_$t.vtu")
-        wakepanels2vtk(wakerings, prefix * "_wakerings_$t.vtu")
-    end
-end
-
-test_geo()
-quit()
 
 # timestep
 for t = 1:tsteps
@@ -171,11 +145,14 @@ for t = 1:tsteps
     end
     
     # move geometry
+    global origin = origin .+ vbody.*dt
     for i = 1:length(panels)
         # update point positions
         for j =1:4
-            panels[i].pts[:,j] = rotm*panels[i].pts[:,j] .+ vbody.*dt
+            panels[i].pts[:,j] = rotm*(panels[i].pts[:,j] .+ vbody.*dt.-origin) .+ origin
         end
+    end
+    for i = 1:length(panels)
         panels[i].cpt[:] = (panels[i].pts[:,1] .+ panels[i].pts[:,2] .+ panels[i].pts[:,3] .+ panels[i].pts[:,4])./4
         panels[i].normal[:] = quadNorm(panels[i].pts)
 
