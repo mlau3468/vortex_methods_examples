@@ -24,10 +24,6 @@ tewidth = nspan
 tsteps = 96
 prefix = "test/_wing"
 
-# component variables
-#origin = [0;0;0]
-#vbody = [0;0;0] 
-#ombody = [0;0;50]
 dt = 2*pi/100/12
 #dt = chord/U/0.1
 
