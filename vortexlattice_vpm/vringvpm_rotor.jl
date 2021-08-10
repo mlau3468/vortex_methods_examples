@@ -127,14 +127,9 @@ for t = 1:tsteps
         end
     end
     
-    test = []
     for i = 1:length(particles)
         vel = elemVel(panels, particles, wakelines, wakerings, particles[i].cpt) .+ uinf
         particles[i].vel[:] = vel
-        push!(test, norm(vel))
-    end
-    if length(test) > 0
-        println(maximum(test))
     end
 
     # move existing wake
@@ -150,15 +145,31 @@ for t = 1:tsteps
     
     # move geometry
     global origin = origin .+ vbody.*dt
+    # update point positions
     for i = 1:length(panels)
         # update point positions
         for j =1:4
             panels[i].pts[:,j] = rotm*(panels[i].pts[:,j] .+ vbody.*dt.-origin) .+ origin
         end
-    end
-    for i = 1:length(panels)
+
         panels[i].cpt[:] = (panels[i].pts[:,1] .+ panels[i].pts[:,2] .+ panels[i].pts[:,3] .+ panels[i].pts[:,4])./4
         panels[i].normal[:] = quadNorm(panels[i].pts)
+
+        pts = panels[i].pts
+
+        tanj_vec = pts[:,2]-pts[:,1]
+        tanj_len = [norm(tanj_vec)]
+        tanj_uvec = tanj_vec./tanj_len
+        tani_vec = pts[:,4]-pts[:,1]
+        tani_len = [norm(tani_vec)]
+        tani_uvec = tani_vec./tani_len
+
+        panels[i].tanj_vec[:] = tanj_vec
+        panels[i].tanj_len[:] = tanj_len
+        panels[i].tanj_uvec[:] = tanj_uvec
+        panels[i].tani_vec[:] = tani_vec
+        panels[i].tani_len[:] = tani_len
+        panels[i].tani_uvec[:] = tani_uvec
 
         # update point velocities
         for j = 1:4
