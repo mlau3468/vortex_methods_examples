@@ -7,21 +7,21 @@ include("vis.jl")
 nspan = 13
 nchord = 4
 
-chord = 0.5
-span =4
+chord = 0.125
+span = 1
 
-new_comp, new_pan = createRect("wing", span, chord, nspan, nchord, [0;1;0], 15)
+new_comp, new_pan = createRect("wing", span, chord, nspan, nchord, [0;3;0], 15)
 new_comp.omega[:] = [0;0;50]
 S = span*chord
 
 alpha = 0
 U = 50
 uinf = [U*cos(deg2rad(alpha)); 0; U*sin(deg2rad(alpha))]
-uinf = [0;0;-10]
+uinf = [0;0;0]
 rho = 1.225
 
 tewidth = nspan
-tsteps = 96*2
+tsteps = 96
 prefix = "test/_wing"
 
 dt = 2*pi/100/12
