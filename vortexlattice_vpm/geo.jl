@@ -177,9 +177,9 @@ function stepGeometry!(components, panels, dt)
 
              # update point velocities
             for j = 1:4
-                panels[idx].vpts[:,j] = cross(panels[idx].pts[:,j], ombody) .+ vbody
+                panels[idx].vpts[:,j] = cross(ombody, panels[idx].pts[:,j].-comp.origin) .+ vbody
             end
-            panels[idx].vcpt[:] = cross(panels[idx].cpt[:], ombody) .+ vbody
+            panels[idx].vcpt[:] = cross(ombody, panels[idx].cpt[:].-comp.origin) .+ vbody
         end
     end
 end
