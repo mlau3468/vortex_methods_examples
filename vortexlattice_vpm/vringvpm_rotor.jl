@@ -1,7 +1,7 @@
 using LinearAlgebra
 using DelimitedFiles
 include("aeroel.jl")
-include("geotools.jl")
+include("geo.jl")
 include("vis.jl")
 
 nspan = 13
@@ -10,8 +10,8 @@ nchord = 4
 chord = 0.125
 span = 1
 
-panels, te_idx = createRect(span, chord, nspan, nchord, [0;3;0], 15)
-
+new_comp, panels = createRect("wing", span, chord, nspan, nchord, [0;3;0], 15)
+te_idx = new_comp.teidx
 S = span*chord
 
 alpha = 0
@@ -49,7 +49,7 @@ te_neighside = []
 maxwakelen = 1
 wakelen = 0
 
-test_geo(panels, origin, vbody, ombody)
+#test_geo(panels, origin, vbody, ombody)
 
 panels_neigh, panels_neighside, panels_neighdir = calcneighbors(panels)
 

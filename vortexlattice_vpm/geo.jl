@@ -73,12 +73,12 @@ function stepRotMat(omega_body, dt)
     return rotation
 end
 
-function createRect(span, chord, nspan, nchord, origin, twist)
+function createRect(name, span, chord, nspan, nchord, offset, twist)
     twist = deg2rad(twist)
     twist_loc = [0.25*chord; 0; 0]
     rot = [cos(twist) 0 sin(twist); 0 1 0; -sin(twist) 0 cos(twist)]
     # create geometry
-    te_idx = []
+    te_idx = Int64[]
     panels = []
     for i = 0:nchord-1
         for j = 0:nspan-1
@@ -92,18 +92,29 @@ function createRect(span, chord, nspan, nchord, origin, twist)
                 p = p .- twist_loc
                 p = rot * p
                 p = p + twist_loc
-                pts[:,k] = p .+ origin
+                pts[:,k] = p .+ offset
             end
             vel = [0; 0; 0]
             new_pan = initVortRing(pts, vel)
+            new_pan.compidx[1] = 1
             push!(panels, new_pan)
             if i+1==nchord
                 push!(te_idx, i*nspan + j + 1)
             end
         end
     end
+    panidx = 1:length(panels)
+    newcomp = component(name, panidx, te_idx, [0;0;0], [0;0;0], [0;0;0])
+    return newcomp, panels
+end
 
-    return panels, te_idx
+struct component
+    name :: String
+    panidx :: Array{Int64,1} # indices of panels in global list
+    teidx :: Array{Int64,1} # indices of trailing edge panels in global list
+    origin :: Array{Float64,1} # origin wrt intertial
+    omega :: Array{Float64,1} # rotational velocity wrt inertial
+    vel :: Array{Float64,1} # velocity of origin wrt inertial
 end
 
 function quadNorm(pts)
@@ -113,34 +124,43 @@ function quadNorm(pts)
     return normal
 end
 
-function test_geo(panelsin, origin, vbody, ombody)
-    rotm = stepRotMat(ombody, dt)
-    panels = deepcopy(panelsin)
-
-    # calculate intial geometry velocities
-    for i = 1:length(panels)
-        for j = 1:4
-            panels[i].vpts[:,j] = cross(ombody, panels[i].pts[:,j]) .+ vbody
+function setPointVels!(components, panels)
+    # set panel point velocities according to compnent rotation and linear velocity definitions
+    for c = 1:length(components)
+        comp = components[c]
+        ombody = comp.omega
+        vbody = comp.vel
+        for i = 1:length(comp.panidx)
+            idx = comp.panidx[i]
+            for j = 1:4
+                panels[idx].vpts[:,j] = cross(ombody, panels[idx].pts[:,j]) .+ vbody
+            end
+            panels[idx].vcpt[:] = cross(ombody, panels[idx].cpt[:]) .+ vbody
         end
-        panels[i].vcpt[:] = cross(ombody, panels[i].cpt[:]) .+ vbody
     end
+end
 
-    panels2vtk(panels, prefix * "_test_panels_0.vtu")
+function stepGeometry!(components, panels, dt)
+    for c = 1:length(components)
+        comp = components[c]
+        ombody = comp.omega
+        vbody = comp.vel
+        rotm = stepRotMat(ombody, dt)
+        # update component origin
+        comp.origin[:] = comp.origin .+ vbody .* dt
 
-    for t = 1:tsteps
-        # move geometry
-        origin = origin .+ vbody.*dt
-        for i = 1:length(panels)
+        # update panels of this component
+        for i = 1:length(comp.panidx)
+            idx = comp.panidx[i]
             # update point positions
             for j =1:4
-                panels[i].pts[:,j] = rotm*(panels[i].pts[:,j] .+ vbody.*dt.-origin) .+ origin
+                panels[idx].pts[:,j] = rotm*(panels[idx].pts[:,j] .+ vbody.*dt.-comp.origin) .+ comp.origin
             end
+            # update collocation point and other vectors
+            panels[idx].cpt[:] = (panels[idx].pts[:,1] .+ panels[idx].pts[:,2] .+ panels[idx].pts[:,3] .+ panels[idx].pts[:,4])./4
+            panels[idx].normal[:] = quadNorm(panels[idx].pts)
 
-            panels[i].cpt[:] = (panels[i].pts[:,1] .+ panels[i].pts[:,2] .+ panels[i].pts[:,3] .+ panels[i].pts[:,4])./4
-            panels[i].normal[:] = quadNorm(panels[i].pts)
-
-            pts = panels[i].pts
-
+            pts = panels[idx].pts
             tanj_vec = pts[:,2]-pts[:,1]
             tanj_len = [norm(tanj_vec)]
             tanj_uvec = tanj_vec./tanj_len
@@ -148,19 +168,33 @@ function test_geo(panelsin, origin, vbody, ombody)
             tani_len = [norm(tani_vec)]
             tani_uvec = tani_vec./tani_len
     
-            panels[i].tanj_vec[:] = tanj_vec
-            panels[i].tanj_len[:] = tanj_len
-            panels[i].tanj_uvec[:] = tanj_uvec
-            panels[i].tani_vec[:] = tani_vec
-            panels[i].tani_len[:] = tani_len
-            panels[i].tani_uvec[:] = tani_uvec
+            panels[idx].tanj_vec[:] = tanj_vec
+            panels[idx].tanj_len[:] = tanj_len
+            panels[idx].tanj_uvec[:] = tanj_uvec
+            panels[idx].tani_vec[:] = tani_vec
+            panels[idx].tani_len[:] = tani_len
+            panels[idx].tani_uvec[:] = tani_uvec
 
-            # update point velocities
+             # update point velocities
             for j = 1:4
-                panels[i].vpts[:,j] = cross(panels[i].pts[:,j], ombody) .+ vbody
+                panels[idx].vpts[:,j] = cross(panels[idx].pts[:,j], ombody) .+ vbody
             end
-            panels[i].vcpt[:] = cross(panels[i].cpt[:], ombody) .+ vbody
+            panels[idx].vcpt[:] = cross(panels[idx].cpt[:], ombody) .+ vbody
         end
+    end
+end
+
+function test_geo(componentsin, panelsin, dt, prefix)
+    panels = deepcopy(panelsin)
+    components = deepcopy(componentsin)
+
+    # set initial point velocities
+    setPointVels!(components, panels)
+
+    panels2vtk(panels, prefix * "_test_panels_0.vtu")
+
+    for t = 1:tsteps
+        stepGeometry!(components, panels, dt)
 
         panels2vtk(panels, prefix * "_test_panels_$t.vtu")
     end
