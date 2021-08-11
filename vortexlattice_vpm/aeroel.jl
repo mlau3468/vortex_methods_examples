@@ -11,7 +11,7 @@ struct wakeLine
     pts :: Array{Float64,2}
     cpt ::Array{Float64,1}
     gam :: Array{Float64,1} # magnitude
-    ptsvel :: Array{Float64,2}
+    ptvel :: Array{Float64,2}
 end
 
 struct wakeRing
@@ -193,6 +193,13 @@ function stepWake!(panels, particles, wakelines, wakerings, uinf, dt)
         particles[i].vel[:] = vel
     end
 
+    for i = 1:length(wakelines)
+        for j = 1:2
+            vel = elemVel(panels, particles, wakelines, wakerings,wakelines[i].pts[:,j]) .+ uinf
+            wakelines[i].ptvel[:,j] = vel
+        end
+    end
+
     # move existing wake
     for i = 1:length(wakerings)
         for j = 1:4
@@ -202,6 +209,12 @@ function stepWake!(panels, particles, wakelines, wakerings, uinf, dt)
 
     for i = 1:length(particles)
         particles[i].cpt[:] = particles[i].cpt .+ particles[i].vel .*dt
+    end
+
+    for i = 1:length(wakelines)
+        for j = 1:2
+            wakelines[i].pts[:,j] = wakelines[i].pts[:,j] .+ wakelines[i].ptvel[:,j].*dt
+        end
     end
 end
 
@@ -265,7 +278,7 @@ function shedParticles(wakeend, te_neigh, te_neighdir, wakelines)
 
         # new wake line left over from wake panel to particle conversion.
         # inject downstream for the next iteration
-        new_wakeline = initWakeLine([pt4 pt3])
+        new_wakeline = initWakeLine([pt1 pt2])
         new_wakeline.gam[1] = wakeend[j].gam[1]
 
         push!(new_particles, new_part)
