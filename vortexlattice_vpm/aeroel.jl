@@ -124,8 +124,8 @@ function vrtxline(p1, p2, p, gam)
     R2 = norm(p.-pts[:,2])
     hv = av .- ai.*edge_uni
     hi = norm(hv)
-    r_rankine = 0.01
-    r_cutoff = 0.001
+    r_rankine = 0.001
+    r_cutoff = 0.0001
     if hi > edge_len.*r_rankine
         vdou = ((edge_len.-ai)./R2 .+ai./R1) ./ (hi.^2) .* cross(edge_uni, hv)
     else

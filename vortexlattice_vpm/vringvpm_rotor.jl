@@ -54,11 +54,12 @@ wakerings = []
 te_neigh = []
 te_neighdir = []
 te_neighside = []
-maxwakelen = 1
+maxwakelen = 0
 wakelen = 0
 
 # test geometry motion
 test_geo(components, panels, dt, prefix)
+
 
 # Initialize
 setPointVels!(components, panels)
@@ -132,6 +133,11 @@ for t = 1:tsteps
     global wakerings = cat(new_wakerings, wakerings, dims=1)
 
     global wakelen = wakelen + 1
+
+    # update panel wake_vel
+    for i =1:length(panels)
+        panels[i].wake_vel[:] = wakeElemVel(particles, wakelines, wakerings, panels[i].cpt)
+    end
     
     # convert end wake rings into particles
     if wakelen > maxwakelen
@@ -155,11 +161,6 @@ for t = 1:tsteps
 
         # append particles to system
         global particles = cat(particles, new_particles, dims=1)
-    end
-
-    # update panel wake_vel
-    for i =1:length(panels)
-        panels[i].wake_vel[:] = wakeElemVel(particles, wakelines, wakerings, panels[i].cpt)
     end
 
     # pressure calculation
@@ -200,10 +201,10 @@ for t = 1:tsteps
     cl = cos(deg2rad(alpha))*total_force[3] - sin(deg2rad(alpha)) * total_force[1]
     cl = cl/(1/2*rho*U^2*S)
     println("Step: $t, CL=$cl")
-    =#
     
     panels2vtk(panels, prefix * "_panels_$t.vtu")
     particles2vtk(particles, prefix * "_particles_$t.vtu")
     wakepanels2vtk(wakerings, prefix * "_wakerings_$t.vtu")
+    =#
 
 end
