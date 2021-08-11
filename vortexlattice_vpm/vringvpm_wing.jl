@@ -47,7 +47,7 @@ wakerings = []
 te_neigh = []
 te_neighdir = []
 te_neighside = []
-maxwakelen = 0
+maxwakelen = 1
 wakelen = 0
 
 # test geometry motion

@@ -44,9 +44,9 @@ end
 
 function initWakeLine(pts)
     cpt =  (pts[:,1] .+ pts[:,2])/2
-    ptsvel = zeros(3,2)
+    ptvel = zeros(3,2)
     gam = [0]
-    return wakeLine(pts, cpt, gam, ptsvel)
+    return wakeLine(pts, cpt, gam, ptvel)
 end
 
 function initWakeRing(pts)
