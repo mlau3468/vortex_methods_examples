@@ -277,7 +277,6 @@ function shedParticles(wakeend, te_neigh, te_neighdir, wakelines)
         new_part = wakePart(dir, [mag_partvec], posp, vel)
 
         # new wake line left over from wake panel to particle conversion.
-        # inject downstream for the next iteration
         new_wakeline = initWakeLine([pt1 pt2])
         new_wakeline.gam[1] = wakeend[j].gam[1]
 
