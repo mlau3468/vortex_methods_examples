@@ -1,3 +1,4 @@
+using Interpolations
 
 function samePt(pt1, pt2)
     tol = 1e-6
@@ -94,8 +95,7 @@ function createRect(name, span, chord, nspan, nchord, offset, twist)
                 p = p + twist_loc
                 pts[:,k] = p .+ offset
             end
-            vel = [0; 0; 0]
-            new_pan = initVortRing(pts, vel)
+            new_pan = initVortRing(pts)
             new_pan.compidx[1] = 1
             push!(panels, new_pan)
             if i+1==nchord
@@ -198,4 +198,73 @@ function test_geo(componentsin, panelsin, dt, prefix)
 
         panels2vtk(panels, prefix * "_test_panels_$t.vtu")
     end
+end
+
+function createWing(name, ys, chords, sweeps, twists, nspan, nchord, xref)
+    spanspace = "cosOB"
+    # convert sweep to x location
+    dxs = diff(ys[2:end]).*tan.(deg2rad.(sweeps))
+    xs = cumsum(dxs)
+    # resample
+    # create linear interpolations
+    chords_itp = LinearInterpolation(ys, chords)
+    sweeps_itp = LinearInterpolation(ys, sweeps)
+    twists_itp = LinearInterpolation(ys, twists)
+    xs_int = LinearInterpolation(ys, xs)
+    
+    w = 0.5
+    k = sin.(LinRange(0,pi/2,nspan+1))
+    k2 = LinRange(0,1,nspan+1)
+    b = k.*w .+ k2.*(1-w)
+
+    ys = ys[1] .+ (ys[end]-ys[1]).*b
+    chords = chords_itp(ys)
+    sweeps = sweeps_itp(ys)
+    twists = twists_itp(ys)
+    xs = xs_int(ys)
+    
+    # calculate geometry
+    points = zeros(3,(nchord+1)*(nspan+1))
+    faces = zeros(Int64, 4,nchord*nspan)
+
+    panels = []
+    
+    b = 1
+    for j = 1:nspan+1
+        xc = LinRange(-xref*chords[j]+xs[j],(1-xref)*chords[j]+xs[j],nchord+1)
+        a = deg2rad(twists[j])
+        rotm = [cos(a) 0 sin(a); 0 1 0; -sin(a) 0 cos(a)]
+        for i =1:nchord+1
+            p = [xc[i];ys[j];0]
+            p = rotm*p
+            points[:,b] = p
+            b = b + 1
+        end
+    end
+
+    b = 1
+    for i =1:nchord
+        for j = 1:nspan
+            faces[:,b] = [(j-1)*(nchord+1)+i;(j)*(nchord+1)+i;(j)*(nchord+1)+i+1;(j-1)*(nchord+1)+i+1]
+            b = b + 1
+        end
+    end
+    
+    b = 1
+    te_idx = []
+    for i =1:nchord
+        for j = 1:nspan
+            pts = points[:,faces[:,b]]
+            new_pan = initVortRing(pts)
+            new_pan.compidx[1] = 1
+            push!(panels, new_pan)
+            if i == nchord
+                push!(te_idx, b)
+            end
+            b = b + 1
+        end
+    end
+    panidx = 1:length(panels)
+    newcomp = component(name, panidx, te_idx, [0;0;0], [0;0;0], [0;0;0])
+    return newcomp, panels
 end

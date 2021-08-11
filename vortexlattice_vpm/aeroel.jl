@@ -25,7 +25,6 @@ struct vortRing
     last_gam :: Array{Float64,1}
     dgdt :: Array{Float64,1}
     pts :: Array{Float64,2}
-    vel :: Array{Float64,1}
     area :: Array{Float64,1}
     tanj_vec :: Array{Float64,1}
     tanj_len :: Array{Float64,1}
@@ -56,7 +55,7 @@ function initWakeRing(pts)
     return wakeRing(gam, pts, ptvel)
 end
 
-function initVortRing(pts, vel)
+function initVortRing(pts)
     gam = [0.0]
     last_gam = [0.0]
     dgdt = [0.0]
@@ -77,7 +76,7 @@ function initVortRing(pts, vel)
 
     compidx = [0]
 
-    return vortRing(gam, last_gam, dgdt, pts, vel, area, tanj_vec, tanj_len, tanj_uvec, tani_vec, tani_len, tani_uvec, normal, wake_vel, dp, df, cpt, vcpt, vpts, compidx)
+    return vortRing(gam, last_gam, dgdt, pts, area, tanj_vec, tanj_len, tanj_uvec, tani_vec, tani_len, tani_uvec, normal, wake_vel, dp, df, cpt, vcpt, vpts, compidx)
 end
 
 function elemVel(panels, particles, wakelines, wakerings, loc)
