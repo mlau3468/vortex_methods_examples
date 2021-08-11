@@ -13,13 +13,13 @@ span = 8
 S = span*chord
 
 new_comp, new_pan = createRect("wing",span, chord, nspan, nchord, [0;4;0], 5)
-new_comp.vel[:] = [-50;0;0]
+new_comp.vel[:] = [0;0;0]
 
 
 alpha = 0
 U = 50
 uinf = [U*cos(deg2rad(alpha)); 0; U*sin(deg2rad(alpha))]
-uinf = [0;0;0]
+#uinf = [0;0;0]
 rho = 1.225
 
 tsteps = 100
@@ -47,7 +47,7 @@ wakerings = []
 te_neigh = []
 te_neighdir = []
 te_neighside = []
-maxwakelen = 2
+maxwakelen = 1
 wakelen = 0
 
 # test geometry motion
@@ -93,8 +93,6 @@ for t = 1:tsteps
     end
 
     # calculate new wake elements
-    new_particles = []
-    new_wakelines = []
     new_wakerings = []
     for i = 1:length(te_idx)
         idx = te_idx[i]

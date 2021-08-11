@@ -17,7 +17,7 @@ S = span*chord
 alpha = 0
 U = 50
 uinf = [U*cos(deg2rad(alpha)); 0; U*sin(deg2rad(alpha))]
-uinf = [0;0;-10]
+uinf = [0;0;-20]
 rho = 1.225
 
 tewidth = nspan
@@ -94,8 +94,6 @@ for t = 1:tsteps
     end
 
     # calculate new wake elements
-    new_particles = []
-    new_wakelines = []
     new_wakerings = []
     for i = 1:length(te_idx)
         idx = te_idx[i]
