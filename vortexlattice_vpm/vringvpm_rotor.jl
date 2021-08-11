@@ -10,7 +10,7 @@ nchord = 4
 ys = [1;2;4]
 chords = [0.5;0.5;0.25]
 sweeps = [0;0;10]
-twists = [12;8;4]
+twists = 2 .*[12;8;4]
 xref = 0.5
 
 alpha = 0
