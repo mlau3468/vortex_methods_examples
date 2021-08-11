@@ -113,17 +113,32 @@ function wakeElemVel(particles, wakelines, wakerings, loc)
 end
 
 function vrtxline(p1, p2, p, gam)
-    r1 = p.-p1
-    r2 = p.-p2
-    r0 = p2.-p1
-    # check for singular conditions
-    e = 1e-8
-    if norm(r1) < e || norm(r2) < e || norm(cross(r1,r2))^2 < e
-        vel = [0;0;0]
+    pts = [p1 p2]
+    edge_vec = pts[:,2] .- pts[:,1]
+    edge_len = norm(edge_vec)
+    edge_uni = edge_vec ./ edge_len
+
+    av = p .- pts[:,1]
+    ai = dot(av,edge_uni)
+
+    R1 = norm(av)
+    R2 = norm(p.-pts[:,2])
+    hv = av .- ai.*edge_uni
+    hi = norm(hv)
+    r_rankine = 0.01
+    r_cutoff = 0.001
+    if hi > edge_len.*r_rankine
+        vdou = ((edge_len.-ai)./R2 .+ai./R1) ./ (hi.^2) .* cross(edge_uni, hv)
     else
-        K = gam/(4*pi*norm(cross(r1,r2)).^2).*(dot(r0,r1)./norm(r1).-dot(r0,r2)./norm(r2))
-        vel = K*cross(r1,r2)
+        if R1 > edge_len.*r_cutoff && R2 > edge_len.*r_cutoff
+            r_ran = r_rankine .* edge_len
+            vdou = ((edge_len.-ai)./R2 .+ai./R1) ./ (r_ran.^2) .* cross(edge_uni, hv)
+        else
+            vdou = [0.0;0.0;0.0]
+        end
     end
+    vel = vdou .* gam[1]
+    vel = vel /4/pi
     return vel
 end
 
