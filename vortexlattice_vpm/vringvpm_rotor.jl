@@ -3,6 +3,7 @@ using DelimitedFiles
 include("aeroel.jl")
 include("geo.jl")
 include("vis.jl")
+include("sim.jl")
 
 
 nspan = 13

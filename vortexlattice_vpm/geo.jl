@@ -18,10 +18,9 @@ function calcneighbors(panels)
                 p2 = pan1.pts[:,idx[ii+1]]
                 for j = 1:length(panels)
                     if i != j
-                        pan2 = panels[j]
                         for jj = 1:4
-                            p11 = pan2.pts[:,idx[jj]]
-                            p22 = pan2.pts[:,idx[jj+1]]
+                            p11 = panels[j].pts[:,idx[jj]]
+                            p22 = panels[j].pts[:,idx[jj+1]]
                             if (samePt(p1,p22) && samePt(p2,p11))
                                 # is neighbor
                                 neigh_idx[ii,i] = j

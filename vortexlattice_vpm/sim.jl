@@ -28,19 +28,19 @@ function simulate(components, panels, te_idx, tsteps, dt, uinf, rho, particles, 
     particles2vtk(particles, prefix * "_particles_0.vtu")
     wakepanels2vtk(wakerings, prefix * "_wakerings_0.vtu")
 
+
     # timestep
     for t = 1:tsteps
         # calculate influence coefficients
         for i = 1:length(panels)
             for j = 1:length(panels)
                 # influence of jth panel on ith collocation point
-                vel = vrtxring(panels[j].pts, panels[i].cpt, 1)
+                vel = vrtxring(panels[j].pts, panels[i].cpt, 1.0)
                 A[i,j] = dot(vel, panels[i].normal)
             end
         end
 
         # build rhs vector
-        RHS[:] .= 0.0
         for i = 1:length(panels)
             RHS[i] = -dot(uinf, panels[i].normal)
             RHS[i] = RHS[i] - dot(panels[i].wake_vel, panels[i].normal)
@@ -54,8 +54,8 @@ function simulate(components, panels, te_idx, tsteps, dt, uinf, rho, particles, 
         end
 
         # calculate new wake elements
-        new_wakerings = []
-        for i = 1:length(te_idx)
+        new_wakerings = Array{wakeRing}(undef, tewidth)
+        for i = 1:tewidth
             idx = te_idx[i]
             p1 = panels[idx].pts[:,4]
             p2 = panels[idx].pts[:,3]
@@ -74,11 +74,12 @@ function simulate(components, panels, te_idx, tsteps, dt, uinf, rho, particles, 
             p4 = p1 .+ vel1.*dt
             new_wakering = initWakeRing([p1_new p2_new p3 p4])
             new_wakering.gam[1] = gam
-            push!(new_wakerings, new_wakering)
+            new_wakerings[i] = new_wakering
         end
-
+        @time begin
         # move wake
         stepWake!(panels, particles, wakelines, wakerings, uinf, dt)
+        end
         
         # move geometry
         stepGeometry!(components, panels, dt)
@@ -150,11 +151,9 @@ function simulate(components, panels, te_idx, tsteps, dt, uinf, rho, particles, 
 
         Fz = total_force[3]
         println("Step: $t, Fz=$Fz")
-        
         panels2vtk(panels, prefix * "_panels_$t.vtu")
         particles2vtk(particles, prefix * "_particles_$t.vtu")
         wakepanels2vtk(wakerings, prefix * "_wakerings_$t.vtu")
-
     end
 
 end

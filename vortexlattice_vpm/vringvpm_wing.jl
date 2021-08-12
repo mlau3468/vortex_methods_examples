@@ -7,21 +7,23 @@ include("sim.jl")
 
 nspan = 13
 nchord = 4
+chord = 1
+
 
 ys = [0;8]
-chords = [1;1]
+chords = [chord;chord]
 sweeps = [0;0]
 twists =[5;5]
 xref = 0.5
 
 new_comp, new_pan = createWing("wing", ys, chords, sweeps, twists, nspan, nchord,xref)
-new_comp.vel[:] = [0;0;0]
+new_comp.vel[:] = [-50;0;0]
 
 
 alpha = 0
 U = 50
 uinf = [U*cos(deg2rad(alpha)); 0; U*sin(deg2rad(alpha))]
-#uinf = [0;0;0]
+uinf = [0;0;0]
 rho = 1.225
 
 tsteps = 100

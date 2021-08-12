@@ -136,7 +136,7 @@ function vrtxline(p1, p2, p, gam)
             vdou = [0.0;0.0;0.0]
         end
     end
-    vel = vdou .* gam[1]
+    vel = vdou .* gam
     vel = vel /4/pi
     return vel
 end
@@ -151,7 +151,7 @@ function vrtxring(pts, p, gam)
     vel2 = vrtxline(p2, p3, p, gam)
     vel3 = vrtxline(p3, p4, p, gam)
     vel4 = vrtxline(p4, p1, p, gam)
-    return vel1 + vel2 + vel3 + vel4
+    return vel1 .+ vel2 .+ vel3 .+ vel4
 end
 
 function velVortRing(vring, loc)
@@ -219,8 +219,8 @@ function stepWake!(panels, particles, wakelines, wakerings, uinf, dt)
 end
 
 function shedParticles(wakeend, te_neigh, te_neighdir, wakelines)
-    new_particles = []
-    new_wakelines = []
+    new_particles = Array{wakePart}(undef, length(wakeend))
+    new_wakelines =  Array{wakeLine}(undef, length(wakeend))
     # convert wakerings into particles
     for j = 1:length(wakeend)
         
@@ -280,8 +280,10 @@ function shedParticles(wakeend, te_neigh, te_neighdir, wakelines)
         new_wakeline = initWakeLine([pt1 pt2])
         new_wakeline.gam[1] = wakeend[j].gam[1]
 
-        push!(new_particles, new_part)
-        push!(new_wakelines, new_wakeline)
+        new_particles[j] = new_part
+        #push!(new_particles, new_part)
+        new_wakelines[j] = new_wakeline
+        #push!(new_wakelines, new_wakeline)
     end
     return new_particles, new_wakelines
 end
