@@ -13,7 +13,7 @@ function simulate(components, panels, te_idx, tsteps, dt, uinf, rho, particles, 
     setPointVels!(components, panels)
     panels_neigh, panels_neighside, panels_neighdir = calcneighbors(panels)
     tewidth = length(te_idx)
-    maxwakelen = 1
+    maxwakelen = 0
     wakelen = 0
 
     # trailing edge variables
@@ -23,10 +23,11 @@ function simulate(components, panels, te_idx, tsteps, dt, uinf, rho, particles, 
 
     A = zeros(Float64,length(panels), length(panels))
     RHS = zeros(Float64,length(panels))
-
+    
     panels2vtk(panels, prefix * "_panels_0.vtu")
     particles2vtk(particles, prefix * "_particles_0.vtu")
     wakepanels2vtk(wakerings, prefix * "_wakerings_0.vtu")
+    
 
 
     # timestep
@@ -76,10 +77,11 @@ function simulate(components, panels, te_idx, tsteps, dt, uinf, rho, particles, 
             new_wakering.gam[1] = gam
             new_wakerings[i] = new_wakering
         end
-        @time begin
+        
+        
         # move wake
         stepWake!(panels, particles, wakelines, wakerings, uinf, dt)
-        end
+        
         
         # move geometry
         stepGeometry!(components, panels, dt)
@@ -150,10 +152,12 @@ function simulate(components, panels, te_idx, tsteps, dt, uinf, rho, particles, 
         end
 
         Fz = total_force[3]
+        
         println("Step: $t, Fz=$Fz")
         panels2vtk(panels, prefix * "_panels_$t.vtu")
         particles2vtk(particles, prefix * "_particles_$t.vtu")
         wakepanels2vtk(wakerings, prefix * "_wakerings_$t.vtu")
+        
     end
 
 end

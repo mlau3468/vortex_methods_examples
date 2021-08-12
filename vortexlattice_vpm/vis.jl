@@ -30,7 +30,7 @@ function particles2vtk(particles_list, fname)
 end
 
 function panels2vtk(panel_list, fname)
-    pts = zeros(3,length(panel_list)*4)
+    pts = zeros(Float64, 3,length(panel_list)*4)
     for i = 1:length(panel_list)
         for j=1:4
             pts[:,(i-1)*4+j] = panel_list[i].pts[:,j]

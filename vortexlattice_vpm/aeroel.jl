@@ -136,9 +136,7 @@ function vrtxline(p1, p2, p, gam)
             vdou = [0.0;0.0;0.0]
         end
     end
-    vel = vdou .* gam
-    vel = vel /4/pi
-    return vel
+    return vdou .* gam/4/pi
 end
 
 function vrtxring(pts, p, gam)
@@ -155,7 +153,7 @@ function vrtxring(pts, p, gam)
 end
 
 function velVortRing(vring, loc)
-    return vrtxring(vring.pts, loc, vring.gam[1])
+ return vrtxring(vring.pts, loc, vring.gam[1])
 end
 
 function velVortPart(particle, loc)

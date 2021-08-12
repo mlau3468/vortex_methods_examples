@@ -5,6 +5,10 @@ include("geo.jl")
 include("vis.jl")
 include("sim.jl")
 
+components = []
+panels = []
+te_idx = []
+
 
 nspan = 13
 nchord = 4
@@ -31,12 +35,6 @@ drev = 12
 dt = 2*pi/om/drev
 tsteps = drev*10
 prefix = "test/_wing"
-
-
-
-components = []
-panels = []
-te_idx = []
 
 # add geometry
 components = cat(components, new_comp, dims=1)
