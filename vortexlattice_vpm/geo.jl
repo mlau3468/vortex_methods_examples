@@ -203,7 +203,8 @@ end
 function createWing(name, ys, chords, sweeps, twists, nspan, nchord, xref)
     spanspace = "cosOB"
     # convert sweep to x location
-    dxs = diff(ys[2:end]).*tan.(deg2rad.(sweeps))
+    ys2 = cat([0.0;],ys, dims=1)
+    dxs = diff(ys2[1:end]).*tan.(deg2rad.(sweeps))
     xs = cumsum(dxs)
     # resample
     # create linear interpolations
@@ -227,7 +228,7 @@ function createWing(name, ys, chords, sweeps, twists, nspan, nchord, xref)
     points = zeros(3,(nchord+1)*(nspan+1))
     faces = zeros(Int64, 4,nchord*nspan)
 
-    panels = []
+    panels = vortRing[]
     
     b = 1
     for j = 1:nspan+1
@@ -251,7 +252,7 @@ function createWing(name, ys, chords, sweeps, twists, nspan, nchord, xref)
     end
     
     b = 1
-    te_idx = []
+    te_idx = Int64[]
     for i =1:nchord
         for j = 1:nspan
             pts = points[:,faces[:,b]]
