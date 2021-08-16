@@ -1,4 +1,5 @@
 using Statistics
+using LinearAlgebra
 
 struct wakePart
     dir :: Array{Float64, 1}

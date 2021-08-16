@@ -199,8 +199,7 @@ function test_geo(componentsin, panelsin, dt, prefix)
     end
 end
 
-function createWing(name, ys, chords, sweeps, twists, nspan, nchord, xref)
-    spanspace = "cosOB"
+function createWing(name, ys, chords, sweeps, twists, nspan, nchord, xref, spacetype)
     # convert sweep to x location
     ys2 = cat([0.0;],ys, dims=1)
     dxs = diff(ys2[1:end]).*tan.(deg2rad.(sweeps))
@@ -212,12 +211,22 @@ function createWing(name, ys, chords, sweeps, twists, nspan, nchord, xref)
     twists_itp = LinearInterpolation(ys, twists)
     xs_int = LinearInterpolation(ys, xs)
     
-    w = 0.5
-    k = sin.(LinRange(0,pi/2,nspan+1))
-    k2 = LinRange(0,1,nspan+1)
-    b = k.*w .+ k2.*(1-w)
-
-    ys = ys[1] .+ (ys[end]-ys[1]).*b
+    if spacetype == "cosOB"
+        w = 0.5
+        k = sin.(LinRange(0,pi/2,nspan+1))
+        k2 = LinRange(0,1,nspan+1)
+        b = k.*w .+ k2.*(1-w)
+        ys = ys[1] .+ (ys[end]-ys[1]).*b
+    elseif spacetype == "equal"
+        ys = LinRange(ys[1], ys[end], nspan+1)
+    elseif spacetype == "cos"
+        w = 0.5
+        beta = LinRange(0, pi, nspan+1)
+        k = (1 .-cos.(beta))/2
+        k2 = LinRange(0,1,nspan+1)
+        b = k.*w .+ k2.*(1-w)
+        ys = ys[1] .+ (ys[end]-ys[1]).*b
+    end
     chords = chords_itp(ys)
     sweeps = sweeps_itp(ys)
     twists = twists_itp(ys)

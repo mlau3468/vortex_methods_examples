@@ -26,7 +26,7 @@ rho = 1.225
 rpm = 500
 
 om = rpm*2*pi/60
-new_comp, new_pan = createWing("blade", ys, chords, sweeps, twists, nspan, nchord,xref)
+new_comp, new_pan = createWing("blade", ys, chords, sweeps, twists, nspan, nchord,xref, "cosOB")
 
 new_comp.omega[:] = [0;0;om]
 
