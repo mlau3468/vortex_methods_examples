@@ -215,8 +215,6 @@ function simulate2(components, panels, te_idx, tsteps, dt, uinf, rho, particles,
         for i = 1:length(panels)
             vt = dot(uinf.+panels[i].wake_vel, panels[i].tani_uvec)
             vp = dot(uinf.+panels[i].wake_vel, panels[i].normal)
-            #println(vt)
-            #println(vp)
             uinflocal = sqrt(vt^2+vp^2)
             a = rad2deg(atan(vp,vt))
             ae = sol[i]/(pi*panels[i].tani_len[1]*uinflocal)
