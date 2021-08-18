@@ -17,13 +17,12 @@ twists =[5;5]
 xref = 0.5
 
 new_comp, new_pan = createWing("wing", ys, chords, sweeps, twists, nspan, nchord,xref, "cos")
-new_comp.vel[:] = [-50;0;0]
+new_comp.vel[:] = [0;0;0]
 
 
 alpha = 0
 U = 50
 uinf = [U*cos(deg2rad(alpha)); 0; U*sin(deg2rad(alpha))]
-uinf = [0;0;0]
 rho = 1.225
 
 tsteps = 100
@@ -43,6 +42,10 @@ te_idx = cat(te_idx, new_comp.teidx, dims=1)
 particles = wakePart[]
 wakelines = wakeLine[]
 wakerings = wakeRing[]
+
+# test geometry motion
+test_geo(components, panels, dt, prefix)
+
 
 simulate(components, panels, te_idx, tsteps, dt, uinf, rho, particles, wakelines, wakerings, prefix)
 #=
