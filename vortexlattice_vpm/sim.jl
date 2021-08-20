@@ -2,6 +2,7 @@ include("aeroel.jl")
 include("geo.jl")
 include("vis.jl")
 using Interpolations
+using NLsolve
 
 
 function simulate(components, panels, te_idx, tsteps, dt, uinf, rho, particles, wakelines, wakerings, prefix)
@@ -181,30 +182,7 @@ function simulate2(components, panels, te_idx, tsteps, dt, uinf, rho, particles,
     
     # timestep
     for t = 1:tsteps
-        
-        # calculate influence coefficients
-        for i = 1:length(panels)
-            for j = 1:length(panels)
-                # influence of jth panel on ith collocation point
-                vel = vrtxring(panels[j].pts, panels[i].cpt, 1.0)
-                A[i,j] = dot(vel, panels[i].normal)
-            end
-        end
-
-        # build rhs vector
-        for i = 1:length(panels)
-            RHS[i] = -dot(uinf, panels[i].normal)
-            RHS[i] = RHS[i] - dot(panels[i].wake_vel, panels[i].normal)
-            RHS[i] = RHS[i] + dot(panels[i].vcpt, panels[i].normal)
-        end
-
-        # solve matrix for panel gamma
-        sol = A\RHS
-        
-        for i = 1:length(panels)
-            newPanGam(panels[i], sol[i], dt)
-        end
-
+       
         # calculate angle of attack on elements
         alphas = zeros(length(panels))
         cls = zeros(length(panels))
@@ -213,16 +191,32 @@ function simulate2(components, panels, te_idx, tsteps, dt, uinf, rho, particles,
         fz = 0.0
         fx = 0.0
         for i = 1:length(panels)
+            function residualfunc(gam)
+                vt = dot(uinf.+panels[i].wake_vel, panels[i].tani_uvec)
+                vp = dot(uinf.+panels[i].wake_vel, panels[i].normal)
+                uinflocal = sqrt.(vt.^2+vp.^2)
+                a = rad2deg.(atan.(vp,vt))
+                ae = gam./(pi.*panels[i].tani_len[1].*uinflocal)
+                a = a .- rad2deg.(ae)
+                cl = cl_interp(a)
+                gam2 = 1/2*cl*uinflocal*panels[i].tani_len[1]
+                return gam2 - gam
+            end
+            res = nlsolve(residualfunc, [1.])
+            
+            newgam = res.zero[1]
+            
             vt = dot(uinf.+panels[i].wake_vel, panels[i].tani_uvec)
             vp = dot(uinf.+panels[i].wake_vel, panels[i].normal)
             uinflocal = sqrt(vt^2+vp^2)
             a = rad2deg(atan(vp,vt))
-            ae = sol[i]/(pi*panels[i].tani_len[1]*uinflocal)
-            ae = panels[i].gam[1]/(pi*panels[i].tani_len[1]*uinflocal)
+            ae = newgam/(pi*panels[i].tani_len[1]*uinflocal)
             a = a - rad2deg(ae)
             alphas[i] = a
             cls[i] = cl_interp(a)
             cds[i] = cd_interp(a)
+            sol2[i] = 1/2*cls[i]*uinflocal*panels[i].tani_len[1]
+
             lift = 1/2*rho*uinflocal^2*panels[i].area[1]*cls[i]
             drag = 1/2*rho*uinflocal^2*panels[i].area[1]*cds[i]
             alf = deg2rad(a)
@@ -230,12 +224,15 @@ function simulate2(components, panels, te_idx, tsteps, dt, uinf, rho, particles,
             ft = (sin(alf)*lift + cos(alf)*drag)
             fz = fz + fn.*panels[i].normal[3] + ft.*panels[i].tani_uvec[3]
             fx = fx + fn.*panels[i].normal[1] + ft.*panels[i].tani_uvec[1]
-            sol2[i] = 1/2*cls[i]*uinflocal*panels[i].tani_len[1]
         end
 
-        #println(alphas)
+        println(alphas)
         println(fz/(1/2*rho*U^2*(1*6)))
         println(fx/(1/2*rho*U^2*(1*6)))
+
+        for i = 1:length(panels)
+            newPanGam(panels[i], sol2[i], dt)
+        end
 
         # calculate new wake elements
         new_wakerings = Array{wakeRing}(undef, tewidth)
@@ -260,7 +257,6 @@ function simulate2(components, panels, te_idx, tsteps, dt, uinf, rho, particles,
             new_wakering.gam[1] = gam
             new_wakerings[i] = new_wakering
         end
-        
         
         # move wake
         stepWake!(panels, particles, wakelines, wakerings, uinf, dt)

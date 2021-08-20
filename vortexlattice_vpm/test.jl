@@ -17,7 +17,7 @@ chord = 1
 ys = [0;6]
 chords = [chord;chord]
 sweeps = [0;0]
-twists =[5;5]
+twists =[45;45]
 xref = 0.5
 
 new_comp, new_pan = createWing("wing", ys, chords, sweeps, twists, nspan, nchord,xref,"cos")
