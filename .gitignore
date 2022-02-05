@@ -1,2 +1,4 @@
 .vscode/*
 *.vtk
+*.pyc
+*.json
