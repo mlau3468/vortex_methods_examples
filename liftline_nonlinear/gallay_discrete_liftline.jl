@@ -131,7 +131,7 @@ function test()
     span = 12
     chord = 1
     S = span.*chord
-    npan = 50
+    npan = 10
     panVerts, panCon, panCpts, bndLen, chordDir = buildRectHShoe(span, chord, npan)
     panNorms = calcPanNorm(panVerts, panCon)
 
@@ -225,6 +225,7 @@ function test()
         end
 
         # update X
+        #println(rad2deg.(Xnew[npan+1:end]))
         X[:] .= Xnew
         w = B*X[1:npan] #downash velocity
         ai = -atan.(w,V)# induced angle of attack
