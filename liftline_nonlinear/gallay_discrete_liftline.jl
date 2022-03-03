@@ -151,7 +151,8 @@ function test()
             A[i,j] = dot(uvw, panNorms[:,i])
             B[i,j] = dot(dwash, panNorms[:,i])
         end
-        RHS[i] = -dot(uinf, panNorms[:,i])
+        #RHS[i] = -dot(uinf, panNorms[:,i])
+        RHS[i] = -sind(alpha)
     end
 
     # uncorrected gamma
@@ -185,10 +186,10 @@ function test()
         iter += 1
         # compute F(X)
         for i = 1:npan
-            F[i] = sum(A[i,:].*gam) - sin(alf[i]-dalf[i])
-            #F[i] = sum(A[i,:].*gam) + sin(alf[i]-dalf[i])
+            #F[i] = sum(A[i,:].*gam) - sin(alf[i]-dalf[i])
+            F[i] = sum(A[i,:].*gam) + sin(alf[i]-dalf[i])
+            
             alfe = rad2deg(alf[i]-dalf[i])
-
             alfe = mod(alfe, 360)
             if alfe > 180
                 alfe = alfe - 360
@@ -197,7 +198,8 @@ function test()
             end
 
             clvisc = cl_interp(alfe)
-            F[npan+i] = dalf[i]-(clvisc - 2*gam[i]/chord/V)/(2*pi)
+            #F[npan+i] = dalf[i]-(clvisc - 2*gam[i]/chord/V)/(2*pi)
+            F[npan+i] = dalf[i]-(2*gam[i]/chord/V - clvisc)/(2*pi)
         end
 
         # compute J(X)
@@ -205,9 +207,10 @@ function test()
             for j = 1:npan
                 J[i,j] = A[i,j]
             end
-            J[i,i+npan] = cos(alf[i]-dalf[i])
-            #J[i,i+npan] = -cos(alf[i]-dalf[i])
-            J[i+npan, i] = 2/chord/V /(2*pi)
+            #J[i,i+npan] = cos(alf[i]-dalf[i])
+            J[i,i+npan] = -cos(alf[i]-dalf[i])
+            #J[i+npan, i] = 2/chord/V /(2*pi)
+            J[i+npan, i] = -2/chord/V /(2*pi)
             J[i+npan, i+npan] = 1
         end
 
