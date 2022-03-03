@@ -1,6 +1,8 @@
 using LinearAlgebra
 using Interpolations
 using DelimitedFiles
+using Printf
+using Plots
 
 # See Katz Plotkin 12.1
 # Lifting-Line Solution by horshoe elements
@@ -129,11 +131,11 @@ function test()
     span = 12
     chord = 1
     S = span.*chord
-    npan = 8
+    npan = 50
     panVerts, panCon, panCpts, bndLen, chordDir = buildRectHShoe(span, chord, npan)
     panNorms = calcPanNorm(panVerts, panCon)
 
-    alpha = 1
+    alpha = 5
     rho = 1.225
     V = 1
     uinf = V.*[cosd(alpha), 0, sind(alpha)]
@@ -141,9 +143,16 @@ function test()
     A = zeros(Float64, npan, npan) # influence coefficents for normal flow
     B = zeros(Float64, npan, npan) # influence coefficents for downwash
     RHS = zeros(Float64, npan)
-    gam = zeros(Float64, npan)
-    alf = zeros(Float64, npan)
-    dalf = zeros(Float64, npan)
+    alf = zeros(Float64, npan) # local angle of attack at each section
+    w = zeros(Float64, npan) # downwash velocity
+    ai = zeros(Float64, npan) # induced angle of attack
+
+    # preallocate working matrices
+    X = zeros(2*npan) #(gam1, gam2, gamn ...., dalf1, dalf2, ....dalfn)
+    F = zeros(2*npan) # nonlinear vector function
+    J = zeros(2*npan, 2*npan)# jacobian of F
+
+
     for i = 1:npan
         for j = 1:npan
             # influence of jth panel on ith collcation point
@@ -155,9 +164,10 @@ function test()
         RHS[i] = -sind(alpha)
     end
 
-    # uncorrected gamma
-    gam[:].= A\RHS
-    println(gam)
+    # intial guess of X using uncorrected gamma
+    X[1:npan].= A\RHS
+    w[:] .= B*X[1:npan] #downash velocity
+    ai[:] .= -atan.(w,V)# induced angle of attack
 
     # calculate local alphas at eacch station
     for i = 1:npan
@@ -169,27 +179,16 @@ function test()
     iter = 0
     tol = 1e-6
 
-    # preallocate working matrices
-    X = zeros(2*npan) #(gam1, gam2, gamn ...., dalf1, dalf2, ....dalfn)
-    F = zeros(2*npan) # nonlinear vector function
-    J = zeros(2*npan, 2*npan)# jacobian of F
-
     # Find F(X)=0 using Newton Raphson
-
-    # initial X
-    for i = 1:npan
-        X[i] = gam[i]
-        X[npan+i] = dalf[i]
-    end
 
     while !done
         iter += 1
         # compute F(X)
         for i = 1:npan
-            #F[i] = sum(A[i,:].*gam) - sin(alf[i]-dalf[i])
-            F[i] = sum(A[i,:].*gam) + sin(alf[i]-dalf[i])
+            #F[i] = sum(A[i,:].*X[1:npan]) - sin(alf[i]-X[npan+i])
+            F[i] = sum(A[i,:].*X[1:npan]) + sin(alf[i]-X[npan+i])
             
-            alfe = rad2deg(alf[i]-dalf[i])
+            alfe = rad2deg(alf[i]-ai[i]-X[npan+i])
             alfe = mod(alfe, 360)
             if alfe > 180
                 alfe = alfe - 360
@@ -198,8 +197,8 @@ function test()
             end
 
             clvisc = cl_interp(alfe)
-            #F[npan+i] = dalf[i]-(clvisc - 2*gam[i]/chord/V)/(2*pi)
-            F[npan+i] = dalf[i]-(2*gam[i]/chord/V - clvisc)/(2*pi)
+            #F[npan+i] = X[npan+i]-(clvisc - 2*X[i]/chord/V)/(2*pi)
+            F[npan+i] = X[npan+i]-(2*X[i]/chord/V - clvisc)/(2*pi)
         end
 
         # compute J(X)
@@ -207,8 +206,8 @@ function test()
             for j = 1:npan
                 J[i,j] = A[i,j]
             end
-            #J[i,i+npan] = cos(alf[i]-dalf[i])
-            J[i,i+npan] = -cos(alf[i]-dalf[i])
+            #J[i,i+npan] = cos(alf[i]-X[npan+i])
+            J[i,i+npan] = -cos(alf[i]-X[npan+i])
             #J[i+npan, i] = 2/chord/V /(2*pi)
             J[i+npan, i] = -2/chord/V /(2*pi)
             J[i+npan, i+npan] = 1
@@ -227,27 +226,18 @@ function test()
 
         # update X
         X[:] .= Xnew
-        gam[:] .= X[1:npan]
-        dalf[:] .= X[npan+1:2*npan]
+        w = B*X[1:npan] #downash velocity
+        ai = -atan.(w,V)# induced angle of attack
     end
-    println(gam)
-    println(rad2deg.(dalf))
-
     
-
-
-    #=
-    gam[:].= A\RHS
-    w = B*gam #downash velocity
-
-    dL = rho.*V.*gam.*bndLen
-    dDi = -rho.*w.*gam.*bndLen
-
+    dL = rho.*V.*X[1:npan].*bndLen
+    dDi = -rho.*w.*X[1:npan].*bndLen
     L = sum(dL)
     Di = sum(dDi)
-
     CL = L/(1/2*rho*V^2*S)
-    =#
+
+    @printf "CL=%.8f" CL
+    plot(panCpts[2,:], X[1:npan])
 
     
 end
