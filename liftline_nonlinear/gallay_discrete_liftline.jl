@@ -129,11 +129,11 @@ function test()
     span = 12
     chord = 1
     S = span.*chord
-    npan = 10
+    npan = 8
     panVerts, panCon, panCpts, bndLen, chordDir = buildRectHShoe(span, chord, npan)
     panNorms = calcPanNorm(panVerts, panCon)
 
-    alpha = 2
+    alpha = 1
     rho = 1.225
     V = 1
     uinf = V.*[cosd(alpha), 0, sind(alpha)]
@@ -173,6 +173,8 @@ function test()
     F = zeros(2*npan) # nonlinear vector function
     J = zeros(2*npan, 2*npan)# jacobian of F
 
+    # Find F(X)=0 using Newton Raphson
+
     # initial X
     for i = 1:npan
         X[i] = gam[i]
@@ -180,10 +182,11 @@ function test()
     end
 
     while !done
-        iter += 1        
+        iter += 1
         # compute F(X)
         for i = 1:npan
             F[i] = sum(A[i,:].*gam) - sin(alf[i]-dalf[i])
+            #F[i] = sum(A[i,:].*gam) + sin(alf[i]-dalf[i])
             alfe = rad2deg(alf[i]-dalf[i])
 
             alfe = mod(alfe, 360)
@@ -203,6 +206,7 @@ function test()
                 J[i,j] = A[i,j]
             end
             J[i,i+npan] = cos(alf[i]-dalf[i])
+            #J[i,i+npan] = -cos(alf[i]-dalf[i])
             J[i+npan, i] = 2/chord/V /(2*pi)
             J[i+npan, i+npan] = 1
         end
@@ -223,6 +227,7 @@ function test()
         gam[:] .= X[1:npan]
         dalf[:] .= X[npan+1:2*npan]
     end
+    println(gam)
     println(rad2deg.(dalf))
 
     
