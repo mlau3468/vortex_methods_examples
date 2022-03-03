@@ -110,7 +110,7 @@ function calcPanNorm(panVerts, panCon)
 end
 
 
-function test()
+function run()
     span = 12
     chord = 1
     S = span.*chord
@@ -152,4 +152,4 @@ function test()
     
 end
 
-test()
+run()
