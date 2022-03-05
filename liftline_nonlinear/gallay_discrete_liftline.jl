@@ -125,7 +125,7 @@ end
 function test()
 
     max_iter = 500
-    rlx = 0.02
+    rlx = 0.4
     tol = 1e-3
 
     # read in airfoil data
@@ -136,7 +136,7 @@ function test()
     span = 12
     chord = 1
     S = span.*chord
-    npan = 20
+    npan = 80
     panVerts, panCon, panCpts, bndLen, chordDir = buildRectHShoe(span, chord, npan)
     panNorms = calcPanNorm(panVerts, panCon)
 
@@ -236,7 +236,8 @@ function test()
             # artificial viscosity contributions to F(X) and J(X)
             if useArtVisc
                 dfdg = J[i,i]
-                mu[i] = 1.2*(dfdg-1)/2
+                mu[i] = 1*(dfdg-1)/2
+                mu[i] = 1e-2
                 F[npan+i] = F[npan+i] +mu[i]*2*X[npan+i]
                 J[npan+i,npan+i] = J[npan+i,npan+i] + 2*mu[i]
                 for n = neigh
@@ -249,7 +250,7 @@ function test()
         # calculate next iteration X
         Xnew = X - inv(J)*F.*rlx
         #display(J)
-        println(F[1:6])
+        println(maximum(abs.(F)))
         #quit()
 
         residual = maximum(abs.(F))
@@ -267,20 +268,22 @@ function test()
         ai = -atan.(w,V)# induced angle of attack
     end
     
-    dL = rho.*V.*X[1:npan].*bndLen
+    # results
+    res_a = rad2deg.(alf .- X[npan+1:end])
+    res_cl = cl_interp(res_a)
+    dL = 1/2 .*rho .* V.^2 .* bndLen .* chord .* res_cl
     dDi = -rho.*w.*X[1:npan].*bndLen
     L = sum(dL)
     Di = sum(dDi)
     CL = L/(1/2*rho*V^2*S)
 
     @printf "CL=%.8f" CL
-    #plot(panCpts[2,:], X[1:npan])
-    p1 = plot(panCpts[2,:], alpha .- rad2deg.(X[npan+1:end]))
-    p2 = plot(panCpts[2,:], cl_interp(alpha .- rad2deg.(X[npan+1:end])))
-    p3 = plot(panCpts[2,:], 2 .*X[1:npan]./chord./V)
+    p1 = plot(panCpts[2,:], res_a)
+    p2 = plot(panCpts[2,:], res_cl)
+    #p3 = plot(panCpts[2,:], 2 .*X[1:npan]./chord./V)
     display(p1)
     display(p2)
-    display(p3)
+    #display(p3)
 
     
 end
