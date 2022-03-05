@@ -123,6 +123,11 @@ end
 
 
 function test()
+
+    max_iter = 500
+    rlx = 0.02
+    tol = 1e-3
+
     # read in airfoil data
     c81 = readdlm("naca0012.csv", ',', Float64)
     cl_interp =  LinearInterpolation(c81[:,1], c81[:,2])
@@ -131,14 +136,17 @@ function test()
     span = 12
     chord = 1
     S = span.*chord
-    npan = 10
+    npan = 20
     panVerts, panCon, panCpts, bndLen, chordDir = buildRectHShoe(span, chord, npan)
     panNorms = calcPanNorm(panVerts, panCon)
 
-    alpha = 5
+
+    alpha = 18
     rho = 1.225
     V = 1
     uinf = V.*[cosd(alpha), 0, sind(alpha)]
+
+    useArtVisc = false
 
     A = zeros(Float64, npan, npan) # influence coefficents for normal flow
     B = zeros(Float64, npan, npan) # influence coefficents for downwash
@@ -152,6 +160,9 @@ function test()
     F = zeros(2*npan) # nonlinear vector function
     J = zeros(2*npan, 2*npan)# jacobian of F
 
+    # artificial viscosity
+    mu = zeros(Float64, npan)
+    #mu[:] .= 0.02
 
     for i = 1:npan
         for j = 1:npan
@@ -164,27 +175,39 @@ function test()
         RHS[i] = -sind(alpha)
     end
 
-    # intial guess of X using uncorrected gamma
-    X[1:npan].= A\RHS
-    w[:] .= B*X[1:npan] #downash velocity
-    ai[:] .= -atan.(w,V)# induced angle of attack
-
     # calculate local alphas at eacch station
     for i = 1:npan
         alf[i] = deg2rad(alpha) 
     end
 
+    # intial guess of X using angle of attack
+    cl_init = cl_interp(rad2deg.(alf))
+    gam_init = cl_init*chord*V/2
+
+    #gam_init = A\RHS
+
+    X[1:npan].= gam_init
+    w[:] .= B*X[1:npan] #downash velocity
+    ai[:] .= -atan.(w,V)# induced angle of attack
+
     done = false
-    max_iter = 100
     iter = 0
-    tol = 1e-6
 
     # Find F(X)=0 using Newton Raphson
 
     while !done
         iter += 1
-        # compute F(X)
         for i = 1:npan
+            # get neighboring panels
+            if i == 1
+                neigh = [i+1]
+            elseif i ==npan
+                neigh = [i-1]
+            else
+                neigh = [i-1; i+1]
+            end
+
+            # compute F(X)
             #F[i] = sum(A[i,:].*X[1:npan]) - sin(alf[i]-X[npan+i])
             F[i] = sum(A[i,:].*X[1:npan]) + sin(alf[i]-X[npan+i])
             
@@ -199,24 +222,37 @@ function test()
             clvisc = cl_interp(alfe)
             #F[npan+i] = X[npan+i]-(clvisc - 2*X[i]/chord/V)/(2*pi)
             F[npan+i] = X[npan+i]-(2*X[i]/chord/V - clvisc)/(2*pi)
-        end
 
-        # compute J(X)
-        for i =1:npan
+            # Compute J(X)
             for j = 1:npan
                 J[i,j] = A[i,j]
             end
-            #J[i,i+npan] = cos(alf[i]-X[npan+i])
-            J[i,i+npan] = -cos(alf[i]-X[npan+i])
-            #J[i+npan, i] = 2/chord/V /(2*pi)
-            J[i+npan, i] = -2/chord/V /(2*pi)
-            J[i+npan, i+npan] = 1
+            #J[i,npan+i] = cos(alf[i]-X[npan+i])
+            J[i,npan+i] = -cos(alf[i]-X[npan+i])
+            #J[npan+i, i] = 2/chord/V /(2*pi)
+            J[npan+i, i] = -2/chord/V /(2*pi)
+            J[npan+i, npan+i] = 1
+
+            # artificial viscosity contributions to F(X) and J(X)
+            if useArtVisc
+                dfdg = J[i,i]
+                mu[i] = 1.2*(dfdg-1)/2
+                F[npan+i] = F[npan+i] +mu[i]*2*X[npan+i]
+                J[npan+i,npan+i] = J[npan+i,npan+i] + 2*mu[i]
+                for n = neigh
+                    F[npan+i] = F[npan+i] -mu[i]*X[npan+n]
+                    J[npan+i, npan+n] = J[npan+i, npan+n] - mu[i]
+                end
+            end
         end
 
         # calculate next iteration X
-        Xnew = X - inv(J)*F
+        Xnew = X - inv(J)*F.*rlx
+        #display(J)
+        println(F[1:6])
+        #quit()
 
-        residual = maximum(abs.(Xnew-X))
+        residual = maximum(abs.(F))
         if residual < tol
             done = true
         elseif iter == max_iter
@@ -238,7 +274,13 @@ function test()
     CL = L/(1/2*rho*V^2*S)
 
     @printf "CL=%.8f" CL
-    plot(panCpts[2,:], X[1:npan])
+    #plot(panCpts[2,:], X[1:npan])
+    p1 = plot(panCpts[2,:], alpha .- rad2deg.(X[npan+1:end]))
+    p2 = plot(panCpts[2,:], cl_interp(alpha .- rad2deg.(X[npan+1:end])))
+    p3 = plot(panCpts[2,:], 2 .*X[1:npan]./chord./V)
+    display(p1)
+    display(p2)
+    display(p3)
 
     
 end
