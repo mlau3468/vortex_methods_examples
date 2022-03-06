@@ -141,7 +141,7 @@ function test()
     panNorms = calcPanNorm(panVerts, panCon)
 
 
-    alpha = 18
+    alpha = 25
     rho = 1.225
     V = 1
     uinf = V.*[cosd(alpha), 0, sind(alpha)]
@@ -154,6 +154,7 @@ function test()
     alf = zeros(Float64, npan) # local angle of attack at each section
     w = zeros(Float64, npan) # downwash velocity
     ai = zeros(Float64, npan) # induced angle of attack
+    alfe = zeros(Float64, npan) # effective angle of attack
 
     # preallocate working matrices
     X = zeros(2*npan) #(gam1, gam2, gamn ...., dalf1, dalf2, ....dalfn)
@@ -211,15 +212,15 @@ function test()
             #F[i] = sum(A[i,:].*X[1:npan]) - sin(alf[i]-X[npan+i])
             F[i] = sum(A[i,:].*X[1:npan]) + sin(alf[i]-X[npan+i])
             
-            alfe = rad2deg(alf[i]-ai[i]-X[npan+i])
-            alfe = mod(alfe, 360)
-            if alfe > 180
-                alfe = alfe - 360
-            elseif alfe < -180
-                alfe = alfe + 360
+            alfe[i] = rad2deg(alf[i]-ai[i]-X[npan+i])
+            alfe[i] = mod(alfe[i], 360)
+            if alfe[i] > 180
+                alfe[i] = alfe[i] - 360
+            elseif alfe[i] < -180
+                alfe[i] = alfe[i] + 360
             end
 
-            clvisc = cl_interp(alfe)
+            clvisc = cl_interp(alfe[i])
             #F[npan+i] = X[npan+i]-(clvisc - 2*X[i]/chord/V)/(2*pi)
             F[npan+i] = X[npan+i]-(2*X[i]/chord/V - clvisc)/(2*pi)
 
@@ -269,8 +270,7 @@ function test()
     end
     
     # results
-    res_a = rad2deg.(alf .- X[npan+1:end])
-    res_cl = cl_interp(res_a)
+    res_cl = cl_interp(alfe)
     dL = 1/2 .*rho .* V.^2 .* bndLen .* chord .* res_cl
     dDi = -rho.*w.*X[1:npan].*bndLen
     L = sum(dL)
@@ -278,12 +278,12 @@ function test()
     CL = L/(1/2*rho*V^2*S)
 
     @printf "CL=%.8f" CL
-    p1 = plot(panCpts[2,:], res_a)
+    p1 = plot(panCpts[2,:], alfe)
     p2 = plot(panCpts[2,:], res_cl)
-    #p3 = plot(panCpts[2,:], 2 .*X[1:npan]./chord./V)
+    p3 = plot(panCpts[2,:], 2 .*X[1:npan]./chord./V)
     display(p1)
     display(p2)
-    #display(p3)
+    display(p3)
 
     
 end
