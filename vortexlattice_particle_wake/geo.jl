@@ -200,6 +200,7 @@ function test_geo(componentsin, panelsin, dt, prefix)
 end
 
 function createWing(name, ys, chords, sweeps, twists, nspan, nchord, xref, spacetype)
+    # panels defined in clockwise
     # convert sweep to x location
     ys2 = cat([0.0;],ys, dims=1)
     dxs = diff(ys2[1:end]).*tan.(deg2rad.(sweeps))

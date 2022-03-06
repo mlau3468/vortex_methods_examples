@@ -32,17 +32,23 @@ function vrtxring(pts, p, gam)
     p3 = pts[:,3]
     p4 = pts[:,4]
     # clockwise panels
-    vel1 = vrtxline(p1, p2, p, gam)
-    vel2 = vrtxline(p2, p3, p, gam)
-    vel3 = vrtxline(p3, p4, p, gam)
-    vel4 = vrtxline(p4, p1, p, gam)
-    return vel1 .+ vel2 .+ vel3 .+ vel4
+    vel = zeros(3)
+    vel = vel + vrtxline(p1, p2, p, gam)
+    vel = vel + vrtxline(p2, p3, p, gam)
+    vel = vel + vrtxline(p3, p4, p, gam)
+    #vel = vel + vrtxline(p4, p1, p, gam)
+    return vel
 end
 
-function hshoe(p1, p2, p3, p4, p)
+function hshoe(pts, p)
     # calculates influence from one horshoe vortex on point p
     # pts A,B,C,D
     # vortexlines: A-B, B-C, C-D 
+    p1 = pts[:,1]
+    p2 = pts[:,2]
+    p3 = pts[:,3]
+    p4 = pts[:,4]
+    
     uvw = zeros(3)
     uvw = uvw + vrtxline(p1, p2, p, 1)
     uvw = uvw + vrtxline(p2, p3, p, 1)

@@ -15,7 +15,7 @@ include("aeroel.jl")
 function test()
     max_iter = 500
     rlx = 0.4
-    tol = 1e-3
+    tol = 1e-6
 
     alpha = 2
     rho = 1.225
@@ -32,13 +32,11 @@ function test()
     span = 12
     chord = 1
     S = span.*chord
-    npan = 10
+    npan = 8
     # read in panels
     panVert, panCon = createRect(span, chord, npan, 1,[0;0;0],0)
     panCpt, panNorm, panNPt, panEdgeVec, panEdgeLen, panEdgeUVec, panArea, panTang, panSinTi, panCosTi = calcPanProps(panVert, panCon)
     panNeighIdx, panNeighSide, panNeighDir, panNNeigh = calcneighbors(panCon, panNPt)
-
-
     npts = size(panVert,2)
     npan = size(panCon,2)
 
@@ -66,7 +64,7 @@ function test()
             A[i,j] = dot(vel, panNorm[:,i])
         end
     end
-    
+
     # build rhs vector
     for i = 1:npan
         RHS[i] = -dot(uinf, panNorm[:,i])
@@ -103,18 +101,16 @@ function test()
 
             # compute F(X)
             F[i] = sum(A[i,:].*X[1:npan]) + sin(alf[i]-X[npan+i])
-            F[npan+i] = X[npan+i]-(2*X[i]/chord/V - clvisc)/(2*pi)
+            F[npan+i] = X[npan+i]-(-2*X[i]/chord/V - clvisc)/(2*pi)
 
             # Compute J(X)
             for j = 1:npan
                 J[i,j] = A[i,j]
             end
             J[i,npan+i] = -cos(alf[i]-X[npan+i])
-            J[npan+i, i] = -2/chord/V /(2*pi)
+            J[npan+i, i] = 2/chord/V /(2*pi)
             J[npan+i, npan+i] = 1
         end
-
-        #display(J)
 
         # calculate next iteration X
         Xnew = X - inv(J)*F.*rlx
@@ -136,7 +132,27 @@ function test()
         end
 
     end
+
+    # results
+    res_cl = cl_interp(alfe)
+    dL = 1/2 .*rho .* V.^2 .* panArea .* res_cl
+    #dDi = -rho.*w.*X[1:npan].*bndLen
+    L = sum(dL)
+    #Di = sum(dDi)
+    CL = L/(1/2*rho*V^2*S)
+    
+    @printf "CL=%.8f\n" CL
+    p1 = plot(panCpt[2,:], alfe)
+    p2 = plot(panCpt[2,:], res_cl)
+    p3 = plot(panCpt[2,:], 2 .*X[1:npan]./chord./V)
+    display(p1)
+    display(p2)
+    display(p3)
+
     pan2Vtu(panCon, panVert, panGam, panPres, panVelSurf, "test.vtu")
+
+
+
     quit()
 end
 

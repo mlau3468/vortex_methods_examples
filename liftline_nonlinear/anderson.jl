@@ -10,13 +10,14 @@ function test()
     cl_interp =  LinearInterpolation(c81[:,1], c81[:,2])
     cd_interp =  LinearInterpolation(c81[:,1], c81[:,3])
 
-    a = 4;
+    a = 2;
     V = 10;
     n = 100
     v = 10 .*[cosd(a); 0; sind(a)] 
     chords = 1 .*ones(n+1)
+    max_iter = 1000
 
-    y = collect(LinRange(-10,10,n+1))
+    y = collect(LinRange(-6,6,n+1))
     b = y[end]-y[1]
     dy = diff(y)
     ymid = (y[2:end]+y[1:end-1])./2
@@ -56,7 +57,7 @@ function test()
         eps = abs.(new_gams-gams)
         if maximum(eps) < 1e-6
             done = true
-        elseif iter == 500
+        elseif iter == max_iter
             done = true
             println("Max iter reached")
         else
@@ -65,7 +66,9 @@ function test()
         end
 
     end
-    plot(y, cls)
+    p = plot(y, cls)
+    println(sum(cls)/length(cls))
+    display(p)
 end
 
 

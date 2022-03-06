@@ -2,6 +2,7 @@ using LinearAlgebra
 using Statistics
 
 function buildRectHShoe(span, chord, n)
+    # defined clockwise
     dy = span/n
 
     panVerts = zeros(Float64, 3, 2*(n+1))
@@ -12,12 +13,14 @@ function buildRectHShoe(span, chord, n)
 
     le_loc = 0.25
 
+    span_mult = 50 # length of trailing element relative to span
+
     npt = 1
     for i = 1:n
-        p1 = [span*20; dy*(i-1); 0]
+        p1 = [span*span_mult; dy*(i-1); 0]
         p2 = [le_loc*chord; dy*(i-1); 0]
         p3 = [le_loc*chord; dy*(i); 0]
-        p4 = [span*20; dy*(i); 0]
+        p4 = [span*span_mult; dy*(i); 0]
 
         # panel te for collcation point calculation
         p1c = [(le_loc+1)*chord; dy*(i-1); 0]
@@ -58,7 +61,7 @@ function buildRectHShoe(span, chord, n)
     return panVerts, panCon, panCpts, bndLen, chordDir
 end
 
-function calcPanNorm(panVerts, panCon)
+function calcHshoeNorm(panVerts, panCon)
     npan = size(panCon,2)
     panNorms = zeros(3,npan)
     for i = 1:npan
@@ -72,6 +75,7 @@ function calcPanNorm(panVerts, panCon)
 end
 
 function createRect(span, chord, nspan, nchord, offset, pitch)
+    # panels are defined counter clockwise
     pitch = deg2rad(pitch)
     pitch_loc = [0.25*chord; 0; 0]
     rot = [cos(pitch) 0 sin(pitch); 0 1 0; -sin(pitch) 0 cos(pitch)]
@@ -84,9 +88,11 @@ function createRect(span, chord, nspan, nchord, offset, pitch)
     for i = 0:nchord-1
         for j = 0:nspan-1
             p1 = [i*chord/nchord; j*span/nspan; 0]
-            p2 = [i*chord/nchord; (j+1)*span/nspan; 0]
+            p2 = [(i+1)*chord/nchord; j*span/nspan; 0]
             p3 = [(i+1)*chord/nchord; (j+1)*span/nspan; 0]
-            p4 = [(i+1)*chord/nchord; j*span/nspan; 0]
+            p4 = [i*chord/nchord; (j+1)*span/nspan; 0]
+            
+            
             pts_new = [p1 p2 p3 p4]
             # apply rotation
             for k=1:4
