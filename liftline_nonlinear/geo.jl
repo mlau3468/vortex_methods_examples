@@ -1,6 +1,76 @@
 using LinearAlgebra
 using Statistics
 
+function buildRectHShoe(span, chord, n)
+    dy = span/n
+
+    panVerts = zeros(Float64, 3, 2*(n+1))
+    panCon = zeros(Int64,4, n)
+    panCpts = zeros(Float64, 3, n)# collocation points
+    bndLen = zeros(n)
+    chordDir = zeros(3,n)
+
+    le_loc = 0.25
+
+    npt = 1
+    for i = 1:n
+        p1 = [span*20; dy*(i-1); 0]
+        p2 = [le_loc*chord; dy*(i-1); 0]
+        p3 = [le_loc*chord; dy*(i); 0]
+        p4 = [span*20; dy*(i); 0]
+
+        # panel te for collcation point calculation
+        p1c = [(le_loc+1)*chord; dy*(i-1); 0]
+        p4c = [(le_loc+1); dy*(i); 0]
+
+        # bound vortex segment length
+        bndLen[i] = norm(p3-p2)
+
+        # direction vector of chord from LE to TE
+        cdir = (p1-p2 + p4-p3)./2
+        cdir = cdir ./ norm(cdir)
+        chordDir[:,i] .= cdir
+         
+
+        # collocation point
+        panCpts[:,i] = (p1c.+p2.+p3.+p4c)/4
+        if i == 1
+            panVerts[:,1] = p1
+            panVerts[:,2] = p2
+            panVerts[:,3] = p3
+            panVerts[:,4] = p4
+            panCon[:,i] .= [1;2;3;4]
+            npt = npt + 4
+        else
+            panVerts[:,npt] = p3
+            panVerts[:,npt+1] = p4
+            
+            panCon[1,i] =  panCon[4,i-1]
+            panCon[2,i] =  panCon[3,i-1]
+            panCon[3,i] = npt
+            panCon[4,i] = npt+1
+
+            npt = npt + 2
+            
+        end
+    end
+
+    return panVerts, panCon, panCpts, bndLen, chordDir
+end
+
+function calcPanNorm(panVerts, panCon)
+    npan = size(panCon,2)
+    panNorms = zeros(3,npan)
+    for i = 1:npan
+        v1 = panVerts[:,panCon[3,i]] - panVerts[:,panCon[1,i]]
+        v2 = panVerts[:,panCon[2,i]] - panVerts[:,panCon[4,i]]
+        newNorm = cross(v1, v2)
+        newNorm = newNorm ./ norm(newNorm)
+        panNorms[:,i] .= newNorm
+    end
+    return panNorms
+end
+
 function createRect(span, chord, nspan, nchord, offset, pitch)
     pitch = deg2rad(pitch)
     pitch_loc = [0.25*chord; 0; 0]

@@ -32,7 +32,7 @@ function test()
     span = 12
     chord = 1
     S = span.*chord
-    npan = 80
+    npan = 10
     # read in panels
     panVert, panCon = createRect(span, chord, npan, 1,[0;0;0],0)
     panCpt, panNorm, panNPt, panEdgeVec, panEdgeLen, panEdgeUVec, panArea, panTang, panSinTi, panCosTi = calcPanProps(panVert, panCon)
@@ -75,7 +75,7 @@ function test()
     end
     
     # solve matrix for panel gamma
-    #gam_init = A\RHS
+    gam_init = A\RHS
 
     # calculate local alphas at each station
     for i = 1:npan
@@ -83,8 +83,10 @@ function test()
     end
 
     # intial guess of X using angle of attack
-    cl_init = cl_interp(rad2deg.(alf))
-    gam_init = cl_init*chord*V/2
+    #cl_init = cl_interp(rad2deg.(alf))
+    #gam_init = cl_init*chord*V/2
+
+    println(gam_init)
 
     done = false
     iter = 0
@@ -112,8 +114,18 @@ function test()
             J[npan+i, npan+i] = 1
         end
 
-        display(J)
-        quit()
+        #display(J)
+
+        # calculate next iteration X
+        Xnew = X - inv(J)*F.*rlx
+        #println(maximum(abs.(F)))
+        println(Xnew[1:npan])
+
+        # update X
+        #println(rad2deg.(Xnew[npan+1:end]))
+        X[:] .= Xnew
+        #w = B*X[1:npan] #downash velocity
+        ai = -atan.(w,V)# induced angle of attack
 
         residual = maximum(abs.(F))
         if residual < tol
@@ -122,8 +134,8 @@ function test()
             done = true
             println("Maximum iterations reached")
         end
-    end
 
+    end
     pan2Vtu(panCon, panVert, panGam, panPres, panVelSurf, "test.vtu")
     quit()
 end

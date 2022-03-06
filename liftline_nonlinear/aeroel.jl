@@ -38,3 +38,18 @@ function vrtxring(pts, p, gam)
     vel4 = vrtxline(p4, p1, p, gam)
     return vel1 .+ vel2 .+ vel3 .+ vel4
 end
+
+function hshoe(p1, p2, p3, p4, p)
+    # calculates influence from one horshoe vortex on point p
+    # pts A,B,C,D
+    # vortexlines: A-B, B-C, C-D 
+    uvw = zeros(3)
+    uvw = uvw + vrtxline(p1, p2, p, 1)
+    uvw = uvw + vrtxline(p2, p3, p, 1)
+    uvw = uvw + vrtxline(p3, p4, p, 1)
+
+    dwash = zeros(3)
+    dwash = dwash + vrtxline(p1, p2, p, 1)
+    dwash = dwash + vrtxline(p3, p4, p, 1)
+    return uvw, dwash
+end

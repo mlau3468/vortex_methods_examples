@@ -2,7 +2,7 @@ include("aeroel.jl")
 include("geo.jl")
 include("vis.jl")
 using Interpolations
-using NLsolve
+#using NLsolve
 
 
 function simulate(components, panels, te_idx, tsteps, dt, uinf, rho, particles, wakelines, wakerings, prefix)
@@ -155,6 +155,7 @@ function simulate(components, panels, te_idx, tsteps, dt, uinf, rho, particles, 
 
 end
 
+#=
 function simulate2(components, panels, te_idx, tsteps, dt, uinf, rho, particles, wakelines, wakerings, prefix)
 
     c81 = readdlm("c81/naca0012.csv", ',', Float64)
@@ -345,3 +346,4 @@ function simulate2(components, panels, te_idx, tsteps, dt, uinf, rho, particles,
     end
 
 end
+=#
