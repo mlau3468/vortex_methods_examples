@@ -7,6 +7,17 @@ using Plots
 # See Katz Plotkin 12.1
 # Lifting-Line Solution by horshoe elements
 
+function deg180(a)
+    # takes angle a in degrees, converts to be between -180 and 180 degrees
+    a = mod(a, 360)
+    if a > 180
+        a = a - 360
+    elseif a < -180
+        a = a + 360
+    end
+    return a
+end
+
 function vortxl!(x,y,z,x1,y1,z1,x2,y2,z2, gama, vel)
     #CALCULATES THE INDUCED VELOCITY (U,V,W) AT A POI
     #(X,Y,Z) DUE TO A VORTEX ELEMENT VITH STRENGTH GAMA PER UNIT LENGTH
@@ -128,6 +139,10 @@ function test()
     rlx = 0.4
     tol = 1e-3
 
+    alpha = 25
+    rho = 1.225
+    V = 1
+
     # read in airfoil data
     c81 = readdlm("naca0012.csv", ',', Float64)
     cl_interp =  LinearInterpolation(c81[:,1], c81[:,2])
@@ -140,10 +155,6 @@ function test()
     panVerts, panCon, panCpts, bndLen, chordDir = buildRectHShoe(span, chord, npan)
     panNorms = calcPanNorm(panVerts, panCon)
 
-
-    alpha = 25
-    rho = 1.225
-    V = 1
     uinf = V.*[cosd(alpha), 0, sind(alpha)]
 
     useArtVisc = false
@@ -208,29 +219,20 @@ function test()
                 neigh = [i-1; i+1]
             end
 
-            # compute F(X)
-            #F[i] = sum(A[i,:].*X[1:npan]) - sin(alf[i]-X[npan+i])
-            F[i] = sum(A[i,:].*X[1:npan]) + sin(alf[i]-X[npan+i])
-            
+            # Lookup cl from angle of attack
             alfe[i] = rad2deg(alf[i]-ai[i]-X[npan+i])
-            alfe[i] = mod(alfe[i], 360)
-            if alfe[i] > 180
-                alfe[i] = alfe[i] - 360
-            elseif alfe[i] < -180
-                alfe[i] = alfe[i] + 360
-            end
-
+            alfe[i] = deg180(alfe[i])
             clvisc = cl_interp(alfe[i])
-            #F[npan+i] = X[npan+i]-(clvisc - 2*X[i]/chord/V)/(2*pi)
+
+            # compute F(X)
+            F[i] = sum(A[i,:].*X[1:npan]) + sin(alf[i]-X[npan+i])
             F[npan+i] = X[npan+i]-(2*X[i]/chord/V - clvisc)/(2*pi)
 
             # Compute J(X)
             for j = 1:npan
                 J[i,j] = A[i,j]
             end
-            #J[i,npan+i] = cos(alf[i]-X[npan+i])
             J[i,npan+i] = -cos(alf[i]-X[npan+i])
-            #J[npan+i, i] = 2/chord/V /(2*pi)
             J[npan+i, i] = -2/chord/V /(2*pi)
             J[npan+i, npan+i] = 1
 

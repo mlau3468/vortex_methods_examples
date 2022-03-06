@@ -45,6 +45,17 @@ function createRect(span, chord, nspan, nchord, offset, pitch)
     return pts, panels
 end
 
+function deg180(a)
+    # takes angle a in degrees, converts to be between -180 and 180 degrees
+    a = mod(a, 360)
+    if a > 180
+        a = a - 360
+    elseif a < -180
+        a = a + 360
+    end
+    return a
+end
+
 # ALL BELOW IS COPIED FROM VPM CODE -----------------------------------
 
 
