@@ -27,7 +27,7 @@ function test()
     span = 12
     chord = 1
     S = span.*chord
-    npan = 50
+    npan = 8
     panVerts, panCon, panCpts, bndLen, chordDir = buildRectHShoe(span, chord, npan)
     panNorms = calcHshoeNorm(panVerts, panCon)
 
