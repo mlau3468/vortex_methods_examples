@@ -13,7 +13,7 @@ function test()
 
     max_iter = 500
     rlx = 0.4
-    tol = 1e-5
+    tol = 1e-6
 
     alpha = 2
     rho = 1.225

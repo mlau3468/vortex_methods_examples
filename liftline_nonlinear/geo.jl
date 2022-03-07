@@ -13,11 +13,11 @@ function buildRectHShoe(span, chord, n)
 
     le_loc = 0.25
 
-    span_mult = 50 # length of trailing element relative to span
+    wake_len = 50 # length of wake relative to span
 
     npt = 1
     for i = 1:n
-        p1 = [le_loc*chord + chord + span*span_mult; dy*(i-1); 0]
+        p1 = [le_loc*chord + chord + span*wake_len; dy*(i-1); 0]
         p2 = [le_loc*chord; dy*(i-1); 0]
         p3 = [le_loc*chord; dy*(i); 0]
         p4 = [le_loc*chord + chord ; dy*(i); 0]
