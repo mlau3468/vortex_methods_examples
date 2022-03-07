@@ -36,7 +36,7 @@ function vrtxring(pts, p, gam)
     vel = vel + vrtxline(p1, p2, p, gam)
     vel = vel + vrtxline(p2, p3, p, gam)
     vel = vel + vrtxline(p3, p4, p, gam)
-    #vel = vel + vrtxline(p4, p1, p, gam)
+    vel = vel + vrtxline(p4, p1, p, gam)
     return vel
 end
 

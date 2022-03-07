@@ -46,10 +46,6 @@ wakerings = wakeRing[]
 # test geometry motion
 test_geo(components, panels, dt, prefix)
 
-display(panels[1].normal)
-display(panels[1].pts)
-quit()
-
 simulate(components, panels, te_idx, tsteps, dt, uinf, rho, particles, wakelines, wakerings, prefix)
 #=
 # lift coefficient

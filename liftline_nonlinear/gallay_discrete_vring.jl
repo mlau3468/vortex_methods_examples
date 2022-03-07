@@ -44,7 +44,8 @@ function test()
     panVelSurf = zeros(Float32, 3, npan)
     panGam = zeros(Float64, npan)
 
-    A = zeros(Float64, npan, npan)
+    A = zeros(Float64, npan, npan) # influence coefficents for normal flow
+    B = zeros(Float64, npan, npan) # influence coefficents for downwash
     RHS = zeros(Float64, npan)
     alf = zeros(Float64, npan) # local angle of attack at each section
     w = zeros(Float64, npan) # downwash velocity
@@ -62,6 +63,9 @@ function test()
             # influence of jth panel on ith collocation point
             vel = vrtxring(panVert[:,panCon[:,j]], panCpt[:,i], 1.0)
             A[i,j] = dot(vel, panNorm[:,i])
+            dwash = vrtxline(panVert[:,panCon[1,j]], panVert[:,panCon[2,j]], panCpt[:,i], 1)
+            dwash = dwash + vrtxline(panVert[:,panCon[3,j]], panVert[:,panCon[4,j]], panCpt[:,i], 1)
+            B[i,j] = dot(dwash, panNorm[:,i])
         end
     end
 
@@ -120,7 +124,7 @@ function test()
         # update X
         #println(rad2deg.(Xnew[npan+1:end]))
         X[:] .= Xnew
-        #w = B*X[1:npan] #downash velocity
+        w = B*X[1:npan] #downash velocity
         ai = -atan.(w,V)# induced angle of attack
 
         residual = maximum(abs.(F))
@@ -139,21 +143,18 @@ function test()
     #dDi = -rho.*w.*X[1:npan].*bndLen
     L = sum(dL)
     #Di = sum(dDi)
-    CL = L/(1/2*rho*V^2*S)
+    CL = L/(1/2*rho*V.^2*S)
     
     @printf "CL=%.8f\n" CL
     p1 = plot(panCpt[2,:], alfe)
     p2 = plot(panCpt[2,:], res_cl)
-    p3 = plot(panCpt[2,:], 2 .*X[1:npan]./chord./V)
+    p3 = plot(panCpt[2,:], -2 .*X[1:npan]./chord./V)
     display(p1)
     display(p2)
     display(p3)
 
     pan2Vtu(panCon, panVert, panGam, panPres, panVelSurf, "test.vtu")
 
-
-
-    quit()
 end
 
 test()
