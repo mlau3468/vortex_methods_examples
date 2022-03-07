@@ -17,10 +17,10 @@ function buildRectHShoe(span, chord, n)
 
     npt = 1
     for i = 1:n
-        p1 = [span*span_mult; dy*(i-1); 0]
+        p1 = [le_loc*chord + chord + span*span_mult; dy*(i-1); 0]
         p2 = [le_loc*chord; dy*(i-1); 0]
         p3 = [le_loc*chord; dy*(i); 0]
-        p4 = [span*span_mult; dy*(i); 0]
+        p4 = [le_loc*chord + chord ; dy*(i); 0]
 
         # panel te for collcation point calculation
         p1c = [(le_loc+1)*chord; dy*(i-1); 0]
