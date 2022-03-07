@@ -2,10 +2,13 @@ using Interpolations
 using DelimitedFiles
 using Plots
 using Printf
-
-# strongly coupled algorithm from Gallay, Nonlinear Lifting Line for PrePost-stall Flows.
-# Applied to a discrete wing modelled using vortex lattices
-# Borrows geometry and visualization functions from VPM code
+#=
+strongly coupled algorithm from Gallay, Nonlinear Lifting Line for PrePost-stall Flows.
+Applied to a discrete wing modelled using vortex rings. The wake is not modelled, so this will not 
+yield a correct solution. Only meant to demonstrate one convergence loop for the 1st timestep in an
+unsteady simulation.
+Borrows geometry and visualization functions from VPM code
+=#
 
 include("geo.jl")
 include("vis.jl")
