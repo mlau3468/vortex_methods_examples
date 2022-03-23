@@ -10,7 +10,7 @@ function simulate(components, panels, te_idx, tsteps, dt, uinf, rho, particles, 
     setPointVels!(components, panels)
     panels_neigh, panels_neighside, panels_neighdir = calcneighbors(panels)
     tewidth = length(te_idx)
-    maxwakelen = 0
+    maxwakelen = 200
     wakelen = 0
 
     # trailing edge variables
@@ -124,7 +124,6 @@ function simulate(components, panels, te_idx, tsteps, dt, uinf, rho, particles, 
             end
             vcpt = panels[i].vcpt[:]
             val = val .+ dot(uinf.-vcpt+panels[i].wake_vel, panels[i].tani_uvec).* (panels[i].gam[1]-gam2)./panels[i].tani_len
-
             # j side, perpendicular to te direction
             if panels_neigh[4,i] > 0
                 gam2 = panels[panels_neigh[4,i]].gam[1]
@@ -132,12 +131,10 @@ function simulate(components, panels, te_idx, tsteps, dt, uinf, rho, particles, 
                 gam2 = 0.0
             end
             val = val .+ dot(uinf.-vcpt+panels[i].wake_vel, panels[i].tanj_uvec).* (panels[i].gam[1]-gam2)./panels[i].tanj_len
-
             val = val .+ panels[i].dgdt[1]
             panels[i].dp[1] = -rho*val[1]
             panels[i].df[:] = -panels[i].dp*panels[i].area[1].*panels[i].normal
         end
-
         # total forces
         total_force = [0;0;0]
         for i=1:length(panels)
