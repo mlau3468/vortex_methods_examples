@@ -167,6 +167,7 @@ function test()
     println(alfe)
     println(rad2deg.(ai))
     println(rad2deg.(X[npan+1:end]))
+    println(L)
 
     
 end
