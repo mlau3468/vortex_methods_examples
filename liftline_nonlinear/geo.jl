@@ -55,7 +55,16 @@ function buildRectHShoeCCW(span, chord, n)
             
         end
     end
-    return panVerts, panCon, panCpts, bndLen, chordDir
+    panNorms = zeros(3,n)
+    for i = 1:n
+        v1 = panVerts[:,panCon[2,i]] - panVerts[:,panCon[4,i]]
+        v2 = panVerts[:,panCon[3,i]] - panVerts[:,panCon[1,i]]
+        newNorm = cross(v1, v2)
+        newNorm = newNorm ./ norm(newNorm)
+        panNorms[:,i] .= newNorm
+    end
+
+    return panVerts, panCon, panCpts, bndLen, chordDir, panNorms
 end
 
 function buildRectHShoe(span, chord, n)
@@ -114,34 +123,16 @@ function buildRectHShoe(span, chord, n)
             
         end
     end
-
-    return panVerts, panCon, panCpts, bndLen, chordDir
-end
-
-function calcHshoeNormCCW(panVerts, panCon)
-    npan = size(panCon,2)
-    panNorms = zeros(3,npan)
-    for i = 1:npan
-        v1 = panVerts[:,panCon[2,i]] - panVerts[:,panCon[4,i]]
-        v2 = panVerts[:,panCon[3,i]] - panVerts[:,panCon[1,i]]
-        newNorm = cross(v1, v2)
-        newNorm = newNorm ./ norm(newNorm)
-        panNorms[:,i] .= newNorm
-    end
-    return panNorms
-end
-
-function calcHshoeNorm(panVerts, panCon)
-    npan = size(panCon,2)
-    panNorms = zeros(3,npan)
-    for i = 1:npan
+    panNorms = zeros(3,n)
+    for i = 1:n
         v1 = panVerts[:,panCon[3,i]] - panVerts[:,panCon[1,i]]
         v2 = panVerts[:,panCon[2,i]] - panVerts[:,panCon[4,i]]
         newNorm = cross(v1, v2)
         newNorm = newNorm ./ norm(newNorm)
         panNorms[:,i] .= newNorm
     end
-    return panNorms
+
+    return panVerts, panCon, panCpts, bndLen, chordDir, panNorms
 end
 
 function buildRect(span, chord, n)

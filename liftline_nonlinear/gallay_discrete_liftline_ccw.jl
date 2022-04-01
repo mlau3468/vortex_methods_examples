@@ -28,8 +28,8 @@ function test()
     chord = 1
     S = span.*chord
     npan = 8
-    panVerts, panCon, panCpts, bndLen, chordDir = buildRectHShoeCCW(span, chord, npan)
-    panNorms = calcHshoeNormCCW(panVerts, panCon)
+    panVerts, panCon, panCpts, bndLen, chordDir, panNorms = buildRectHShoeCCW(span, chord, npan)
+    
     uinf = V.*[cosd(alpha), 0, sind(alpha)]
 
     useArtVisc = false

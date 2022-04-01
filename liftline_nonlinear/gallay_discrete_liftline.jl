@@ -28,8 +28,7 @@ function test()
     chord = 1
     S = span.*chord
     npan = 8
-    panVerts, panCon, panCpts, bndLen, chordDir = buildRectHShoe(span, chord, npan)
-    panNorms = calcHshoeNorm(panVerts, panCon)
+    panVerts, panCon, panCpts, bndLen, chordDir, panNorms = buildRectHShoe(span, chord, npan)
 
     uinf = V.*[cosd(alpha), 0, sind(alpha)]
 
