@@ -28,9 +28,8 @@ function test()
     chord = 1
     S = span.*chord
     npan = 8
-    panVerts, panCon, panCpts, bndLen, chordDir = buildRectHShoe(span, chord, npan)
-    panNorms = calcHshoeNorm(panVerts, panCon)
-
+    panVerts, panCon, panCpts, bndLen, chordDir = buildRectHShoeCCW(span, chord, npan)
+    panNorms = calcHshoeNormCCW(panVerts, panCon)
     uinf = V.*[cosd(alpha), 0, sind(alpha)]
 
     useArtVisc = false
@@ -62,6 +61,7 @@ function test()
         end
         RHS[i] = dot(-uinf, panNorms[:,i])
     end
+
     # calculate local alphas at eacch station
     for i = 1:npan
         vt = dot(uinf, chordDir[:,i])
@@ -105,14 +105,14 @@ function test()
 
             # compute F(X)
             F[i] = sum(A[i,:].*X[1:npan]) + sin(alf[i]-X[npan+i])
-            F[npan+i] = X[npan+i]-(2*X[i]/chord/V - clvisc)/(2*pi)
+            F[npan+i] = X[npan+i]-(-2*X[i]/chord/V - clvisc)/(2*pi)
 
             # Compute J(X)
             for j = 1:npan
                 J[i,j] = A[i,j]
             end
             J[i,npan+i] = -cos(alf[i]-X[npan+i])
-            J[npan+i, i] = -2/chord/V /(2*pi)
+            J[npan+i, i] = 2/chord/V /(2*pi)
             J[npan+i, npan+i] = 1
 
             # artificial viscosity contributions to F(X) and J(X)

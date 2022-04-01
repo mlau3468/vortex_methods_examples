@@ -104,7 +104,9 @@ function test()
             # Lookup cl from angle of attack
             alfe[i] = rad2deg(alf[i]-ai[i]-X[npan+i])
             alfe[i] = deg180(alfe[i])
-            clvisc = cl_interp(alfe[i])
+            #clvisc = cl_interp(alfe[i])
+            clvisc = 2*pi*deg2rad(alfe[i])
+
 
             # compute F(X)
             F[i] = sum(A[i,:].*X[1:npan]) + sin(alf[i]-X[npan+i])
@@ -137,7 +139,7 @@ function test()
             done = true
             println("Maximum iterations reached")
         end
-
+        
     end
 
     # results

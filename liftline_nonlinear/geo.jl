@@ -1,6 +1,64 @@
 using LinearAlgebra
 using Statistics
 
+function buildRectHShoeCCW(span, chord, n)
+    # defined clockwise
+    dy = span/n
+
+    panVerts = zeros(Float64, 3, 2*(n+1))
+    panCon = zeros(Int64,4, n)
+    panCpts = zeros(Float64, 3, n)# collocation points
+    bndLen = zeros(n)
+    chordDir = zeros(3,n)
+
+    le_loc = 0.25
+
+    wake_len = 50 # length of wake relative to span
+
+    npt = 0
+    for i = 1:n
+        p4 = [le_loc*chord + chord + span*wake_len; dy*(i-1); 0]
+        p3 = [le_loc*chord; dy*(i-1); 0]
+        p2 = [le_loc*chord; dy*(i); 0]
+        p1 = [le_loc*chord + chord + span*wake_len; dy*(i); 0]
+
+        # panel te for collcation point calculation
+        p4c = [(le_loc+1)*chord; dy*(i-1); 0]
+        p1c = [(le_loc+1); dy*(i); 0]
+
+        # bound vortex segment length
+        bndLen[i] = norm(p3-p2)
+
+        # direction vector of chord from LE to TE
+        cdir = (p1-p2 + p4-p3)./2
+        cdir = cdir ./ norm(cdir)
+        chordDir[:,i] .= cdir
+         
+        # collocation point
+        panCpts[:,i] = (p1c.+p2.+p3.+p4c)/4
+        if i == 1
+            panVerts[:,1] = p1
+            panVerts[:,2] = p2
+            panVerts[:,3] = p3
+            panVerts[:,4] = p4
+            panCon[:,i] .= [1;2;3;4]
+            npt = npt + 4
+        else
+            panVerts[:,npt+1] = p1
+            panVerts[:,npt+2] = p2
+            
+            panCon[4,i] = panCon[1,i-1]
+            panCon[3,i] = panCon[2,i-1]
+            panCon[2,i] = npt + 2
+            panCon[1,i] = npt + 1
+
+            npt = npt + 2
+            
+        end
+    end
+    return panVerts, panCon, panCpts, bndLen, chordDir
+end
+
 function buildRectHShoe(span, chord, n)
     # defined clockwise
     dy = span/n
@@ -15,12 +73,12 @@ function buildRectHShoe(span, chord, n)
 
     wake_len = 50 # length of wake relative to span
 
-    npt = 1
+    npt = 0
     for i = 1:n
         p1 = [le_loc*chord + chord + span*wake_len; dy*(i-1); 0]
         p2 = [le_loc*chord; dy*(i-1); 0]
         p3 = [le_loc*chord; dy*(i); 0]
-        p4 = [le_loc*chord + chord ; dy*(i); 0]
+        p4 = [le_loc*chord + chord + span*wake_len; dy*(i); 0]
 
         # panel te for collcation point calculation
         p1c = [(le_loc+1)*chord; dy*(i-1); 0]
@@ -45,13 +103,13 @@ function buildRectHShoe(span, chord, n)
             panCon[:,i] .= [1;2;3;4]
             npt = npt + 4
         else
-            panVerts[:,npt] = p3
-            panVerts[:,npt+1] = p4
+            panVerts[:,npt+1] = p3
+            panVerts[:,npt+2] = p4
             
             panCon[1,i] =  panCon[4,i-1]
             panCon[2,i] =  panCon[3,i-1]
-            panCon[3,i] = npt
-            panCon[4,i] = npt+1
+            panCon[3,i] = npt + 1
+            panCon[4,i] = npt + 2
 
             npt = npt + 2
             
@@ -59,6 +117,19 @@ function buildRectHShoe(span, chord, n)
     end
 
     return panVerts, panCon, panCpts, bndLen, chordDir
+end
+
+function calcHshoeNormCCW(panVerts, panCon)
+    npan = size(panCon,2)
+    panNorms = zeros(3,npan)
+    for i = 1:npan
+        v1 = panVerts[:,panCon[2,i]] - panVerts[:,panCon[4,i]]
+        v2 = panVerts[:,panCon[3,i]] - panVerts[:,panCon[1,i]]
+        newNorm = cross(v1, v2)
+        newNorm = newNorm ./ norm(newNorm)
+        panNorms[:,i] .= newNorm
+    end
+    return panNorms
 end
 
 function calcHshoeNorm(panVerts, panCon)
