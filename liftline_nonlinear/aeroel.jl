@@ -26,18 +26,23 @@ function vrtxline(p1, p2, p, gam)
     return vdou .* gam/4/pi
 end
 
-function vrtxring(pts, p, gam)
+function vrtxring(pts, p)
     p1 = pts[:,1]
     p2 = pts[:,2]
     p3 = pts[:,3]
     p4 = pts[:,4]
-    # clockwise panels
+
     vel = zeros(3)
-    vel = vel + vrtxline(p1, p2, p, gam)
-    vel = vel + vrtxline(p2, p3, p, gam)
-    vel = vel + vrtxline(p3, p4, p, gam)
-    vel = vel + vrtxline(p4, p1, p, gam)
-    return vel
+    vel = vel + vrtxline(p1, p2, p, 1)
+    vel = vel + vrtxline(p2, p3, p, 1)
+    vel = vel + vrtxline(p3, p4, p, 1)
+    vel = vel + vrtxline(p4, p1, p, 1)
+
+    dwash = zeros(3)
+    dwash = dwash + vrtxline(p1, p2, p, 1)
+    dwash = dwash + vrtxline(p3, p4, p, 1)
+
+    return vel, dwash
 end
 
 function hshoe(pts, p)

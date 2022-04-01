@@ -60,10 +60,8 @@ function test()
     for i = 1:npan
         for j = 1:npan
             # influence of jth panel on ith collocation point
-            vel = vrtxring(panVert[:,panCon[:,j]], panCpt[:,i], 1.0)
+            vel, dwash = hshoe(panVert[:,panCon[:,j]], panCpt[:,i])
             A[i,j] = dot(vel, panNorm[:,i])
-            dwash = vrtxline(panVert[:,panCon[1,j]], panVert[:,panCon[2,j]], panCpt[:,i], 1)
-            dwash = dwash + vrtxline(panVert[:,panCon[3,j]], panVert[:,panCon[4,j]], panCpt[:,i], 1)
             B[i,j] = dot(dwash, panNorm[:,i])
         end
         RHS[i] = dot(-uinf, panNorm[:,i])
@@ -131,10 +129,6 @@ function test()
         
     end
 
-    println(alfe)
-    println(rad2deg.(ai))
-    println(rad2deg.(X[npan+1:end]))
-
     # results
     res_cl = cl_interp(alfe)
     dL = 1/2 .*rho .* V.^2 .* panArea .* res_cl
@@ -142,6 +136,7 @@ function test()
     L = sum(dL)
     #Di = sum(dDi)
     CL = L/(1/2*rho*V.^2*S)
+    display(panArea)
     
     @printf "CL=%.8f\n" CL
     p1 = plot(panCpt[2,:], alfe)
@@ -150,6 +145,9 @@ function test()
     display(p1)
     display(p2)
     display(p3)
+    println(alfe)
+    println(rad2deg.(ai))
+    println(rad2deg.(X[npan+1:end]))
 
     pan2Vtu(panCon, panVert, panGam, panPres, panVelSurf, "test.vtu")
 

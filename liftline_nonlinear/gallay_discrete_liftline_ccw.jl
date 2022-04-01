@@ -28,8 +28,8 @@ function test()
     chord = 1
     S = span.*chord
     npan = 8
-    panVerts, panCon, panCpts, bndLen, chordDir, panNorms = buildRectHShoeCCW(span, chord, npan)
-    
+    panVert, panCon, panCpt, bndLen, chordDir, panNorms = buildRectHShoeCCW(span, chord, npan)
+
     uinf = V.*[cosd(alpha), 0, sind(alpha)]
 
     useArtVisc = false
@@ -55,7 +55,7 @@ function test()
     for i = 1:npan
         for j = 1:npan
             # influence of jth panel on ith collcation point
-            uvw, dwash = hshoe(panVerts[:,panCon[:,j]], panCpts[:,i])
+            uvw, dwash = hshoe(panVert[:,panCon[:,j]], panCpt[:,i])
             A[i,j] = dot(uvw, panNorms[:,i])
             B[i,j] = dot(dwash, panNorms[:,i])
         end
@@ -75,7 +75,7 @@ function test()
 
     gam_init = A\RHS
 
-    #println(gam_init)
+    println(gam_init)
 
     X[1:npan].= gam_init
     w[:] .= B*X[1:npan] #downash velocity
@@ -158,9 +158,9 @@ function test()
     CL = L/(1/2*rho*V^2*S)
 
     @printf "CL=%.8f\n" CL
-    p1 = plot(panCpts[2,:], alfe)
-    p2 = plot(panCpts[2,:], res_cl)
-    p3 = plot(panCpts[2,:], 2 .*X[1:npan]./chord./V)
+    p1 = plot(panCpt[2,:], alfe)
+    p2 = plot(panCpt[2,:], res_cl)
+    p3 = plot(panCpt[2,:], 2 .*X[1:npan]./chord./V)
     display(p1)
     display(p2)
     #display(p3)

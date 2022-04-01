@@ -153,15 +153,15 @@ function buildRect(span, chord, n)
 
     npt = 0
     for i = 1:n
-        p1 = [le_loc*chord + chord + span*wake_len; dy*(i-1); 0]
-        p2 = [le_loc*chord; dy*(i-1); 0]
-        p3 = [le_loc*chord; dy*(i); 0]
-        p4 = [le_loc*chord + chord + span*wake_len; dy*(i); 0]
-        
-        p4 = [le_loc*chord + chord; dy*(i-1); 0]
+        p4 = [le_loc*chord + chord + span*wake_len; dy*(i-1); 0]
         p3 = [le_loc*chord; dy*(i-1); 0]
         p2 = [le_loc*chord; dy*(i); 0]
-        p1 = [le_loc*chord + chord; dy*(i); 0]
+        p1 = [le_loc*chord + chord + span*wake_len; dy*(i); 0]
+
+        #p4 = [le_loc*chord + chord; dy*(i-1); 0]
+        #p3 = [le_loc*chord; dy*(i-1); 0]
+        #p2 = [le_loc*chord; dy*(i); 0]
+        #p1 = [le_loc*chord + chord; dy*(i); 0]
 
         # bound vortex segment length
         bndLen[i] = norm(p3-p2)
@@ -195,18 +195,17 @@ function buildRect(span, chord, n)
             npt = npt + 2
             
         end
-    end
 
-    for i = 1:n
         # normals
-        v1 = panVerts[:,panCon[2,i]] - panVerts[:,panCon[4,i]]
-        v2 = panVerts[:,panCon[3,i]] - panVerts[:,panCon[1,i]]
+        v1 = p2 .- p4c
+        v2 = p3 .- p1c
         v3 = cross(v1, v2)
         panNorms[:,i] .= v3 ./ norm(v3)
 
         # areas
         panArea[i] = norm(v3)/2
     end
+
     return panVerts, panCon, panCpts, bndLen, chordDir, panNorms, panArea
 end
 
