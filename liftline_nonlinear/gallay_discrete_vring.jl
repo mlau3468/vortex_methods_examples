@@ -60,7 +60,8 @@ function test()
     for i = 1:npan
         for j = 1:npan
             # influence of jth panel on ith collocation point
-            vel, dwash = hshoe(panVert[:,panCon[:,j]], panCpt[:,i])
+            vel, dwash = vrtxring(panVert[:,panCon[:,j]], panCpt[:,i])
+            #vel, dwash = hshoe(panVert[:,panCon[:,j]], panCpt[:,i])
             A[i,j] = dot(vel, panNorm[:,i])
             B[i,j] = dot(dwash, panNorm[:,i])
         end
@@ -136,7 +137,6 @@ function test()
     L = sum(dL)
     #Di = sum(dDi)
     CL = L/(1/2*rho*V.^2*S)
-    display(panArea)
     
     @printf "CL=%.8f\n" CL
     p1 = plot(panCpt[2,:], alfe)
@@ -153,4 +153,4 @@ function test()
 
 end
 
-test()
+test();

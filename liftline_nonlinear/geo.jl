@@ -149,19 +149,21 @@ function buildRect(span, chord, n)
 
     le_loc = 0.25
 
-    wake_len = 50 # length of wake relative to span
+    extend_len = 0 # extend vortex line downstream by this amount, =0 for vortex ring
 
     npt = 0
     for i = 1:n
-        p4 = [le_loc*chord + chord + span*wake_len; dy*(i-1); 0]
+        # use this to extend panel way downstream to mimick horshoe
+        p4 = [le_loc*chord + chord + span*extend_len; dy*(i-1); 0]
         p3 = [le_loc*chord; dy*(i-1); 0]
         p2 = [le_loc*chord; dy*(i); 0]
-        p1 = [le_loc*chord + chord + span*wake_len; dy*(i); 0]
+        p1 = [le_loc*chord + chord + span*extend_len; dy*(i); 0]
 
-        #p4 = [le_loc*chord + chord; dy*(i-1); 0]
-        #p3 = [le_loc*chord; dy*(i-1); 0]
-        #p2 = [le_loc*chord; dy*(i); 0]
-        #p1 = [le_loc*chord + chord; dy*(i); 0]
+        # use this for actual vortex ring
+        p4 = [le_loc*chord + chord; dy*(i-1); 0]
+        p3 = [le_loc*chord; dy*(i-1); 0]
+        p2 = [le_loc*chord; dy*(i); 0]
+        p1 = [le_loc*chord + chord; dy*(i); 0]
 
         # bound vortex segment length
         bndLen[i] = norm(p3-p2)
