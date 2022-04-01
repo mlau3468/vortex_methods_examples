@@ -37,11 +37,7 @@ function test()
     S = span.*chord
     npan = 8
     # read in panels
-    panVert, panCon = createRect(span, chord, npan, 1,[0;0;0],0)
-    panCpt, panNorm, panNPt, panEdgeVec, panEdgeLen, panEdgeUVec, panArea, panTang, panSinTi, panCosTi = calcPanProps(panVert, panCon)
-    panNeighIdx, panNeighSide, panNeighDir, panNNeigh = calcneighbors(panCon, panNPt)
-    npts = size(panVert,2)
-    npan = size(panCon,2)
+    panVert, panCon, panCpt, bndLen, chordDir, panNorm, panArea = buildRect(span, chord, npan)
 
     panPres = zeros(Float32, npan)
     panVelSurf = zeros(Float32, 3, npan)
@@ -70,22 +66,18 @@ function test()
             dwash = dwash + vrtxline(panVert[:,panCon[3,j]], panVert[:,panCon[4,j]], panCpt[:,i], 1)
             B[i,j] = dot(dwash, panNorm[:,i])
         end
+        RHS[i] = dot(-uinf, panNorm[:,i])
     end
-
-    # build rhs vector
-    for i = 1:npan
-        RHS[i] = -dot(uinf, panNorm[:,i])
-        #RHS[i] = RHS[i] - dot(panels[i].wake_vel, panNorm[:,i])
-        #RHS[i] = RHS[i] + dot(panels[i].vcpt, panNorm[:,i])
-    end
-    
-    # solve matrix for panel gamma
-    gam_init = A\RHS
 
     # calculate local alphas at each station
     for i = 1:npan
-        alf[i] = deg2rad(alpha) 
+        vt = dot(uinf, chordDir[:,i])
+        vp = dot(uinf, panNorm[:,i])
+        alf[i] = atan(vp, vt)
     end
+
+    # solve matrix for panel gamma
+    gam_init = A\RHS
 
     # intial guess of X using angle of attack
     #cl_init = cl_interp(rad2deg.(alf))
@@ -104,9 +96,7 @@ function test()
             # Lookup cl from angle of attack
             alfe[i] = rad2deg(alf[i]-ai[i]-X[npan+i])
             alfe[i] = deg180(alfe[i])
-            #clvisc = cl_interp(alfe[i])
-            clvisc = 2*pi*deg2rad(alfe[i])
-
+            clvisc = cl_interp(alfe[i])
 
             # compute F(X)
             F[i] = sum(A[i,:].*X[1:npan]) + sin(alf[i]-X[npan+i])
@@ -124,10 +114,9 @@ function test()
         # calculate next iteration X
         Xnew = X - inv(J)*F.*rlx
         #println(maximum(abs.(F)))
-        println(Xnew[1:npan])
+        #println(Xnew[1:npan])
 
         # update X
-        #println(rad2deg.(Xnew[npan+1:end]))
         X[:] .= Xnew
         w = B*X[1:npan] #downash velocity
         ai = -atan.(w,V)# induced angle of attack
@@ -141,6 +130,10 @@ function test()
         end
         
     end
+
+    println(alfe)
+    println(rad2deg.(ai))
+    println(rad2deg.(X[npan+1:end]))
 
     # results
     res_cl = cl_interp(alfe)

@@ -164,6 +164,9 @@ function test()
     display(p1)
     display(p2)
     #display(p3)
+    println(alfe)
+    println(rad2deg.(ai))
+    println(rad2deg.(X[npan+1:end]))
 
     
 end
