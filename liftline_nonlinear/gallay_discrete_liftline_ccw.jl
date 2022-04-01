@@ -106,6 +106,7 @@ function test()
 
             # compute F(X)
             F[i] = sum(A[i,:].*X[1:npan]) + sin(alf[i]-X[npan+i])
+            #F[i] = sum(A[i,:].*X[1:npan]) + sin(alf[i]-X[npan+i] - ai[i]) # ?
             F[npan+i] = X[npan+i]-(-2*X[i]/chord/V - clvisc)/(2*pi)
 
             # Compute J(X)
@@ -113,6 +114,7 @@ function test()
                 J[i,j] = A[i,j]
             end
             J[i,npan+i] = -cos(alf[i]-X[npan+i])
+            #J[i,npan+i] = -cos(alf[i]-X[npan+i]-ai[i]) # ?
             J[npan+i, i] = 2/chord/V /(2*pi)
             J[npan+i, npan+i] = 1
 
