@@ -17,7 +17,7 @@ function test()
 
     alpha = 2
     rho = 1.225
-    V = 1
+    V = 2
 
     # read in airfoil data
     c81 = readdlm("naca0012.csv", ',', Float64)
@@ -105,7 +105,7 @@ function test()
             #clvisc = 2*pi*deg2rad(alfe[i]) # debug, assume 2pi airfoil
 
             # compute F(X)
-            F[i] = sum(A[i,:].*X[1:npan]) + sin(alf[i]-X[npan+i])
+            F[i] = sum(A[i,:].*X[1:npan]) + sin(alf[i]-X[npan+i])*V
             #F[i] = sum(A[i,:].*X[1:npan]) + sin(alf[i]-X[npan+i] - ai[i]) # ?
             F[npan+i] = X[npan+i]-(-2*X[i]/chord/V - clvisc)/(2*pi)
 
