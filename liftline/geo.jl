@@ -1,5 +1,3 @@
-using Interpolations
-
 """
     cosine_spacing(startval, endval, num, weight, spacetype)
 Cosine space num numbers between startval and endval.
@@ -205,6 +203,7 @@ function calc_liftline_props(pan_vert, pan_con)
     pan_edgeuni = zeros(floatType, 3, 5, npan)
     pan_edgelen = zeros(floatType, 5, npan)
     pan_edgevec = zeros(floatType, 3, 5, npan)
+    pan_tan = zeros(floatType, 3, npan)
 
     for i = 1:npan
         pan_cpt[:,i] = (pan_vert[:,pan_con[2,i]] .+ pan_vert[:,pan_con[3,i]] .+ pan_vert[:,pan_con[4,i]] .+ pan_vert[:,pan_con[5,i]])./4
@@ -218,7 +217,8 @@ function calc_liftline_props(pan_vert, pan_con)
             pan_edgelen[j,i] = norm(pan_edgevec[:,j,i])
             pan_edgeuni[:,j,i] .= pan_edgevec[:,j,i]./pan_edgelen[j,i]
         end
+        pan_tan[:,i] .= (-pan_edgeuni[:,2,i] .+ pan_edgeuni[:,4,i])./2
     end
 
-    return pan_cpt, pan_norm, pan_area, pan_edgeuni, pan_edgelen
+    return pan_cpt, pan_norm, pan_area, pan_edgeuni, pan_edgelen, pan_tan
 end

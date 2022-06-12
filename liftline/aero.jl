@@ -1,5 +1,3 @@
-using LinearAlgebra
-
 function vel_line(p1, p2, loc, gam)
     pts = [p1 p2]
     edge_vec = pts[:,2] .- pts[:,1]
@@ -38,19 +36,15 @@ function vel_hshoe!(vel, dwash, pts, pt_idx, loc, gam)
     end
 end
 
-function solve_liftline(pansys, vel_inf)
+function solve_liftline(pansys, vel_inf, rho)
+    # Source: Katz, Low-Speed Aerodynamics
     rho = 1.225
     v_mag = norm(vel_inf)
     npan = size(pansys.pan_con, 2)
-    pan_cpt, pan_norm, pan_area, pan_edgeuni, pan_edgelen = calc_liftline_props(pansys.pan_vert, pansys.pan_con)
-    pan_tan = zeros(3, npan)
-    for i = 1:npan
-        pan_tan[:,i] .= (-pan_edgeuni[:,2,i] .+ pan_edgeuni[:,4,i])./2
-    end
+    pan_cpt, pan_norm, pan_area, pan_edgeuni, pan_edgelen, pan_tan = calc_liftline_props(pansys.pan_vert, pansys.pan_con)
     A = zeros(npan, npan) # influence coefficient, perpendicular to collocation point
     B = zeros(npan, npan) # influence coefficient, wake perpendicular to collocation point
-    C = zeros(npan, npan) # influence coefficient, tangent downstream to collocation point
-    D = zeros(npan, npan) # influence coefficient, wake tangent to collocation point
+    wake_inf_tan = zeros(npan, npan) # influence coefficient, wake tangent to collocation point
     RHS = zeros(npan)
     for i = 1:npan
         for j = 1:npan
@@ -59,8 +53,49 @@ function solve_liftline(pansys, vel_inf)
             vel_hshoe!(vel, dwash, pansys.pan_vert, pansys.pan_con[:,j], pan_cpt[:,i], 1)
             A[i,j] = dot(vel, pan_norm[:,i])
             B[i,j] = dot(dwash, pan_norm[:,i])
-            C[i,j] = dot(vel, pan_tan[:,i])
-            D[i,j] = dot(dwash, pan_tan[:,i])
+            wake_inf_tan[i,j] = dot(dwash, pan_tan[:,i])
+        end
+    end
+    for i = 1:npan
+        RHS[i] = -dot(vel_inf, pan_norm[:,i])
+    end
+
+    gam_sol = A\RHS
+    gam_sol .= -gam_sol
+    
+    # downwash velocity from wake
+    w = B*gam_sol
+
+    # lift and drag using kutta joukouski on global flow
+    dL = zeros(npan)
+    dD = zeros(npan)
+    for i = 1:npan
+        dL[i] = rho*v_mag*gam_sol[i]*pan_edgelen[3,i]
+        dD[i] = rho*w[i]*gam_sol[i]*pan_edgelen[3,i] # small angle assumption?
+    end
+    L = sum(dL)
+    D = sum(dD)
+
+    return L, D
+end
+
+function solve_liftline2(pansys, vel_inf, rho)
+    # Modified from Katz, Low-Speed Aerodynamics
+    v_mag = norm(vel_inf)
+    npan = size(pansys.pan_con, 2)
+    pan_cpt, pan_norm, pan_area, pan_edgeuni, pan_edgelen, pan_tan = calc_liftline_props(pansys.pan_vert, pansys.pan_con)
+    A = zeros(npan, npan) # influence coefficient, perpendicular to collocation point
+    wake_inf_perp = zeros(npan, npan) # influence coefficient, wake perpendicular to collocation point
+    wake_inf_tan = zeros(npan, npan) # influence coefficient, wake tangent to collocation point
+    RHS = zeros(npan)
+    for i = 1:npan
+        for j = 1:npan
+            vel = zeros(3)
+            wakevel = zeros(3)
+            vel_hshoe!(vel, wakevel, pansys.pan_vert, pansys.pan_con[:,j], pan_cpt[:,i], 1)
+            A[i,j] = dot(vel, pan_norm[:,i])
+            wake_inf_perp[i,j] = dot(wakevel, pan_norm[:,i])
+            wake_inf_tan[i,j] = dot(wakevel, pan_tan[:,i])
         end
     end
     for i = 1:npan
@@ -76,29 +111,15 @@ function solve_liftline(pansys, vel_inf)
     v_total = zeros(npan)
     
     # downwash velocity from wake
-    w = B*gam_sol # perpendicular
-    d = D*gam_sol # tangent
+    wakevel_perp = wake_inf_perp*gam_sol # perpendicular
+    wakevel_tan = wake_inf_tan*gam_sol # tangent
 
     for i = 1:npan
-        v_perp[i] = -w[i] + dot(vel_inf, pan_norm[:,i])
-        v_tan[i] = d[i] + dot(vel_inf, pan_tan[:,i])
+        v_perp[i] = -wakevel_perp[i] + dot(vel_inf, pan_norm[:,i])
+        v_tan[i] = wakevel_tan[i] + dot(vel_inf, pan_tan[:,i])
         alpha_eff[i] = atan(v_perp[i], v_tan[i])
         v_total[i] = sqrt(v_perp[i]^2 + v_tan[i]^2)
     end
-    
-    # lift and drag using kutta joukouski on global flow
-    dL = zeros(npan)
-    dD = zeros(npan)
-    for i = 1:npan
-        dL[i] = rho*v_mag*gam_sol[i]*pan_edgelen[3,i]
-        dD[i] = rho*w[i]*gam_sol[i]*pan_edgelen[3,i] # small angle assumption?
-    end
-    L = sum(dL)
-    D = sum(dD)
-
-    area = sum(pan_area)
-    CL = L/(1/2*rho*v_mag^2*area)
-    CDi = D/(1/2*rho*v_mag^2*area)
 
     # lift and drag using kutta joukouski on local flow
     dN = zeros(npan)
@@ -112,13 +133,6 @@ function solve_liftline(pansys, vel_inf)
     end
 
     F = sum(dF, dims=2)
-    println("Force from local KJ theorem:")
-    println(F)
-    println("Lift from gloabl JK theorem")
-    println(L)
-    println("Drag from gloabl JK theorem")
-    println(D)
-    
 
-    return CL, CDi
+    return F
 end
