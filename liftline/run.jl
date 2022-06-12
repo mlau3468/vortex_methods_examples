@@ -5,7 +5,7 @@ include("aero.jl")
 include("vis.jl")
 
 # Freestream definition
-alpha = deg2rad(0)
+alpha = deg2rad(5)
 V = 1
 vel_inf = [cos(alpha)*V;0;sin(alpha)*V]
 v_mag = norm(vel_inf)
@@ -18,7 +18,7 @@ zle = [0;0;0]
 chords = [1;1;1]
 area = 10
 AR = 10
-pitch = [5;5;5]
+pitch = [0;0;0]
 nspan = [10;10]
 tevec = [cos(alpha);0;sin(alpha);]
 telen = 30*sum(chords)./length(chords)

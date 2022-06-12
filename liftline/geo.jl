@@ -93,8 +93,8 @@ function refine_wing(xloc, yloc, zloc, chord, pitch, nspan::Array{Int})
 end
 
 function wing2vortlat(xloc, yloc, zloc, chord, pitch, nchord, chordspace, xref)
-    floatType = Float32
-    intType = Int32
+    floatType = Float64
+    intType = Int64
 
     nspan = length(xloc) - 1 # number of spanwise elements
     npt = (nspan+1)*(nchord+1) # number of points
@@ -136,8 +136,8 @@ function wing2vortlat(xloc, yloc, zloc, chord, pitch, nchord, chordspace, xref)
 end
 
 function wing2liftline(xle, yle, zle, chord, pitch, tevec, telen)
-    floatType = Float32
-    intType = Int32
+    floatType = Float64
+    intType = Int64
 
     nspan = length(xle) - 1 # number of spanwise elements
     npt = (nspan+1)*3 # number of points
@@ -163,8 +163,8 @@ function wing2liftline(xle, yle, zle, chord, pitch, tevec, telen)
 
         # wake point
         pwake_x = pte_x + tevec[1]*telen
-        pwake_z = pte_z + tevec[2]*telen
-        pwake_y = pte_y + tevec[3]*telen
+        pwake_z = pte_z + tevec[3]*telen
+        pwake_y = pte_y + tevec[2]*telen
 
         # store points
         pan_vert[1,count] = ple_x
@@ -194,7 +194,7 @@ function wing2liftline(xle, yle, zle, chord, pitch, tevec, telen)
 end
 
 function calc_liftline_props(pan_vert, pan_con)
-    floatType = Float32
+    floatType = Float64
 
     npan = size(pan_con, 2)
     pan_cpt = zeros(floatType, 3, npan) # collocation points
