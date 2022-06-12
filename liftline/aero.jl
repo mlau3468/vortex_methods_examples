@@ -61,16 +61,15 @@ function solve_liftline(pansys, vel_inf, rho)
     end
 
     gam_sol = A\RHS
-    gam_sol .= -gam_sol
     
     # downwash velocity from wake
-    w = B*gam_sol
+    w = .-B*gam_sol
 
     # lift and drag using kutta joukouski on global flow
     dL = zeros(npan)
     dD = zeros(npan)
     for i = 1:npan
-        dL[i] = rho*v_mag*gam_sol[i]*pan_edgelen[3,i]
+        dL[i] = -rho*v_mag*gam_sol[i]*pan_edgelen[3,i]
         dD[i] = rho*w[i]*gam_sol[i]*pan_edgelen[3,i] # small angle assumption?
     end
     L = sum(dL)
@@ -102,7 +101,6 @@ function solve_liftline2(pansys, vel_inf, rho)
         RHS[i] = -dot(vel_inf, pan_norm[:,i])
     end
     gam_sol = A\RHS
-    gam_sol .= -gam_sol
 
     # local tangent and perpendicular velocities
     v_perp = zeros(npan)
@@ -110,12 +108,12 @@ function solve_liftline2(pansys, vel_inf, rho)
     alpha_eff = zeros(npan)
     v_total = zeros(npan)
     
-    # downwash velocity from wake
+    # wake induced velocities
     wakevel_perp = wake_inf_perp*gam_sol # perpendicular
     wakevel_tan = wake_inf_tan*gam_sol # tangent
 
     for i = 1:npan
-        v_perp[i] = -wakevel_perp[i] + dot(vel_inf, pan_norm[:,i])
+        v_perp[i] = wakevel_perp[i] + dot(vel_inf, pan_norm[:,i])
         v_tan[i] = wakevel_tan[i] + dot(vel_inf, pan_tan[:,i])
         alpha_eff[i] = atan(v_perp[i], v_tan[i])
         v_total[i] = sqrt(v_perp[i]^2 + v_tan[i]^2)
@@ -126,7 +124,7 @@ function solve_liftline2(pansys, vel_inf, rho)
     dT = zeros(npan)
     dF = zeros(3,npan)
     for i = 1:npan
-        dL_local = rho*v_total[i]*gam_sol[i]*pan_edgelen[3,i]
+        dL_local = -rho*v_total[i]*gam_sol[i]*pan_edgelen[3,i]
         dN[i] = cos(alpha_eff[i])*dL_local
         dT[i] = -sin(alpha_eff[i])*dL_local
         dF[:,i] .= dN[i].*pan_norm[:,i] .+ dT[i].*pan_tan[:,i]
