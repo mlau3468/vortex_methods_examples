@@ -29,7 +29,7 @@ pansys = wing2liftline(xle, yle, zle, chord, pitch, tevec, telen)
 vis_liftline(pansys.pan_con, pansys.pan_vert, "geometry")
 
 # Solve lifting line, Katz Plotkin
-lift, drag = solve_liftline(pansys, vel_inf, rho)
+lift, drag = solve_liftline_katz(pansys, vel_inf, rho)
 CL = lift/(1/2*rho*v_mag^2*area)
 CDi = drag/(1/2*rho*v_mag^2*area)
 oswald = CL^2/(pi*AR*CDi)
@@ -40,7 +40,7 @@ println("e="*string(oswald))
 println("")
 
 # Solve lifting line, modified Katz Plotkin
-F = solve_liftline2(pansys, vel_inf, rho)
+F = solve_liftline_katz_mod(pansys, vel_inf, rho)
 lift = F[3]*cos(alpha) - F[1]*sin(alpha)
 drag = F[3]*sin(alpha) + F[1]*cos(alpha)
 CL = lift/(1/2*rho*v_mag^2*area)

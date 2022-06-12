@@ -36,7 +36,7 @@ function vel_hshoe!(vel, dwash, pts, pt_idx, loc, gam)
     end
 end
 
-function solve_liftline(pansys, vel_inf, rho)
+function solve_liftline_katz(pansys, vel_inf, rho)
     # Source: Katz, Low-Speed Aerodynamics
     rho = 1.225
     v_mag = norm(vel_inf)
@@ -78,7 +78,7 @@ function solve_liftline(pansys, vel_inf, rho)
     return L, D
 end
 
-function solve_liftline2(pansys, vel_inf, rho)
+function solve_liftline_katz_mod(pansys, vel_inf, rho)
     # Modified from Katz, Low-Speed Aerodynamics
     npan = size(pansys.pan_con, 2)
     pan_cpt, pan_norm, pan_area, pan_edgeuni, pan_edgelen, pan_tan = calc_liftline_props(pansys.pan_vert, pansys.pan_con)
@@ -226,4 +226,3 @@ function solve_liftline_weissinger(pansys, vel_inf, rho)
     F_visc = sum(dF, dims=2)
     return F_inv, F_visc
 end
-
