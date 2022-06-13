@@ -17,12 +17,12 @@ chords = [39.37;39.37;39.37].*0.0254
 area = 9134.6*0.00064516
 AR = 5.8933
 pitch = [0;0;0]
-nspan = 30
+nspan = 50
 telen = 30*sum(chords)./length(chords)
 xle, yle, zle, chord, pitch = refine_wing(xle, yle, zle, chords, pitch, nspan, "cos")
 
 # Freestream
-alphas = collect(LinRange(-4,17,20))
+alphas = collect(LinRange(-4,18,30))
 V = 1
 cls = zeros(length(alphas))
 cds = zeros(length(alphas))
@@ -30,7 +30,6 @@ cds = zeros(length(alphas))
 for i = 1:length(alphas)
     # Freestream definition
     alpha = deg2rad(alphas[i])
-    println(alphas[i])
     vel_inf = [cos(alpha)*V;0;sin(alpha)*V]
     v_mag = norm(vel_inf)
     rho = 1.225
@@ -39,7 +38,7 @@ for i = 1:length(alphas)
     vis_liftline(pansys.pan_con, pansys.pan_vert, "geometry")
 
     # Solve lifting line, Wickenheiser
-    F_inv, F_visc = solve_liftline_weissinger(pansys, vel_inf, rho, "naca0012.csv")
+    F_inv, F_visc = solve_liftline_weissinger(pansys, vel_inf, rho, "naca0012_mod.csv")
     lift = F_visc[3]*cos(alpha) - F_visc[1]*sin(alpha)
     drag = F_visc[3]*sin(alpha) + F_visc[1]*cos(alpha)
     CL = lift/(1/2*rho*v_mag^2*area)

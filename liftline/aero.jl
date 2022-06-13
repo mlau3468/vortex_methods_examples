@@ -150,7 +150,7 @@ function solve_liftline_weissinger(pansys, vel_inf, rho, affile)
     cds = zeros(npan)
     residuals = zeros(npan)
     tol = 1e-4
-    max_iter = 2000
+    max_iter = 1000
     iter = 1
     rlx = 0.01
 
@@ -183,36 +183,19 @@ function solve_liftline_weissinger(pansys, vel_inf, rho, affile)
     while !done
         # calculate effective angle of attack, cl, cd
         for i = 1:npan
-            #=
             v_perp[i] = sum(wake_inf_perp[i,:].*gam_sol) + dot(vel_inf, pan_norm[:,i]) # wake induced + freestream
             v_tan[i] = sum(wake_inf_tan[i,:].*gam_sol) + dot(vel_inf, pan_tan[:,i]) # wake induced + freestream
             v_total[i] = sqrt(v_perp[i]^2 + v_tan[i]^2)
 
             chord = (pan_edgelen[2,i] + pan_edgelen[4,i])/2
-
-            alpha = atan(v_perp[i], v_tan[i])
-            alpha_2d = -gam_sol[i]/(pi*chord*v_total[i])
-            alpha_eff[i] = alpha + alpha_2d
-
-            cls[i] = cl_interp(rad2deg(alpha_eff[i]))
-            cds[i] = cd_interp(rad2deg(alpha_eff[i]))
             
-            gamnew = -0.5*v_total[i]*cls[i]*chord
-            residuals[i] = abs(gamnew - gam_sol[i])
-            gam_sol[i] = gam_sol[i]*(1-rlx) + rlx*gamnew
-            =#
-            v_perp[i] = sum(wake_inf_perp[i,:].*gam_sol) + dot(vel_inf, pan_norm[:,i]) # wake induced + freestream
-            v_tan[i] = sum(wake_inf_tan[i,:].*gam_sol) + dot(vel_inf, pan_tan[:,i]) # wake induced + freestream
             alpha_eff[i] = atan(v_perp[i], v_tan[i])
-            v_total[i] = sqrt(v_perp[i]^2 + v_tan[i]^2)
-
-            chord = (pan_edgelen[2,i] + pan_edgelen[4,i])/2
-
             cls[i] = cl_interp(rad2deg(alpha_eff[i]))
             cds[i] = cd_interp(rad2deg(alpha_eff[i]))
             gamnew = -0.5*v_total[i]*cls[i]*chord
             residuals[i] = abs(gamnew - gam_sol[i])
             gam_temp[i] = gam_sol[i]*(1-rlx) + rlx*gamnew
+            
         end
 
         iter += 1
