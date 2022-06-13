@@ -149,8 +149,8 @@ function solve_liftline_weissinger(pansys, vel_inf, rho, affile)
     cls = zeros(npan)
     cds = zeros(npan)
     residuals = zeros(npan)
-    tol = 1e-4
-    max_iter = 1000
+    tol = 1e-5
+    max_iter = 2000
     iter = 1
     rlx = 0.01
 
@@ -176,7 +176,7 @@ function solve_liftline_weissinger(pansys, vel_inf, rho, affile)
 
     # Initial solution for circulation, uncorrected
     gam_sol = A\RHS
-
+    #gam_sol = zeros(npan)
     gam_temp = zeros(npan)
     
     done = false
@@ -195,7 +195,6 @@ function solve_liftline_weissinger(pansys, vel_inf, rho, affile)
             gamnew = -0.5*v_total[i]*cls[i]*chord
             residuals[i] = abs(gamnew - gam_sol[i])
             gam_temp[i] = gam_sol[i]*(1-rlx) + rlx*gamnew
-            
         end
 
         iter += 1

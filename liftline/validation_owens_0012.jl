@@ -23,7 +23,7 @@ xle, yle, zle, chord, pitch = refine_wing(xle, yle, zle, chords, pitch, nspan, "
 
 # Freestream
 alphas = collect(LinRange(-4,18,30))
-V = 1
+V = 10
 cls = zeros(length(alphas))
 cds = zeros(length(alphas))
 
