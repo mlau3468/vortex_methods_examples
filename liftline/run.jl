@@ -13,18 +13,19 @@ v_mag = norm(vel_inf)
 rho = 1.225
 
 # Create Geometry
-xle = [0;0]
-yle = [0;10]
-zle = [0;0]
-chords = [1;1]
-area = 10
-AR = 10
-pitch = [0;0]
-nspan = [16]
-tevec = [cos(alpha);0;sin(alpha);]
+span = 232.02
+xle = [0;0;0].*0.0254
+yle = [-span/2;0;span/2].*0.0254
+zle = [0;0;0].*0.0254
+chords = [39.37;39.37;39.37].*0.0254
+area = 9134.6*0.00064516
+AR = 5.8933
+pitch = [0;0;0]
+nspan = 50
 telen = 30*sum(chords)./length(chords)
+tevec = [cos(alpha);0;sin(alpha);]
+xle, yle, zle, chord, pitch = refine_wing(xle, yle, zle, chords, pitch, nspan, "cos")
 
-xle, yle, zle, chord, pitch = refine_wing(xle, yle, zle, chords, pitch, nspan)
 pansys = wing2liftline(xle, yle, zle, chord, pitch, tevec, telen)
 vis_liftline(pansys.pan_con, pansys.pan_vert, "geometry")
 

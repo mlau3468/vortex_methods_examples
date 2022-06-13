@@ -22,7 +22,7 @@ telen = 30*sum(chords)./length(chords)
 xle, yle, zle, chord, pitch = refine_wing(xle, yle, zle, chords, pitch, nspan, "cos")
 
 # Freestream
-alphas = collect(LinRange(-4,18,30))
+alphas = collect(LinRange(-4,20,30))
 V = 10
 cls = zeros(length(alphas))
 cds = zeros(length(alphas))
@@ -56,7 +56,11 @@ p1 = plot(alphas, cls, label="model", legend=:bottomright)
 scatter!(df[!,"alpha"], df[!,"cl"], label="data")
 xlabel!("Angle of Attack (deg)")
 ylabel!("CL")
+ylims!((-0.4,1.2))
 display(p1)
+
+println(maximum(cls))
+println(maximum(df[!,"cl"]))
 
 p2 = plot(cds, cls, label="model", legend=:bottomright)
 scatter!(df[!,"cd_polar"], df[!,"cl_polar"], label="data")
