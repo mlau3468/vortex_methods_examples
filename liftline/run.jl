@@ -13,14 +13,14 @@ v_mag = norm(vel_inf)
 rho = 1.225
 
 # Create Geometry
-xle = [0;0;0]
-yle = [0;5;10]
-zle = [0;0;0]
-chords = [1;1;1]
+xle = [0;0]
+yle = [0;10]
+zle = [0;0]
+chords = [1;1]
 area = 10
 AR = 10
-pitch = [0;0;0]
-nspan = [3;3]
+pitch = [0;0]
+nspan = [16]
 tevec = [cos(alpha);0;sin(alpha);]
 telen = 30*sum(chords)./length(chords)
 
@@ -53,7 +53,7 @@ println("e="*string(oswald))
 println("")
 
 # Solve lifting line, Wickenheiser
-F_inv, F_visc = solve_liftline_weissinger(pansys, vel_inf, rho)
+F_inv, F_visc = solve_liftline_weissinger(pansys, vel_inf, rho, "naca0012.csv")
 lift = F_inv[3]*cos(alpha) - F_inv[1]*sin(alpha)
 drag = F_inv[3]*sin(alpha) + F_inv[1]*cos(alpha)
 CL = lift/(1/2*rho*v_mag^2*area)

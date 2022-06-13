@@ -132,7 +132,7 @@ function solve_liftline_katz_mod(pansys, vel_inf, rho)
     return F
 end
 
-function solve_liftline_weissinger(pansys, vel_inf, rho)
+function solve_liftline_weissinger(pansys, vel_inf, rho, affile)
     # Source: Owens, Weissinger's Modle of the Nonlinear Lifting-Line MEthod for Aircraft Design
     npan = size(pansys.pan_con, 2)
     pan_cpt, pan_norm, pan_area, pan_edgeuni, pan_edgelen, pan_tan = calc_liftline_props(pansys.pan_vert, pansys.pan_con)
@@ -149,13 +149,13 @@ function solve_liftline_weissinger(pansys, vel_inf, rho)
     cls = zeros(npan)
     cds = zeros(npan)
     residuals = zeros(npan)
-    tol = 1e-6
-    max_iter = 400
+    tol = 1e-4
+    max_iter = 2000
     iter = 1
-    rlx = 0.5
+    rlx = 0.01
 
     # airfoil polar
-    af_data = readdlm("naca0012.csv", ',')
+    af_data = readdlm(affile, ',')
     cl_interp = LinearInterpolation(af_data[:,1], af_data[:,2])
     cd_interp = LinearInterpolation(af_data[:,1], af_data[:,3])
 
@@ -176,21 +176,43 @@ function solve_liftline_weissinger(pansys, vel_inf, rho)
 
     # Initial solution for circulation, uncorrected
     gam_sol = A\RHS
+
+    gam_temp = zeros(npan)
     
     done = false
     while !done
         # calculate effective angle of attack, cl, cd
         for i = 1:npan
+            #=
+            v_perp[i] = sum(wake_inf_perp[i,:].*gam_sol) + dot(vel_inf, pan_norm[:,i]) # wake induced + freestream
+            v_tan[i] = sum(wake_inf_tan[i,:].*gam_sol) + dot(vel_inf, pan_tan[:,i]) # wake induced + freestream
+            v_total[i] = sqrt(v_perp[i]^2 + v_tan[i]^2)
+
+            chord = (pan_edgelen[2,i] + pan_edgelen[4,i])/2
+
+            alpha = atan(v_perp[i], v_tan[i])
+            alpha_2d = -gam_sol[i]/(pi*chord*v_total[i])
+            alpha_eff[i] = alpha + alpha_2d
+
+            cls[i] = cl_interp(rad2deg(alpha_eff[i]))
+            cds[i] = cd_interp(rad2deg(alpha_eff[i]))
+            
+            gamnew = -0.5*v_total[i]*cls[i]*chord
+            residuals[i] = abs(gamnew - gam_sol[i])
+            gam_sol[i] = gam_sol[i]*(1-rlx) + rlx*gamnew
+            =#
             v_perp[i] = sum(wake_inf_perp[i,:].*gam_sol) + dot(vel_inf, pan_norm[:,i]) # wake induced + freestream
             v_tan[i] = sum(wake_inf_tan[i,:].*gam_sol) + dot(vel_inf, pan_tan[:,i]) # wake induced + freestream
             alpha_eff[i] = atan(v_perp[i], v_tan[i])
             v_total[i] = sqrt(v_perp[i]^2 + v_tan[i]^2)
+
+            chord = (pan_edgelen[2,i] + pan_edgelen[4,i])/2
+
             cls[i] = cl_interp(rad2deg(alpha_eff[i]))
             cds[i] = cd_interp(rad2deg(alpha_eff[i]))
-            chord = (pan_edgelen[2,i] + pan_edgelen[4,i])/2
             gamnew = -0.5*v_total[i]*cls[i]*chord
             residuals[i] = abs(gamnew - gam_sol[i])
-            gam_sol[i] = gam_sol[i]*(1-rlx) + rlx*gamnew
+            gam_temp[i] = gam_sol[i]*(1-rlx) + rlx*gamnew
         end
 
         iter += 1
@@ -200,6 +222,8 @@ function solve_liftline_weissinger(pansys, vel_inf, rho)
         elseif iter == max_iter
             done = true
             println("Maximum iterations exceeded.")
+        else
+            gam_sol[:] .= gam_temp
         end
     end
 
