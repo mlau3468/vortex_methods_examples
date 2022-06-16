@@ -92,7 +92,9 @@ function solve_liftline_katz_mod(pansys, vel_inf, rho)
     v_perp = zeros(npan)
     v_tan = zeros(npan)
     alpha_eff = zeros(npan)
+    alpha_ind = zeros(npan)
     v_total = zeros(npan)
+    dwash = zeros(npan)
 
     for i = 1:npan
         for j = 1:npan
@@ -114,17 +116,20 @@ function solve_liftline_katz_mod(pansys, vel_inf, rho)
     for i = 1:npan
         v_perp[i] = sum(wake_inf_perp[i,:].*gam_sol) + dot(vel_inf, pan_norm[:,i]) # wake induced + freestream
         v_tan[i] = sum(wake_inf_tan[i,:].*gam_sol) + dot(vel_inf, pan_tan[:,i]) # wake induced + freestream
-        alpha_eff[i] = atan(v_perp[i], v_tan[i])
-        #v_total[i] = sqrt(v_perp[i]^2 + v_tan[i]^2)
         v_total[i] = norm(vel_inf)
+        dwash[i] = sum(wake_inf_perp[i,:].*gam_sol)
+        alpha_eff[i] = atan(v_perp[i], v_tan[i])
+        alpha_ind[i] = atan(-dwash[i], v_total[i])
     end
 
     # lift and drag using kutta joukouski on local flow
     dN = zeros(npan)
     dT = zeros(npan)
     dF = zeros(3,npan)
+    cls = zeros(npan)
     for i = 1:npan
         dL_local = -rho*v_total[i]*gam_sol[i]*pan_edgelen[3,i]
+        #cls[i] = -2*gam_sol[i]/
         #cl_local = 2*pi*alpha_eff[i]
         #dL_local = 1/2*rho*v_total[i]^2*pan_area[i]*cl_local
         dN[i] = cos(alpha_eff[i])*dL_local
@@ -256,8 +261,8 @@ function solve_liftline_vandam(pansys, vel_inf, rho, affile)
     alpha_eff = zeros(npan)
     v_total = zeros(npan)
     residuals = zeros(npan)
-    tol = 1e-4
-    max_iter = 20
+    tol = 0.005
+    max_iter = 100
     iter = 1
     rlx = 0.1
 
@@ -274,55 +279,62 @@ function solve_liftline_vandam(pansys, vel_inf, rho, affile)
     cd_visc = zeros(npan)
     gam_sol = zeros(npan)
 
-    for i = 1:npan
-        v_p = dot(vel_inf, pan_norm[:,i]) # freestream
-        v_t = dot(vel_inf, pan_tan[:,i]) # freestream
-        alphas[i] = atan(v_p, v_t)
-    end
-
-    # Inflence matrices
-    for i = 1:npan
-        for j = 1:npan
-            vel = zeros(3)
-            wakevel = zeros(3)
-            vel_hshoe!(vel, wakevel, pansys.pan_vert, pansys.pan_con[:,j], pan_cpt[:,i], 1)
-            A[i,j] = dot(vel, pan_norm[:,i])
-            wake_inf_perp[i,j] = dot(wakevel, pan_norm[:,i])
-            wake_inf_tan[i,j] = dot(wakevel, pan_tan[:,i])
-        end
-    end
-
 
     done = false
     while !done
+        # Local angle of attack
+        for i = 1:npan
+            v_p = dot(vel_inf, pan_norm[:,i]) # freestream
+            v_t = dot(vel_inf, pan_tan[:,i]) # freestream
+            alphas[i] = atan(v_p, v_t)
+        end
+    
+        # Inflence matrices
+        for i = 1:npan
+            dcm = euler2dcm(0, -dalpha[i], 0)
+            for j = 1:npan
+                vel = zeros(3)
+                wakevel = zeros(3)
+                vel_hshoe!(vel, wakevel, pansys.pan_vert, pansys.pan_con[:,j], pan_cpt[:,i], 1)
+                #A[i,j] = dot(vel, pan_norm[:,i])
+                #wake_inf_perp[i,j] = dot(wakevel, pan_norm[:,i])
+                #wake_inf_tan[i,j] = dot(wakevel, pan_tan[:,i])
+                A[i,j] = dot(vel, dcm*pan_norm[:,i])
+                wake_inf_perp[i,j] = dot(wakevel, pan_norm[:,i])
+                wake_inf_tan[i,j] = dot(wakevel, pan_tan[:,i])
+            end
+        end
+    
         for i = 1:npan
             #RHS[i] = -dot(vel_inf, pan_norm[:,i])
             RHS[i] = -sin(alphas[i] - dalpha[i])*vel_mag
         end
-
+    
         gam_sol[:] = A\RHS
-
+    
         # calculate effective angle of attack, cl, cd
         for i = 1:npan
             v_perp[i] = sum(wake_inf_perp[i,:].*gam_sol) + dot(vel_inf, pan_norm[:,i]) # wake induced + freestream
-            v_tan[i] = dot(vel_inf, pan_tan[:,i]) # wake induced + freestream
+            v_tan[i] = sum(wake_inf_tan[i,:].*gam_sol) + dot(vel_inf, pan_tan[:,i]) # wake induced + freestream
             v_total[i] = sqrt(v_perp[i]^2 + v_tan[i]^2)
             v_total[i] = norm(vel_inf)
 
             chord = (pan_edgelen[2,i] + pan_edgelen[4,i])/2
             
-            alpha_eff[i] = atan(v_perp[i], v_tan[i])
+            #alpha_eff[i] = atan(v_perp[i], v_tan[i])
             cl_inv[i] = -2*gam_sol[i]/v_total[i]/chord
-            #alpha_eff[i] = cl_inv[i]/(2*pi)
+            alpha_eff[i] = cl_inv[i]/(2*pi)
             cl_visc[i] = cl_interp(rad2deg(alpha_eff[i] - dalpha[i]))
             cd_visc[i] = cd_interp(rad2deg(alpha_eff[i] - dalpha[i]))
-            dalpha_new = -(cl_inv[i] - cl_visc[i])/(2*pi)
+            dalpha_new = (cl_inv[i] - cl_visc[i])/(2*pi)
             dalpha[i] = (1-rlx)*dalpha[i] + rlx*dalpha_new
             residuals[i] = abs(cl_visc[i] - cl_inv[i])
         end
-        println(cl_inv)
-        println(cl_visc)
-        println("--------------")
+
+        #println(rad2deg.(cl_inv))
+        #println(rad2deg.(cl_visc))
+        #println(maximum(residuals))
+        #println("-------")
 
         iter += 1
         if maximum(residuals) < tol
@@ -350,8 +362,8 @@ function solve_liftline_vandam(pansys, vel_inf, rho, affile)
 
     # lift and drag using airfoil polars
     for i = 1:npan
-        dL_local = 0.5*rho*v_total[i]^2*pan_area[i]*cls[i]
-        dD_local = 0.5*rho*v_total[i]^2*pan_area[i]*cds[i]
+        dL_local = 0.5*rho*v_total[i]^2*pan_area[i]*cl_visc[i]
+        dD_local = 0.5*rho*v_total[i]^2*pan_area[i]*cd_visc[i]
         dN[i] = cos(alpha_eff[i])*dL_local + sin(alpha_eff[i])*dD_local
         dT[i] = -sin(alpha_eff[i])*dL_local + cos(alpha_eff[i])*dD_local
         dF[:,i] .= dN[i].*pan_norm[:,i] .+ dT[i].*pan_tan[:,i]

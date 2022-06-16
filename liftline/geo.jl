@@ -222,3 +222,18 @@ function calc_liftline_props(pan_vert, pan_con)
 
     return pan_cpt, pan_norm, pan_area, pan_edgeuni, pan_edgelen, pan_tan
 end
+
+"""
+    euler2dcm(g, b, a, degrees=false)
+    # computes euler matrix to perform 321 rotation. g-b-a = 1-2-3. Rotation in 3-2-1 order.
+"""
+function euler2dcm(g, b, a, degrees=false)
+    if degrees
+        a = deg2rad(a)
+        b = deg2rad(b)
+        g = deg2rad(g)
+    end
+    return [[cos(a)*cos(b) cos(a)*sin(b)*sin(g)-sin(a)*cos(g) cos(a)*sin(b)*cos(g)+sin(a)*sin(g)]; 
+    [sin(a)*cos(b) sin(a)*sin(b)*sin(g)+cos(a)*cos(g) sin(a)*sin(b)*cos(g)-cos(a)*sin(g)];
+    [-sin(b) cos(b)*sin(g) cos(b)*cos(g)]]  
+end

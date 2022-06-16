@@ -38,7 +38,8 @@ for i = 1:length(alphas)
     vis_liftline(pansys.pan_con, pansys.pan_vert, "geometry")
 
     # Solve lifting line, Wickenheiser
-    F_inv, F_visc = solve_liftline_weissinger(pansys, vel_inf, rho, "naca0012_mod.csv")
+    #F_inv, F_visc = solve_liftline_weissinger(pansys, vel_inf, rho, "naca0012_mod.csv")
+    F_inv, F_visc = solve_liftline_vandam(pansys, vel_inf, rho, "naca0012_mod.csv")
     lift = F_visc[3]*cos(alpha) - F_visc[1]*sin(alpha)
     drag = F_visc[3]*sin(alpha) + F_visc[1]*cos(alpha)
     CL = lift/(1/2*rho*v_mag^2*area)

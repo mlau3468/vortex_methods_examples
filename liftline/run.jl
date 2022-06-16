@@ -73,7 +73,7 @@ println("CD(visc)="*string(CD))
 println("")
 
 # Solve lifting line, van Dam
-F_inv, F_visc = solve_liftline_vandam(pansys, vel_inf, rho, "naca0012.csv")
+F_inv, F_visc = solve_liftline_vandam(pansys, vel_inf, rho, "naca0012_mod.csv")
 lift = F_inv[3]*cos(alpha) - F_inv[1]*sin(alpha)
 drag = F_inv[3]*sin(alpha) + F_inv[1]*cos(alpha)
 CL = lift/(1/2*rho*v_mag^2*area)
