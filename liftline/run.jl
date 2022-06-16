@@ -21,8 +21,8 @@ chords = [39.37;39.37;39.37].*0.0254
 area = 9134.6*0.00064516
 AR = 5.8933
 pitch = [0;0;0]
-nspan = 50
-telen = 30*sum(chords)./length(chords)
+nspan = 10
+telen = 50*sum(chords)./length(chords)
 tevec = [cos(alpha);0;sin(alpha);]
 xle, yle, zle, chord, pitch = refine_wing(xle, yle, zle, chords, pitch, nspan, "cos")
 
@@ -61,6 +61,25 @@ CL = lift/(1/2*rho*v_mag^2*area)
 CDi = drag/(1/2*rho*v_mag^2*area)
 oswald = CL^2/(pi*AR*CDi)
 println("Weissinger Method")
+println("CL(KJ)="*string(CL))
+println("CDi="*string(CDi))
+println("e="*string(oswald))
+lift = F_visc[3]*cos(alpha) - F_visc[1]*sin(alpha)
+drag = F_visc[3]*sin(alpha) + F_visc[1]*cos(alpha)
+CL = lift/(1/2*rho*v_mag^2*area)
+CD = drag/(1/2*rho*v_mag^2*area)
+println("CL(visc)="*string(CL))
+println("CD(visc)="*string(CD))
+println("")
+
+# Solve lifting line, van Dam
+F_inv, F_visc = solve_liftline_vandam(pansys, vel_inf, rho, "naca0012.csv")
+lift = F_inv[3]*cos(alpha) - F_inv[1]*sin(alpha)
+drag = F_inv[3]*sin(alpha) + F_inv[1]*cos(alpha)
+CL = lift/(1/2*rho*v_mag^2*area)
+CDi = drag/(1/2*rho*v_mag^2*area)
+oswald = CL^2/(pi*AR*CDi)
+println("van Dam Method")
 println("CL(KJ)="*string(CL))
 println("CDi="*string(CDi))
 println("e="*string(oswald))
