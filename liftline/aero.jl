@@ -186,6 +186,7 @@ function solve_liftline_weissinger(pansys, vel_inf, rho, affile)
 
     # Initial solution for circulation, uncorrected
     gam_sol = A\RHS
+    # Initial solution for ciculation at 0
     #gam_sol = zeros(npan)
     gam_temp = zeros(npan)
 
@@ -202,7 +203,6 @@ function solve_liftline_weissinger(pansys, vel_inf, rho, affile)
             
             alpha_eff[i] = atan(v_perp[i], v_tan[i])
             cls[i] = cl_interp(rad2deg(alpha_eff[i]))
-            #cls[i] = 2*pi*alpha_eff[i]
             cds[i] = cd_interp(rad2deg(alpha_eff[i]))
             gamnew = -0.5*v_total[i]*cls[i]*chord
             residuals[i] = abs(gamnew - gam_sol[i])
@@ -247,7 +247,7 @@ end
 
 
 function solve_liftline_vandam(pansys, vel_inf, rho, affile)
-    # Source: Owens, Weissinger's Modle of the Nonlinear Lifting-Line MEthod for Aircraft Design
+    # Source: van Dam, The aerodynamic design of multi-element high-lift systems for transport airplanes
     npan = size(pansys.pan_con, 2)
     pan_cpt, pan_norm, pan_area, pan_edgeuni, pan_edgelen, pan_tan = calc_liftline_props(pansys.pan_vert, pansys.pan_con)
     A = zeros(npan, npan) # influence coefficient, perpendicular to collocation point
@@ -261,10 +261,10 @@ function solve_liftline_vandam(pansys, vel_inf, rho, affile)
     alpha_eff = zeros(npan)
     v_total = zeros(npan)
     residuals = zeros(npan)
-    tol = 0.005
-    max_iter = 100
+    tol = 1e-6
+    max_iter = 500
     iter = 1
-    rlx = 0.1
+    rlx = 1
 
     # airfoil polar
     af_data = readdlm(affile, ',')
@@ -279,34 +279,29 @@ function solve_liftline_vandam(pansys, vel_inf, rho, affile)
     cd_visc = zeros(npan)
     gam_sol = zeros(npan)
 
+    # Local angle of attack
+    for i = 1:npan
+        v_p = dot(vel_inf, pan_norm[:,i]) # freestream
+        v_t = dot(vel_inf, pan_tan[:,i]) # freestream
+        alphas[i] = atan(v_p, v_t)
+    end
+
+    # Inflence matrices
+    for i = 1:npan
+        for j = 1:npan
+            vel = zeros(3)
+            wakevel = zeros(3)
+            vel_hshoe!(vel, wakevel, pansys.pan_vert, pansys.pan_con[:,j], pan_cpt[:,i], 1)
+            A[i,j] = dot(vel, pan_norm[:,i])
+            wake_inf_perp[i,j] = dot(wakevel, pan_norm[:,i])
+            wake_inf_tan[i,j] = dot(wakevel, pan_tan[:,i])
+        end
+    end
 
     done = false
     while !done
-        # Local angle of attack
+        
         for i = 1:npan
-            v_p = dot(vel_inf, pan_norm[:,i]) # freestream
-            v_t = dot(vel_inf, pan_tan[:,i]) # freestream
-            alphas[i] = atan(v_p, v_t)
-        end
-    
-        # Inflence matrices
-        for i = 1:npan
-            dcm = euler2dcm(0, -dalpha[i], 0)
-            for j = 1:npan
-                vel = zeros(3)
-                wakevel = zeros(3)
-                vel_hshoe!(vel, wakevel, pansys.pan_vert, pansys.pan_con[:,j], pan_cpt[:,i], 1)
-                #A[i,j] = dot(vel, pan_norm[:,i])
-                #wake_inf_perp[i,j] = dot(wakevel, pan_norm[:,i])
-                #wake_inf_tan[i,j] = dot(wakevel, pan_tan[:,i])
-                A[i,j] = dot(vel, dcm*pan_norm[:,i])
-                wake_inf_perp[i,j] = dot(wakevel, pan_norm[:,i])
-                wake_inf_tan[i,j] = dot(wakevel, pan_tan[:,i])
-            end
-        end
-    
-        for i = 1:npan
-            #RHS[i] = -dot(vel_inf, pan_norm[:,i])
             RHS[i] = -sin(alphas[i] - dalpha[i])*vel_mag
         end
     
@@ -316,25 +311,18 @@ function solve_liftline_vandam(pansys, vel_inf, rho, affile)
         for i = 1:npan
             v_perp[i] = sum(wake_inf_perp[i,:].*gam_sol) + dot(vel_inf, pan_norm[:,i]) # wake induced + freestream
             v_tan[i] = sum(wake_inf_tan[i,:].*gam_sol) + dot(vel_inf, pan_tan[:,i]) # wake induced + freestream
-            v_total[i] = sqrt(v_perp[i]^2 + v_tan[i]^2)
             v_total[i] = norm(vel_inf)
 
             chord = (pan_edgelen[2,i] + pan_edgelen[4,i])/2
             
-            #alpha_eff[i] = atan(v_perp[i], v_tan[i])
+            alpha_eff[i] = atan(v_perp[i], v_tan[i])
             cl_inv[i] = -2*gam_sol[i]/v_total[i]/chord
-            alpha_eff[i] = cl_inv[i]/(2*pi)
-            cl_visc[i] = cl_interp(rad2deg(alpha_eff[i] - dalpha[i]))
-            cd_visc[i] = cd_interp(rad2deg(alpha_eff[i] - dalpha[i]))
+            cl_visc[i] = cl_interp(rad2deg(alpha_eff[i]))
+            cd_visc[i] = cd_interp(rad2deg(alpha_eff[i]))
             dalpha_new = (cl_inv[i] - cl_visc[i])/(2*pi)
-            dalpha[i] = (1-rlx)*dalpha[i] + rlx*dalpha_new
+            dalpha[i] = dalpha[i] + rlx*dalpha_new
             residuals[i] = abs(cl_visc[i] - cl_inv[i])
         end
-
-        #println(rad2deg.(cl_inv))
-        #println(rad2deg.(cl_visc))
-        #println(maximum(residuals))
-        #println("-------")
 
         iter += 1
         if maximum(residuals) < tol
@@ -345,9 +333,6 @@ function solve_liftline_vandam(pansys, vel_inf, rho, affile)
         end
     end
 
-    #println(rad2deg.(alpha_eff))
-    #println(rad2deg.(dalpha))
-    
     # lift and drag using kutta joukouski on local flow
     dN = zeros(npan)
     dT = zeros(npan)
