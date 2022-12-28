@@ -121,6 +121,7 @@ end
 
 function vel_line_doublet_2d(p1::AbstractVector{<:Real}, p2::AbstractVector{<:Real}, p::AbstractVector{<:Real})
     # Velocity induced by unit strength double line
+    # eq 10.29, 10.30 pg 236
 
     # line local tangent and normal vectors
     pan_tan = calc_line_tan_2d(p1,p2)
@@ -164,6 +165,7 @@ end
 function pot_line_vortex_2d(p1::AbstractVector{<:Real}, p2::AbstractVector{<:Real}, p::AbstractVector{<:Real})
     # Potential induced by unit strength vortex line
     # eq 10.37 pg 237
+
     # line local tangent and normal vectors
     pan_tan = calc_line_tan_2d(p1,p2)
     pan_norm = calc_line_norm_2d(p1,p2)
@@ -201,6 +203,8 @@ end
 
 function vel_line_vortex_2d(p1::AbstractVector{<:Real}, p2::AbstractVector{<:Real}, p::AbstractVector{<:Real})
     # Velocity induced by unit strength vortex line
+    # eq 10.39, 10.40 pg 237
+
     # line local tangent and normal vectors
     pan_tan = calc_line_tan_2d(p1,p2)
     pan_norm = calc_line_norm_2d(p1,p2)
