@@ -58,3 +58,20 @@ function vel_line_vortex_linear_midpoint_2d(p1::AbstractVector{<:Real}, p2::Abst
     
     return vel_global_a, vel_global_b
 end
+
+function vel_line_vortex_linear_2d_int(p1::AbstractVector{<:Real}, p2::AbstractVector{<:Real}, p::AbstractVector{<:Real})
+    # Velocity induced by unit linear strength vortex line by numerical integration
+    # strength ramps from 0 to 1
+    n = 5
+    vec = p2.-p1 # line between the points
+    len = dist2D(p1,p2)
+    # ts is coordinate between 0-1 along vec
+    ts, weights, scale = quadrature_transform(0, 1, n)
+    val = zeros(eltype(p),2)
+    for i = 1:n
+        p0 = p1 .+ vec.*ts[i]
+        gam = ts[i]
+        val .+= vel_point_vortex_2d(p0, p)*weights[i]*gam
+        end
+    return val.*scale.*len
+end
