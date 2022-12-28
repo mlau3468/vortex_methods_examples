@@ -1,6 +1,6 @@
 function pot_line_source_2d(p1::AbstractVector{<:Real}, p2::AbstractVector{<:Real}, p::AbstractVector{<:Real})
     # Potential induced by unit strength source line
-    # pg 234 eq 10.19 corrected suing appendix B.11
+    # pg 234 eq 10.19 corrected using appendix B.11
 
     # line local tangent and normal vectors
     pan_tan = calc_line_tan_2d(p1,p2)
@@ -18,7 +18,8 @@ function pot_line_source_2d(p1::AbstractVector{<:Real}, p2::AbstractVector{<:Rea
     term2 = (x-x2)*log((x-x2)^2 + z^2)
     term3 = atan(z, x-x2) - atan(z, x-x1)
 
-    phi = 1/(4*pi)*(term1 - term2 -2*(x2-x1) + 2*z*term3)
+    # phi = 1/(4*pi)*(term1 - term2 -2*(x2-x1) + 2*z*term3)
+    phi = 1/(4*pi)*(term1 - term2 + 2*z*term3)
     return phi
 end
 

@@ -40,3 +40,7 @@ function quadrature_transform(a::Real, b::Real, order::Integer)
     points = scale.*gauss_points .+ (a+b)/2
     return points, weights, scale
 end
+
+function midpoint2d(p1::AbstractVector{<:Real}, p2::AbstractVector{<:Real})
+    return (p1.+p2)./2
+end
