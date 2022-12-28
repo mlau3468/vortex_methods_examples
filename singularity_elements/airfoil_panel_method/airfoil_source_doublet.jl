@@ -58,6 +58,7 @@ function airfoil_sourcedoublet_dirichlet(pan_vert::Matrix{<:Real}, aoa::Real)
     # dot(u_vec, pan_tan[:,i]) includes the effect of the gradient of freestream potential function
     vel_vec = zeros(npan-1)
     for i = 1:npan-1
+        # finite difference in panel tangent direction
         l = dist2D(pan_cpt[:,i], pan_cpt[:,i+1])
         vel_vec[i] = (pan_mu[i+1] - pan_mu[i])/l + dot(u_vec, pan_tan[:,i])
     end

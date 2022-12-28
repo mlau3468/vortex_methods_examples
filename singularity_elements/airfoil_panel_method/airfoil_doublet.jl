@@ -48,6 +48,7 @@ function airfoil_doublet_dirichlet(pan_vert::Matrix{<:Real}, aoa::Real)
     # Velocity along the surface of airfoil is differentiation of total potential
     vel_vec = zeros(npan-1)
     for i = 1:npan-1
+        # finite difference in panel tangent direction
         l = dist2D(pan_cpt[:,i], pan_cpt[:,i+1])
         vel_vec[i] = (pan_mu[i+1] - pan_mu[i])/l
     end
