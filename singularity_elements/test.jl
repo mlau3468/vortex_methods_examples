@@ -13,8 +13,9 @@ a = vel_line_doublet_2d([1.0;2.0], [3.0;-1.0], [4.0;4.0])
 b = vel_line_doublet_2d_int([1.0;2.0], [3.0;-1.0], [4.0;4.0])
 
 pan_vert = naca4(0.00, 0.0, 0.04, nchord=100, spacetype="cos", cosine_weight=1.0)
-result = airfoil_sourcedoublet_dirichlet(pan_vert, 0)
-result2 = airfoil_doublet_dirichlet(pan_vert, 0)
+aoa = 0
+result = airfoil_sourcedoublet_dirichlet(pan_vert, aoa)
+result2 = airfoil_doublet_dirichlet(pan_vert, aoa)
 
 cp_plot = plot(yflip=true, legend=:bottomright)
 plot!(cp_plot, result.pan_cpt[1,:], result.pan_cp, label="sourc+doub")
