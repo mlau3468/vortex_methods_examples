@@ -1,4 +1,4 @@
-function airfoil_vortex_linear_neumann(pan_vert::Matrix{<:Real}, aoa::Real, num_integrate::Bool=false)
+function airfoil_vortex_linear_neumann(pan_vert::Matrix{<:Real}, aoa::Real; num_integrate::Bool=false)
     # set num_integrate = true to use evaluate influence coefficients using numerical quadrature method
     nvert = size(pan_vert, 2)
     npan = nvert - 1

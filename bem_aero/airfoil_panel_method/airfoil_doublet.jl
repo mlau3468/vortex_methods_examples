@@ -1,4 +1,4 @@
-function airfoil_doublet_dirichlet(pan_vert::Matrix{<:Real}, aoa::Real, compute_full_potential::Bool=false)
+function airfoil_doublet_dirichlet(pan_vert::Matrix{<:Real}, aoa::Real; compute_full_potential::Bool=false)
     # set compute_full_potential to true to compute full potential and take derivative to get velocity
 
     npan = size(pan_vert,2) - 1
@@ -38,6 +38,7 @@ function airfoil_doublet_dirichlet(pan_vert::Matrix{<:Real}, aoa::Real, compute_
         end
         # trailing edge influence
         te = pot_line_doublet_2d(pan_vert[:,1], [1e3;0.0], pan_cpt[:,i])
+        # kutta condition
         A[i,1] -= te
         A[i,npan] += te
     end
@@ -50,7 +51,7 @@ function airfoil_doublet_dirichlet(pan_vert::Matrix{<:Real}, aoa::Real, compute_
     # Solve linear system
     pan_mu = A\RHS
 
-    # Compute total potential at each collocation point
+    # Compute full potential at each collocation point
     pot_cpt = zeros(npan)
     for i = 1:npan
         pot_cpt[i] = dot(A_pot_out[i,:], pan_mu) + dot(u_vec, pan_cpt[:,i])
