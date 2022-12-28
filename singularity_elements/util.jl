@@ -12,6 +12,10 @@ function dist2Dsq(p1::AbstractVector{T}, p2::AbstractVector{T}) where {T<:Real}
     return dx^2 + dz^2
 end
 
+function norm2D(vec::AbstractVector{T}) where {T<:Real}
+    return sqrt(vec[1]^2 + vec[2]^2)
+end
+
 function calc_line_tan_2d(p1::AbstractVector{T}, p2::AbstractVector{T}) where {T<:Real}
     # compute tangent vector for line element local coordinates
     dx = p2[1] - p1[1]

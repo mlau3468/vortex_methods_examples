@@ -82,6 +82,37 @@ function vel_line_source_2d_int(p1::AbstractVector{T}, p2::AbstractVector{T}, p:
     return val.*scale.*len
 end
 
+function pot_line_doublet_2d(p1::AbstractVector{T}, p2::AbstractVector{T}, p::AbstractVector{T}) where {T<:Real}
+    # Potential induced by unit doublet line
+    # eq 10.28 pg 235
+
+    # line local tangent and normal vectors
+    pan_tan = calc_line_tan_2d(p1,p2)
+    pan_norm = calc_line_norm_2d(p1,p2)
+
+    # Express field point in local panel frame
+    x = dot(p.-p1, pan_tan)
+    z = dot(p.-p1, pan_norm)
+
+    # Express panel points in local panel frame
+    x1 = 0
+    x2 = dist2D(p1, p2)
+
+    theta1 = atan(z,x)
+    theta2 = atan(z, x-x2)
+
+    return -1/(2*pi)*(theta2-theta1)
+end
+
+function pot_line_doublet_2d_int(p1::AbstractVector{T}, p2::AbstractVector{T}, p::AbstractVector{T}) where {T<:Real}
+end
+
+function vel_line_doublet_2d(p1::AbstractVector{T}, p2::AbstractVector{T}, p::AbstractVector{T}) where {T<:Real}
+end
+
+function vel_line_doublet_2d_int(p1::AbstractVector{T}, p2::AbstractVector{T}, p::AbstractVector{T}) where {T<:Real}
+end
+
 function pot_line_vortex_2d(p1::AbstractVector{T}, p2::AbstractVector{T}, p::AbstractVector{T}) where {T<:Real}
     # Potential induced by unit strength vortex line
     # eq 10.37 pg 237

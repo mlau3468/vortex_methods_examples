@@ -27,33 +27,47 @@ function vel_point_source_2d_ad(p0::AbstractVector{T}, p::AbstractVector{T}) whe
     return ForwardDiff.gradient((x) -> pot_point_source_2d(p0, x), p)
 end
 
-function pot_point_doublet_2d(p0::AbstractVector{T}, p::AbstractVector{T}) where {T<:Real}
-    # Potential induced by unit strength doublet
+function pot_point_doublet_2d(p0::AbstractVector{T}, p::AbstractVector{T}, x_dir::AbstractVector{T}) where {T<:Real}
+    # Potential induced by unit strength doublet with local x axis in x_dir direction
     # pg 231 eq 10.4
-    x = p[1]
-    z = p[2]
-    x0 = p0[1]
-    z0 = p0[2]
+
+    # Local tangent and normal vectors
+    pan_tan = x_dir ./ norm2D(x_dir)
+    pan_norm = [-pan_tan[2]; pan_tan[1]]
+
+    # Express field point in local frame
+    x = dot(p.-p0, pan_tan)
+    z = dot(p.-p0, pan_norm)
+
+    x0 = 0
+    z0 = 0
     r2 = (x-x0)^2 + (z-z0)^2
     return -1/(2*pi)*(z-z0)/r2
 end
 
-function vel_point_doublet_2d(p0::AbstractVector{T}, p::AbstractVector{T}) where {T<:Real}
-    # Velocity induced by unit strength doublet oriented in z direction
+function vel_point_doublet_2d(p0::AbstractVector{T}, p::AbstractVector{T}, x_dir::AbstractVector{T}) where {T<:Real}
+    # Velocity induced by unit strength doublet with local x axis in x_dir direction
     # pg 231 eq 10.5, 10.6
-    x = p[1]
-    z = p[2]
-    x0 = p0[1]
-    z0 = p0[2]
+
+    # Local tangent and normal vectors
+    pan_tan = x_dir ./ norm2D(x_dir)
+    pan_norm = [-pan_tan[2]; pan_tan[1]]
+
+    # Express field point in local frame
+    x = dot(p.-p0, pan_tan)
+    z = dot(p.-p0, pan_norm)
+
+    x0 = 0
+    z0 = 0
     r2 = (x-x0)^2 + (z-z0)^2
     u = 1/pi*(x-x0)*(z-z0)/r2^2
     w = -1/(2*pi)* ((x-x0)^2 - (z-z0)^2) /r2^2
     return [u;w]
 end
 
-function vel_point_doublet_2d_ad(p0::AbstractVector{T}, p::AbstractVector{T}) where {T<:Real}
+function vel_point_doublet_2d_ad(p0::AbstractVector{T}, p::AbstractVector{T}, x_dir::AbstractVector{T}) where {T<:Real}
     # Velocity induced by unit strength doublet oriented in z direction by differentiation of potential
-    return ForwardDiff.gradient((x) -> pot_point_doublet_2d(p0, x), p)
+    return ForwardDiff.gradient((x) -> pot_point_doublet_2d(p0, x, x_dir), p)
 end
 
 function pot_point_vortex_2d(p0::AbstractVector{T}, p::AbstractVector{T}) where {T<:Real}
