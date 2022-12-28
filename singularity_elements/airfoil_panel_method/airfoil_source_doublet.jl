@@ -27,14 +27,14 @@ function airfoil_sourcedoublet_dirichlet(pan_vert::Matrix{<:Real}, aoa::Real)
     for i = 1:npan
         for j = 1:npan
             if i == j
-                A[i,j] = 0.5
+                A[i,j] = -0.5
             else
-                A[i,j] = pot_line_doublet_2d(pan_vert[:,j+1], pan_vert[:,j], pan_cpt[:,i])
+                A[i,j] = pot_line_doublet_2d(pan_vert[:,j], pan_vert[:,j+1], pan_cpt[:,i])
             end
-            B[i,j] = pot_line_source_2d(pan_vert[:,j+1], pan_vert[:,j], pan_cpt[:,i])
+            B[i,j] = pot_line_source_2d(pan_vert[:,j], pan_vert[:,j+1],  pan_cpt[:,i])
         end
         # trailing edge influence
-        te = pot_line_doublet_2d([1e3;0.0], pan_vert[:,1], pan_cpt[:,i])
+        te = pot_line_doublet_2d(pan_vert[:,1], [1e3;0.0] , pan_cpt[:,i])
         A[i,1] -= te
         A[i,npan] += te
     end
@@ -42,12 +42,12 @@ function airfoil_sourcedoublet_dirichlet(pan_vert::Matrix{<:Real}, aoa::Real)
     # Source strengths
     pan_source = zeros(npan)
     for i = 1:npan
-        pan_source[i] = dot(pan_norm[:,i], u_vec)
+        pan_source[i] = dot(calc_line_norm_2d(pan_vert[:,i], pan_vert[:,i+1]), u_vec)
     end
 
     # Set RHS
     for i = 1:npan
-        RHS[i] += -dot(B[i,:], pan_source) # source panel
+        RHS[i] = -dot(B[i,:], pan_source) # source panel
     end
 
     # Solve linear system

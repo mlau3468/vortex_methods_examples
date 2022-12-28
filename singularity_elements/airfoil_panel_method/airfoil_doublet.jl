@@ -26,20 +26,20 @@ function airfoil_doublet_dirichlet(pan_vert::Matrix{<:Real}, aoa::Real)
     for i = 1:npan
         for j = 1:npan
             if i == j
-                A[i,j] = 0.5
+                A[i,j] = -0.5
             else
-                A[i,j] = pot_line_doublet_2d(pan_vert[:,j+1], pan_vert[:,j], pan_cpt[:,i])
+                A[i,j] = pot_line_doublet_2d(pan_vert[:,j], pan_vert[:,j+1], pan_cpt[:,i])
             end
         end
         # trailing edge influence
-        te = pot_line_doublet_2d([1e3;0.0], pan_vert[:,1], pan_cpt[:,i])
+        te = pot_line_doublet_2d(pan_vert[:,1], [1e3;0.0], pan_cpt[:,i])
         A[i,1] -= te
         A[i,npan] += te
     end
 
      # Set RHS
      for i = 1:npan
-        RHS[i] += -dot(u_vec, pan_cpt[:,i]) # source panel
+        RHS[i] += -dot(u_vec, pan_cpt[:,i]) # potential due to freestream
     end
 
     # Solve linear system
