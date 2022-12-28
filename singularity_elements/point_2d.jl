@@ -1,4 +1,4 @@
-function pot_point_source_2d(p0::AbstractVector{T}, p::AbstractVector{T}) where {T<:Real}
+function pot_point_source_2d(p0::AbstractVector{<:Real}, p::AbstractVector{<:Real})
     # Potential induced by unit strength point source
     # pg 230 eq 10.1
     x = p[1]
@@ -9,7 +9,7 @@ function pot_point_source_2d(p0::AbstractVector{T}, p::AbstractVector{T}) where 
     return 1/(2*pi)*log(sqrt(r2))
 end
 
-function vel_point_source_2d(p0::AbstractVector{T}, p::AbstractVector{T}) where {T<:Real}
+function vel_point_source_2d(p0::AbstractVector{<:Real}, p::AbstractVector{<:Real})
     # Velocity induced by unit strength point source
     # pg 231 eq 10.2, 10.3
     x = p[1]
@@ -22,12 +22,12 @@ function vel_point_source_2d(p0::AbstractVector{T}, p::AbstractVector{T}) where 
     return [u;w]
 end
 
-function vel_point_source_2d_ad(p0::AbstractVector{T}, p::AbstractVector{T}) where {T<:Real}
+function vel_point_source_2d_ad(p0::AbstractVector{<:Real}, p::AbstractVector{<:Real})
     # Velocity induced by unit strength point source by differentiation of potential
     return ForwardDiff.gradient((x) -> pot_point_source_2d(p0, x), p)
 end
 
-function pot_point_doublet_2d(p0::AbstractVector{T}, p::AbstractVector{T}, x_dir::AbstractVector{T}) where {T<:Real}
+function pot_point_doublet_2d(p0::AbstractVector{<:Real}, p::AbstractVector{<:Real}, x_dir::AbstractVector{<:Real})
     # Potential induced by unit strength doublet with local x axis in x_dir direction
     # pg 231 eq 10.4
 
@@ -45,7 +45,7 @@ function pot_point_doublet_2d(p0::AbstractVector{T}, p::AbstractVector{T}, x_dir
     return -1/(2*pi)*(z-z0)/r2
 end
 
-function vel_point_doublet_2d(p0::AbstractVector{T}, p::AbstractVector{T}, x_dir::AbstractVector{T}) where {T<:Real}
+function vel_point_doublet_2d(p0::AbstractVector{<:Real}, p::AbstractVector{<:Real}, x_dir::AbstractVector{<:Real})
     # Velocity induced by unit strength doublet with local x axis in x_dir direction
     # pg 231 eq 10.5, 10.6
 
@@ -65,12 +65,12 @@ function vel_point_doublet_2d(p0::AbstractVector{T}, p::AbstractVector{T}, x_dir
     return [u;w]
 end
 
-function vel_point_doublet_2d_ad(p0::AbstractVector{T}, p::AbstractVector{T}, x_dir::AbstractVector{T}) where {T<:Real}
+function vel_point_doublet_2d_ad(p0::AbstractVector{<:Real}, p::AbstractVector{<:Real}, x_dir::AbstractVector{<:Real})
     # Velocity induced by unit strength doublet oriented in z direction by differentiation of potential
     return ForwardDiff.gradient((x) -> pot_point_doublet_2d(p0, x, x_dir), p)
 end
 
-function pot_point_vortex_2d(p0::AbstractVector{T}, p::AbstractVector{T}) where {T<:Real}
+function pot_point_vortex_2d(p0::AbstractVector{<:Real}, p::AbstractVector{<:Real})
     # Potential induced by unit strength vortex
     # pg 232 eq. 10.8
     x = p[1]
@@ -80,7 +80,7 @@ function pot_point_vortex_2d(p0::AbstractVector{T}, p::AbstractVector{T}) where 
     return -1/(2*pi)*atan(z-z0, x-x0)
 end
 
-function vel_point_vortex_2d(p0::AbstractVector{T}, p::AbstractVector{T}) where {T<:Real}
+function vel_point_vortex_2d(p0::AbstractVector{<:Real}, p::AbstractVector{<:Real})
     # Velocity induced by unit strength vortex
     # pg 232 eq 10.9, 10.10
     x = p[1]
@@ -93,7 +93,7 @@ function vel_point_vortex_2d(p0::AbstractVector{T}, p::AbstractVector{T}) where 
     return [u;w]
 end
 
-function vel_point_vortex_2d_ad(p0::AbstractVector{T}, p::AbstractVector{T}) where {T<:Real}
+function vel_point_vortex_2d_ad(p0::AbstractVector{<:Real}, p::AbstractVector{<:Real})
     # Velocity induced by unit strength vortex by differentiation of potential
     return ForwardDiff.gradient((x) -> pot_point_vortex_2d(p0, x), p)
 end
