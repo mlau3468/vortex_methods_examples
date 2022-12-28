@@ -9,7 +9,6 @@ using Plots
 a = pot_line_doublet_2d([1.0;2.0], [3.0;-1.0], [4.0;4.0])
 b = pot_line_doublet_2d_int([1.0;2.0], [3.0;-1.0], [4.0;4.0])
 
-
 a = vel_line_doublet_2d([1.0;2.0], [3.0;-1.0], [4.0;4.0])
 b = vel_line_doublet_2d_int([1.0;2.0], [3.0;-1.0], [4.0;4.0])
 
