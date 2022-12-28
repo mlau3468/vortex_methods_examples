@@ -1,4 +1,5 @@
-function airfoil_vortex_linear_neumann(pan_vert::Matrix{<:Real}, aoa::Real)
+function airfoil_vortex_linear_neumann(pan_vert::Matrix{<:Real}, aoa::Real, num_integrate::Bool=false)
+    # set num_integrate = true to use evaluate influence coefficients using numerical quadrature method
     nvert = size(pan_vert, 2)
     npan = nvert - 1
 
@@ -31,7 +32,12 @@ function airfoil_vortex_linear_neumann(pan_vert::Matrix{<:Real}, aoa::Real)
             if i == j 
                 uw_a, uw_b = vel_line_vortex_linear_midpoint_2d(pan_vert[:,j], pan_vert[:,j+1], false)
             else
-                uw_a, uw_b = vel_line_vortex_linear_2d(pan_vert[:,j], pan_vert[:,j+1], pan_cpt[:,i])
+                if num_integrate
+                    uw_a = vel_line_vortex_linear_2d_int(pan_vert[:,j+1], pan_vert[:,j], pan_cpt[:,i])
+                    uw_b = vel_line_vortex_linear_2d_int(pan_vert[:,j], pan_vert[:,j+1], pan_cpt[:,i])
+                else
+                    uw_a, uw_b = vel_line_vortex_linear_2d(pan_vert[:,j], pan_vert[:,j+1], pan_cpt[:,i])
+                end
             end
             A[i,j] += dot(uw_a, pan_norm[:,i])
             A[i,j+1] += dot(uw_b, pan_norm[:,i])
