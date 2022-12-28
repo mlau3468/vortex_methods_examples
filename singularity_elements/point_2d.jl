@@ -18,7 +18,7 @@ function vel_point_source_2d(p0::AbstractVector{T}, p::AbstractVector{T}) where 
     z0 = p0[2]
     r2 = (x-x0)^2 + (z-z0)^2
     u = 1/(2*pi)*(x-x0)/r2
-    w = 1/(2*pi)*(z-x0)/r2
+    w = 1/(2*pi)*(z-z0)/r2
     return [u;w]
 end
 

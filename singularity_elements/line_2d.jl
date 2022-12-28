@@ -1,5 +1,6 @@
 function pot_line_source_2d(p1::AbstractVector{T}, p2::AbstractVector{T}, p::AbstractVector{T}) where {T<:Real}
-    # pg 234 eq 10.19
+    # Potential induced by unit strength source line
+    # pg 234 eq 10.19 corrected suing appendix B.11
 
     # line local tangent and normal vectors
     pan_tan = calc_line_tan_2d(p1,p2)
@@ -22,6 +23,7 @@ function pot_line_source_2d(p1::AbstractVector{T}, p2::AbstractVector{T}, p::Abs
 end
 
 function pot_line_source_2d_int(p1::AbstractVector{T}, p2::AbstractVector{T}, p::AbstractVector{T}) where {T<:Real}
+    # Potential induced by unit strength source line by numerical integration
     n = 5
     vec = p2.-p1 # line between the points
     len = dist2D(p1,p2)
@@ -36,6 +38,7 @@ function pot_line_source_2d_int(p1::AbstractVector{T}, p2::AbstractVector{T}, p:
 end
 
 function vel_line_source_2d(p1::AbstractVector{T}, p2::AbstractVector{T}, p::AbstractVector{T}) where {T<:Real}
+    # Velocity induced by unit strength source line
     # pg 234 eq 10.20, 10,21
 
     # line local tangent and normal vectors
@@ -62,4 +65,19 @@ function vel_line_source_2d(p1::AbstractVector{T}, p2::AbstractVector{T}, p::Abs
     # Velocity in global frame
     vel_global = upanel.*pan_tan .+ wpanel.*pan_norm
     return vel_global
+end
+
+function vel_line_source_2d_int(p1::AbstractVector{T}, p2::AbstractVector{T}, p::AbstractVector{T}) where {T<:Real}
+    # Velocity induced by unit strength source line by numerical integration
+    n = 5
+    vec = p2.-p1 # line between the points
+    len = dist2D(p1,p2)
+    # ts is coordinate between 0-1 along vec
+    ts, weights, scale = quadrature_transform(0, 1, n)
+    val = zeros(T,2)
+    for i = 1:n
+        p0 = p1 .+ vec.*ts[i]
+        val .+= vel_point_source_2d(p0, p)*weights[i]
+    end
+    return val.*scale.*len
 end
