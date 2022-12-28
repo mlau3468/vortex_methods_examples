@@ -45,11 +45,11 @@ function airfoil_doublet_dirichlet(pan_vert::Matrix{<:Real}, aoa::Real)
     # Solve linear system
     pan_mu = A\RHS
 
-    # Velocity along the surface of airfoil
+    # Velocity along the surface of airfoil is differentiation of total potential
     vel_vec = zeros(npan-1)
     for i = 1:npan-1
         l = dist2D(pan_cpt[:,i], pan_cpt[:,i+1])
-        vel_vec[i] = (pan_mu[i+1] - pan_mu[i])/l + dot(u_vec, pan_tan[:,i])
+        vel_vec[i] = (pan_mu[i+1] - pan_mu[i])/l
     end
 
     # Velocity at collocation points

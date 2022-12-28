@@ -53,7 +53,9 @@ function airfoil_sourcedoublet_dirichlet(pan_vert::Matrix{<:Real}, aoa::Real)
     # Solve linear system
     pan_mu = A\RHS
 
-    # Velocity along the surface of airfoil
+    # Velocity along the surface of airfoil is differentiation of potential
+    # note dot(u_vec, pan_tan[:,i]) is needed as this is a pertubation potential formulation
+    # dot(u_vec, pan_tan[:,i]) includes the effect of the gradient of freestream potential function
     vel_vec = zeros(npan-1)
     for i = 1:npan-1
         l = dist2D(pan_cpt[:,i], pan_cpt[:,i+1])
