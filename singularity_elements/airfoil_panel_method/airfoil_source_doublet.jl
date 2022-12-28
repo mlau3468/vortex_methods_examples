@@ -89,6 +89,6 @@ function airfoil_sourcedoublet(pan_vert::Matrix{<:Real}, aoa::Real)
     lift = sum(pan_force[2,:])
     cl = lift/0.5/rho/U^2/chord
 
-    result = (cl=cl, pan_cp=pan_cp, pan_pres=pan_pres, vel_cpt=vel_cpt, pan_mu=pan_mu, pan_cpt=pan_cpt)
+    result = (cl=cl, pan_cp=pan_cp, pan_pres=pan_pres, vel_cpt=vel_cpt, pan_mu=pan_mu, pan_source=pan_source, pan_cpt=pan_cpt)
     return result
 end
