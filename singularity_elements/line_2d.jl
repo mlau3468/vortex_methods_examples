@@ -1,4 +1,4 @@
-function pot_line_source_2d(p1::AbstractVector{<:Real}, p2::AbstractVector{<:Real}, p::AbstractVector{<:Real})
+function pot_line_source_2d(p1::AbstractVector{T}, p2::AbstractVector{T}, p::AbstractVector{T}) where {T<:Real}
     # pg 234 eq 10.19
 
     # line local tangent and normal vectors
@@ -21,13 +21,13 @@ function pot_line_source_2d(p1::AbstractVector{<:Real}, p2::AbstractVector{<:Rea
     return phi
 end
 
-function pot_line_source_2d_int(p1::AbstractVector{<:Real}, p2::AbstractVector{<:Real}, p::AbstractVector{<:Real})
+function pot_line_source_2d_int(p1::AbstractVector{T}, p2::AbstractVector{T}, p::AbstractVector{T}) where {T<:Real}
     n = 5
     vec = p2.-p1 # line between the points
     len = dist2D(p1,p2)
     # ts is coordinate between 0-1 along vec
     ts, weights, scale = quadrature_transform(0, 1, n)
-    val = 0.0
+    val = zero(T)
     for i = 1:n
         p0 = p1 .+ vec.*ts[i]
         val += pot_point_source_2d(p0, p)*weights[i]
@@ -35,7 +35,7 @@ function pot_line_source_2d_int(p1::AbstractVector{<:Real}, p2::AbstractVector{<
     return val*scale*len
 end
 
-function vel_line_source_2d(p1::AbstractVector{<:Real}, p2::AbstractVector{<:Real}, p::AbstractVector{<:Real})
+function vel_line_source_2d(p1::AbstractVector{T}, p2::AbstractVector{T}, p::AbstractVector{T}) where {T<:Real}
     # pg 234 eq 10.20, 10,21
 
     # line local tangent and normal vectors
