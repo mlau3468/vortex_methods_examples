@@ -1,4 +1,4 @@
-function airfoil_sourcedoublet_dirichlet(pan_vert::Matrix{<:Real}, aoa::Real)
+function airfoil_doublet_dirichlet(pan_vert::Matrix{<:Real}, aoa::Real)
     npan = size(pan_vert,2) - 1
 
     # Compute panel properties
@@ -20,10 +20,9 @@ function airfoil_sourcedoublet_dirichlet(pan_vert::Matrix{<:Real}, aoa::Real)
     u_vec[2] = sin(alf)
 
     A = zeros(npan, npan)
-    B = zeros(npan, npan)
     RHS = zeros(npan)
 
-    # Influence coefficients of doublet and sources
+    # Influence coefficients of doublet
     for i = 1:npan
         for j = 1:npan
             if i == j
@@ -31,7 +30,6 @@ function airfoil_sourcedoublet_dirichlet(pan_vert::Matrix{<:Real}, aoa::Real)
             else
                 A[i,j] = pot_line_doublet_2d(pan_vert[:,j+1], pan_vert[:,j], pan_cpt[:,i])
             end
-            B[i,j] = pot_line_source_2d(pan_vert[:,j+1], pan_vert[:,j], pan_cpt[:,i])
         end
         # trailing edge influence
         te = pot_line_doublet_2d([1e3;0.0], pan_vert[:,1], pan_cpt[:,i])
@@ -39,15 +37,9 @@ function airfoil_sourcedoublet_dirichlet(pan_vert::Matrix{<:Real}, aoa::Real)
         A[i,npan] += te
     end
 
-    # Source strengths
-    pan_source = zeros(npan)
-    for i = 1:npan
-        pan_source[i] = dot(pan_norm[:,i], u_vec)
-    end
-
-    # Set RHS
-    for i = 1:npan
-        RHS[i] += -dot(B[i,:], pan_source) # source panel
+     # Set RHS
+     for i = 1:npan
+        RHS[i] += -dot(u_vec, pan_cpt[:,i]) # source panel
     end
 
     # Solve linear system
@@ -89,6 +81,6 @@ function airfoil_sourcedoublet_dirichlet(pan_vert::Matrix{<:Real}, aoa::Real)
     lift = sum(pan_force[2,:])
     cl = lift/0.5/rho/U^2/chord
 
-    result = (cl=cl, pan_cp=pan_cp, pan_pres=pan_pres, vel_cpt=vel_cpt, pan_mu=pan_mu, pan_source=pan_source, pan_cpt=pan_cpt)
+    result = (cl=cl, pan_cp=pan_cp, pan_pres=pan_pres, vel_cpt=vel_cpt, pan_mu=pan_mu, pan_cpt=pan_cpt)
     return result
 end
