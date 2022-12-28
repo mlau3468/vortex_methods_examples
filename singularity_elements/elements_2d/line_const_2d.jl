@@ -171,7 +171,7 @@ function vel_line_doublet_2d_midpoint(p1::AbstractVector{<:Real}, p2::AbstractVe
     # Velcoity in local frame
     upanel = 0
     wpanel = -1/pi*2/(x2-x1)
-    if !limit_plus
+    if !limit_plus # approach from bottom instead
         wpanel = -wpanel
     end
 
