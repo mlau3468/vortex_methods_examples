@@ -26,7 +26,7 @@ function airfoil_doublet_dirichlet(pan_vert::Matrix{<:Real}, aoa::Real)
     for i = 1:npan
         for j = 1:npan
             if i == j
-                A[i,j] = -0.5
+                A[i,j] = pot_line_doublet_2d_self() # limit approaching from inside airfoil
             else
                 A[i,j] = pot_line_doublet_2d(pan_vert[:,j], pan_vert[:,j+1], pan_cpt[:,i])
             end

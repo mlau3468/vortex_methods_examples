@@ -104,6 +104,15 @@ function pot_line_doublet_2d(p1::AbstractVector{<:Real}, p2::AbstractVector{<:Re
     return -1/(2*pi)*(theta2-theta1)
 end
 
+function pot_line_doublet_2d_self(limit_plus::Bool=true)
+    # potential induced by unit doublet line onto itself
+    if limit_plus
+        return -0.5
+    else
+        return 0.5
+    end
+end
+
 function pot_line_doublet_2d_int(p1::AbstractVector{<:Real}, p2::AbstractVector{<:Real}, p::AbstractVector{<:Real})
     # Potential induced by unit doublet line by numerical integration
     n = 5
