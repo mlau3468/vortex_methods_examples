@@ -6,6 +6,7 @@ pan_vert = naca4(0.00, 0.0, 0.12, nchord=100, spacetype="cos", cosine_weight=1.0
 aoa = 2
 result = airfoil_sourcedoublet_dirichlet(pan_vert, aoa)
 result2 = airfoil_doublet_dirichlet(pan_vert, aoa)
+# result2 = airfoil_doublet_dirichlet(pan_vert, aoa, true)
 result3 = airfoil_vortex_linear_neumann(pan_vert, aoa)
 result4 = airfoil_vortex_linear_neumann(pan_vert, aoa, true)
 

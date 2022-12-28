@@ -1,4 +1,6 @@
-function airfoil_doublet_dirichlet(pan_vert::Matrix{<:Real}, aoa::Real)
+function airfoil_doublet_dirichlet(pan_vert::Matrix{<:Real}, aoa::Real, compute_full_potential::Bool=false)
+    # set compute_full_potential to true to compute full potential and take derivative to get velocity
+
     npan = size(pan_vert,2) - 1
 
     # Compute panel properties
@@ -19,7 +21,8 @@ function airfoil_doublet_dirichlet(pan_vert::Matrix{<:Real}, aoa::Real)
     u_vec[1] = cos(alf)
     u_vec[2] = sin(alf)
 
-    A = zeros(npan, npan)
+    A = zeros(npan, npan) # Influence coefficent for potential just inside airfoil
+    A_pot_out = zeros(npan, npan) # Influence coefficeint for potential just outside airfoil
     RHS = zeros(npan)
 
     # Influence coefficients of doublet
@@ -27,8 +30,10 @@ function airfoil_doublet_dirichlet(pan_vert::Matrix{<:Real}, aoa::Real)
         for j = 1:npan
             if i == j
                 A[i,j] = pot_line_doublet_2d_self() # limit approaching from inside airfoil
+                A_pot_out[i,j] = pot_line_doublet_2d_self(false) # limit approaching from outside airfoil
             else
                 A[i,j] = pot_line_doublet_2d(pan_vert[:,j], pan_vert[:,j+1], pan_cpt[:,i])
+                A_pot_out[i,j] = A[i,j]
             end
         end
         # trailing edge influence
@@ -45,12 +50,22 @@ function airfoil_doublet_dirichlet(pan_vert::Matrix{<:Real}, aoa::Real)
     # Solve linear system
     pan_mu = A\RHS
 
+    # Compute total potential at each collocation point
+    pot_cpt = zeros(npan)
+    for i = 1:npan
+        pot_cpt[i] = dot(A_pot_out[i,:], pan_mu) + dot(u_vec, pan_cpt[:,i])
+    end
+
     # Velocity along the surface of airfoil is differentiation of total potential
     vel_vec = zeros(npan-1)
     for i = 1:npan-1
         # finite difference in panel tangent direction
         l = dist2D(pan_cpt[:,i], pan_cpt[:,i+1])
-        vel_vec[i] = (pan_mu[i+1] - pan_mu[i])/l
+        if compute_full_potential
+            vel_vec[i] = (pot_cpt[i+1] - pot_cpt[i])/l
+        else
+            vel_vec[i] = (pan_mu[i+1] - pan_mu[i])/l
+        end
     end
 
     # Velocity at collocation points
