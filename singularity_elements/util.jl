@@ -1,18 +1,18 @@
-function dist2D(p1::AbstractVector{<:Real}, p2::AbstractVector{<:Real})
+function dist2D(p1::AbstractVector{T}, p2::AbstractVector{T}) where {T<:Real}
     # compute 2d distance between two points
     dx = p2[1] - p1[1]
     dz = p2[2] - p1[2]
     return sqrt(dx^2 + dz^2)
 end
 
-function dist2Dsq(p1::AbstractVector{<:Real}, p2::AbstractVector{<:Real})
+function dist2Dsq(p1::AbstractVector{T}, p2::AbstractVector{T}) where {T<:Real}
     # compute 2d distance squared between two points
     dx = p2[1] - p1[1]
     dz = p2[2] - p1[2]
     return dx^2 + dz^2
 end
 
-function calc_line_tan_2d(p1::AbstractVector{<:Real}, p2::AbstractVector{<:Real})
+function calc_line_tan_2d(p1::AbstractVector{T}, p2::AbstractVector{T}) where {T<:Real}
     # compute tangent vector for line element local coordinates
     dx = p2[1] - p1[1]
     dz = p2[2] - p1[2]
@@ -20,7 +20,7 @@ function calc_line_tan_2d(p1::AbstractVector{<:Real}, p2::AbstractVector{<:Real}
     return [dx/len; dz/len]
 end
 
-function calc_line_norm_2d(p1::AbstractVector{<:Real}, p2::AbstractVector{<:Real})
+function calc_line_norm_2d(p1::AbstractVector{T}, p2::AbstractVector{T}) where {T<:Real}
     # compute normal vector for line element local coordinates
     dx = p2[1] - p1[1]
     dz = p2[2] - p1[2]
