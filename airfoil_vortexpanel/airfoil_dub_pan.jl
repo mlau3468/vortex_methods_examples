@@ -73,6 +73,8 @@ A[end, end] = 1
 A[end, end-1] = -1
 RHS[end] = 0
 
+display(A)
+
 # remove one panel
 remIdx = Int(round(size(pan_pts,1)/2))
 num_pan = num_pan -1

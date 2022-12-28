@@ -120,7 +120,7 @@ function pot_line_doublet_2d_int(p1::AbstractVector{<:Real}, p2::AbstractVector{
 end
 
 function vel_line_doublet_2d(p1::AbstractVector{<:Real}, p2::AbstractVector{<:Real}, p::AbstractVector{<:Real})
-    # Velocity induced by unit strength double line
+    # Velocity induced by unit strength doublet line
     # eq 10.29, 10.30 pg 236
 
     # line local tangent and normal vectors
@@ -141,6 +141,30 @@ function vel_line_doublet_2d(p1::AbstractVector{<:Real}, p2::AbstractVector{<:Re
     # Velocity in local frame
     upanel = -1/(2*pi)*(z/r1_2 - z/r2_2)
     wpanel = 1/(2*pi)*((x-x1)/r1_2 - (x-x2)/r2_2)
+
+    # Velocity in global frame
+    vel_global = upanel.*pan_tan .+ wpanel.*pan_norm
+    return vel_global
+end
+
+function vel_line_doublet_2d_midpoint(p1::AbstractVector{<:Real}, p2::AbstractVector{<:Real}, limit_plus::Bool=true)
+    # Velocity induced by unit strength doublet line at its midpoint
+    # Limit is taken approaching from the positive local y direction by default
+
+    # line local tangent and normal vectors
+    pan_tan = calc_line_tan_2d(p1,p2)
+    pan_norm = calc_line_norm_2d(p1,p2)
+
+    # Express panel points in local panel frame
+    x1 = 0
+    x2 = dist2D(p1, p2)
+
+    # Velcoity in local frame
+    upanel = 0
+    wpanel = -1/pi*2/(x2-x1)
+    if !limit_plus
+        wpanel = -wpanel
+    end
 
     # Velocity in global frame
     vel_global = upanel.*pan_tan .+ wpanel.*pan_norm
