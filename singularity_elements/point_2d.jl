@@ -57,12 +57,16 @@ function vel_point_doublet_2d(p0::AbstractVector{<:Real}, p::AbstractVector{<:Re
     x = dot(p.-p0, pan_tan)
     z = dot(p.-p0, pan_norm)
 
+    # Velocity in local frame
     x0 = 0
     z0 = 0
     r2 = (x-x0)^2 + (z-z0)^2
-    u = 1/pi*(x-x0)*(z-z0)/r2^2
-    w = -1/(2*pi)* ((x-x0)^2 - (z-z0)^2) /r2^2
-    return [u;w]
+    u_local = 1/pi*(x-x0)*(z-z0)/r2^2
+    w_local = -1/(2*pi)* ((x-x0)^2 - (z-z0)^2) /r2^2
+
+    # Velocity in global frame
+    vel_global = u_local.*pan_tan .+ w_local.*pan_norm
+    return vel_global
 end
 
 function vel_point_doublet_2d_ad(p0::AbstractVector{<:Real}, p::AbstractVector{<:Real}, x_dir::AbstractVector{<:Real})
