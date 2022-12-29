@@ -1,5 +1,8 @@
 function pot_line_doublet_linear_2d(p1::AbstractVector{<:Real}, p2::AbstractVector{<:Real}, p::AbstractVector{<:Real})
     # Potential induced by linear strength doublet line
+    # Potential is expressed in local element frame
+    # First output is influence of unit strength at second node
+    # Second output is influence of unit strength at second node
 
     # line local tangent and normal vectors
     pan_tan = calc_line_tan_2d(p1,p2)
@@ -27,6 +30,9 @@ end
 
 function pot_line_doublet_linear_2d_self(p1::AbstractVector{<:Real}, p2::AbstractVector{<:Real}, limit_plus::Bool=true)
     # Potential induced by linear strength doublet line on itself approached from above
+    # Potential is expressed in local element frame
+    # First output is influence of unit strength at second node
+    # Second output is influence of unit strength at second node
 
     # Express panel points in local panel frame
     x1 = 0
@@ -45,8 +51,10 @@ end
 
 function pot_line_doublet_linear_2d_int(p1::AbstractVector{<:Real}, p2::AbstractVector{<:Real}, p::AbstractVector{<:Real})
     # Potential induced by linear strength doublet line by numerical integration
-    # First output is influence of unit trength at second node
-    # Second output is influence of unit trength at second node
+    # Potential is expressed in local element frame
+    # First output is influence of unit strength at second node
+    # Second output is influence of unit strength at second node
+
     n = 5
     vec = p2.-p1 # line between the points
     len = dist2D(p1,p2)
@@ -68,6 +76,11 @@ function pot_line_doublet_linear_2d_int(p1::AbstractVector{<:Real}, p2::Abstract
 end
 
 function pot_line_vortex_linear_2d(p1::AbstractVector{<:Real}, p2::AbstractVector{<:Real}, p::AbstractVector{<:Real})
+    # Potential induced by linear strength vortex line
+    # Potential is expressed in local element frame
+    # First output is influence of unit strength at second node
+    # Second output is influence of unit strength at second node
+
     # line local tangent and normal vectors
     pan_tan = calc_line_tan_2d(p1,p2)
     pan_norm = calc_line_norm_2d(p1,p2)
@@ -97,9 +110,11 @@ function pot_line_vortex_linear_2d(p1::AbstractVector{<:Real}, p2::AbstractVecto
 end
 
 function pot_line_vortex_linear_2d_int(p1::AbstractVector{<:Real}, p2::AbstractVector{<:Real}, p::AbstractVector{<:Real}, use_line_coords::Bool=false)
-     # Potential induced by linear strength doublet line by numerical integration
-    # First output is influence of unit trength at second node
-    # Second output is influence of unit trength at second node
+    # Potential induced by linear strength vortex line by numerical integration
+    # Potential is expressed in local element frame
+    # First output is influence of unit strength at second node
+    # Second output is influence of unit strength at second node
+
     # line local tangent and normal vectors
     pan_tan = calc_line_tan_2d(p1,p2)
     pan_norm = calc_line_norm_2d(p1,p2)
@@ -142,6 +157,9 @@ end
 
 function vel_line_vortex_linear_2d(p1::AbstractVector{<:Real}, p2::AbstractVector{<:Real}, p::AbstractVector{<:Real})
     # Velocity induced by linear strength vortex line
+    # Velocity expressed in global frame
+    # First output is influence of unit strength at second node
+    # Second output is influence of unit strength at second node
 
     # line local tangent and normal vectors
     pan_tan = calc_line_tan_2d(p1,p2)
@@ -175,6 +193,10 @@ end
 
 function vel_line_vortex_linear_midpoint_2d(p1::AbstractVector{<:Real}, p2::AbstractVector{<:Real}, limit_plus::Bool=true)
     # Velocity induced by linear strength vortex line at own midpoint approached from above
+    # Velocity expressed in global frame
+    # First output is influence of unit strength at second node
+    # Second output is influence of unit strength at second node
+
     # line local tangent and normal vectors
     pan_tan = calc_line_tan_2d(p1,p2)
     pan_norm = calc_line_norm_2d(p1,p2)
@@ -203,8 +225,10 @@ end
 
 function vel_line_vortex_linear_2d_int(p1::AbstractVector{<:Real}, p2::AbstractVector{<:Real}, p::AbstractVector{<:Real})
     # Velocity induced by unit linear strength vortex line by numerical integration
+    # Velocity expressed in global frame
     # First output is influence of unit trength at second node
     # Second output is influence of unit trength at second node
+
     n = 5
     vec = p2.-p1 # line between the points
     len = dist2D(p1,p2)

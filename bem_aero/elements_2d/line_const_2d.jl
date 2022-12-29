@@ -1,5 +1,6 @@
 function pot_line_source_2d(p1::AbstractVector{<:Real}, p2::AbstractVector{<:Real}, p::AbstractVector{<:Real})
     # Potential induced by unit strength source line
+    # Potential is expressed in local element frame
     # pg 234 eq 10.19 corrected using appendix B.11
 
     # line local tangent and normal vectors
@@ -24,6 +25,7 @@ end
 
 function pot_line_source_2d_int(p1::AbstractVector{<:Real}, p2::AbstractVector{<:Real}, p::AbstractVector{<:Real})
     # Potential induced by unit strength source line by numerical integration
+    # Potential is expressed in local element frame
     n = 5
     vec = p2.-p1 # line between the points
     len = dist2D(p1,p2)
@@ -39,6 +41,7 @@ end
 
 function vel_line_source_2d(p1::AbstractVector{<:Real}, p2::AbstractVector{<:Real}, p::AbstractVector{<:Real})
     # Velocity induced by unit strength source line
+    # Velocity expressed in global frame
     # pg 234 eq 10.20, 10,21
 
     # line local tangent and normal vectors
@@ -69,6 +72,7 @@ end
 
 function vel_line_source_2d_int(p1::AbstractVector{<:Real}, p2::AbstractVector{<:Real}, p::AbstractVector{<:Real})
     # Velocity induced by unit strength source line by numerical integration
+    # Velocity expressed in global frame
     n = 5
     vec = p2.-p1 # line between the points
     len = dist2D(p1,p2)
@@ -84,6 +88,7 @@ end
 
 function pot_line_doublet_2d(p1::AbstractVector{<:Real}, p2::AbstractVector{<:Real}, p::AbstractVector{<:Real})
     # Potential induced by unit doublet line
+    # Potential is expressed in local element frame
     # eq 10.28 pg 235
 
     # line local tangent and normal vectors
@@ -106,6 +111,7 @@ end
 
 function pot_line_doublet_2d_self(limit_plus::Bool=true)
     # potential induced by unit doublet line onto itself
+    # Potential is expressed in local element frame
     if limit_plus
         return -0.5
     else
@@ -115,6 +121,7 @@ end
 
 function pot_line_doublet_2d_int(p1::AbstractVector{<:Real}, p2::AbstractVector{<:Real}, p::AbstractVector{<:Real})
     # Potential induced by unit doublet line by numerical integration
+    # Potential is expressed in local element frame
     n = 5
     vec = p2.-p1 # line between the points
     len = dist2D(p1,p2)
@@ -130,6 +137,7 @@ end
 
 function vel_line_doublet_2d(p1::AbstractVector{<:Real}, p2::AbstractVector{<:Real}, p::AbstractVector{<:Real})
     # Velocity induced by unit strength doublet line
+    # Velocity expressed in global frame
     # eq 10.29, 10.30 pg 236
 
     # line local tangent and normal vectors
@@ -158,6 +166,7 @@ end
 
 function vel_line_doublet_2d_midpoint(p1::AbstractVector{<:Real}, p2::AbstractVector{<:Real}, limit_plus::Bool=true)
     # Velocity induced by unit strength doublet line at its midpoint
+    # Velocity expressed in global frame
     # Limit is taken approaching from the positive local y direction by default
 
     # line local tangent and normal vectors
@@ -182,6 +191,7 @@ end
 
 function vel_line_doublet_2d_int(p1::AbstractVector{<:Real}, p2::AbstractVector{<:Real}, p::AbstractVector{<:Real})
     # Velocity induced by unit strength doublet line by numerical integration
+    # Velocity expressed in global frame
     n = 5
     vec = p2.-p1 # line between the points
     len = dist2D(p1,p2)
@@ -197,6 +207,7 @@ end
 
 function pot_line_vortex_2d(p1::AbstractVector{<:Real}, p2::AbstractVector{<:Real}, p::AbstractVector{<:Real})
     # Potential induced by unit strength vortex line
+    # Potential is expressed in local element frame
     # eq 10.37 pg 237
 
     # line local tangent and normal vectors
@@ -221,6 +232,7 @@ end
 
 function pot_line_vortex_2d_int(p1::AbstractVector{<:Real}, p2::AbstractVector{<:Real}, p::AbstractVector{<:Real})
     # Potential induced by unit strength vortex line by numerical integration
+    # Potential is expressed in local element frame
     n = 5
     vec = p2.-p1 # line between the points
     len = dist2D(p1,p2)
@@ -236,6 +248,7 @@ end
 
 function vel_line_vortex_2d(p1::AbstractVector{<:Real}, p2::AbstractVector{<:Real}, p::AbstractVector{<:Real})
     # Velocity induced by unit strength vortex line
+    # Velocity expressed in global frame
     # eq 10.39, 10.40 pg 237
 
     # line local tangent and normal vectors
@@ -266,6 +279,7 @@ end
 
 function vel_line_vortex_2d_int(p1::AbstractVector{<:Real}, p2::AbstractVector{<:Real}, p::AbstractVector{<:Real})
     # Velocity induced by unit strength vortex line by numerical integration
+    # Velocity expressed in global frame
     n = 5
     vec = p2.-p1 # line between the points
     len = dist2D(p1,p2)

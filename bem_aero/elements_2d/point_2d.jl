@@ -11,6 +11,7 @@ end
 
 function vel_point_source_2d(p0::AbstractVector{<:Real}, p::AbstractVector{<:Real})
     # Velocity induced by unit strength point source
+    # Velocity expressed in global frame
     # pg 231 eq 10.2, 10.3
     x = p[1]
     z = p[2]
@@ -24,11 +25,13 @@ end
 
 function vel_point_source_2d_ad(p0::AbstractVector{<:Real}, p::AbstractVector{<:Real})
     # Velocity induced by unit strength point source by differentiation of potential
+    # Velocity expressed in global frame
     return ForwardDiff.gradient((x) -> pot_point_source_2d(p0, x), p)
 end
 
 function pot_point_doublet_2d(p0::AbstractVector{<:Real}, p::AbstractVector{<:Real}, x_dir::AbstractVector{<:Real})
     # Potential induced by unit strength doublet with local x axis in x_dir direction
+    # Potential expressed in local element frame
     # pg 231 eq 10.4
 
     # Local tangent and normal vectors
@@ -47,6 +50,7 @@ end
 
 function vel_point_doublet_2d(p0::AbstractVector{<:Real}, p::AbstractVector{<:Real}, x_dir::AbstractVector{<:Real})
     # Velocity induced by unit strength doublet with local x axis in x_dir direction
+    # Velocity expressed in global frame
     # pg 231 eq 10.5, 10.6
 
     # Local tangent and normal vectors
@@ -71,6 +75,7 @@ end
 
 function vel_point_doublet_2d_ad(p0::AbstractVector{<:Real}, p::AbstractVector{<:Real}, x_dir::AbstractVector{<:Real})
     # Velocity induced by unit strength doublet oriented in z direction by differentiation of potential
+    # Velocity expressed in global frame
     return ForwardDiff.gradient((x) -> pot_point_doublet_2d(p0, x, x_dir), p)
 end
 
@@ -86,6 +91,7 @@ end
 
 function vel_point_vortex_2d(p0::AbstractVector{<:Real}, p::AbstractVector{<:Real})
     # Velocity induced by unit strength vortex
+    # Velocity expressed in global frame
     # pg 232 eq 10.9, 10.10
     x = p[1]
     z = p[2]
@@ -99,5 +105,6 @@ end
 
 function vel_point_vortex_2d_ad(p0::AbstractVector{<:Real}, p::AbstractVector{<:Real})
     # Velocity induced by unit strength vortex by differentiation of potential
+    # Velocity expressed in global frame
     return ForwardDiff.gradient((x) -> pot_point_vortex_2d(p0, x), p)
 end
