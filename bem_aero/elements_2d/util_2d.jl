@@ -35,7 +35,7 @@ end
 function quadrature_transform(a::Real, b::Real, order::Integer)
     # compute scaling factor and transformed integration points
     # for gause quadrature
-    gauss_points, weights = gausslobatto(order)
+    gauss_points, weights = gausslegendre(order)
     scale = (b-a)/2
     points = scale.*gauss_points .+ (a+b)/2
     return points, weights, scale
