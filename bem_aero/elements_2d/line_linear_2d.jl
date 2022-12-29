@@ -121,9 +121,12 @@ function pot_line_vortex_linear_2d_self(p1::AbstractVector{<:Real}, p2::Abstract
     # Express panel points in local panel frame
     x1 = 0
     x2 = dist2D(p1, p2)
-    x = x2/2
+    # x is field point projected onto the local unit vector
+    unit_vec = calc_line_tan_2d(p1, p2)
+    x = dot(p.-p1, unit_vec)
 
-
+    # superposition unit constant and unit ramp
+    term1 = # constant part
 
     phia = term1 - 1/(x2-x1)*term2
     phib = 1/(x2-x1)*term2

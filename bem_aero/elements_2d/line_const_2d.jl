@@ -230,6 +230,25 @@ function pot_line_vortex_2d(p1::AbstractVector{<:Real}, p2::AbstractVector{<:Rea
     return -1/(2*pi)*((x-x1)*theta1 - (x-x2)*theta2 + z/2*log(r1_2/r2_2))
 end
 
+function pot_line_vortex_2d_self(p1::AbstractVector{<:Real}, p2::AbstractVector{<:Real}, p::AbstractVector{<:Real}, limit_plus::Bool=true)
+    # Potential induced by unit strength vortex line on itself approached from above
+    # Potential is expressed in local element frame
+    # eq 10.41 pg 237
+
+    # Express panel points in local panel frame
+    x1 = 0
+    x2 = dist2D(p1, p2)
+    # x is field point projected onto the local unit vector
+    unit_vec = calc_line_tan_2d(p1, p2)
+    x = dot(p.-p1, unit_vec)
+
+    phi = 1/2*(x-x2)
+    if !limit_plus
+        phi = -phi
+    end
+    return phi
+end
+
 function pot_line_vortex_2d_int(p1::AbstractVector{<:Real}, p2::AbstractVector{<:Real}, p::AbstractVector{<:Real})
     # Potential induced by unit strength vortex line by numerical integration
     # Potential is expressed in local element frame
