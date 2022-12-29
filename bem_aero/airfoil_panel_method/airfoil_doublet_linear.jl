@@ -22,7 +22,7 @@ function airfoil_doublet_linear_dirichlet(pan_vert::Matrix{<:Real}, aoa::Real)
     u_vec[2] = sin(alf)
 
     A = zeros(nvert+1, nvert+1) # Influence coefficent for potential just inside airfoil
-    # A_pot_out = zeros(nvert+1, nvert+1) # Influence coefficeint for potential just outside airfoil
+    A_pot_out = zeros(nvert+1, nvert+1) # Influence coefficeint for potential just outside airfoil
     RHS = zeros(nvert+1)
 
     pt_add = (pan_cpt[:,1] .+ pan_cpt[:,npan])./2
@@ -36,14 +36,21 @@ function airfoil_doublet_linear_dirichlet(pan_vert::Matrix{<:Real}, aoa::Real)
         for j = 1:npan
             if i == j
                 phi_a, phi_b = pot_line_doublet_linear_2d_self(pan_vert[:,j], pan_vert[:,j+1])
+                phi_a2, phi_b2 = pot_line_doublet_linear_2d_self(pan_vert[:,j], pan_vert[:,j+1], false)
             else
                 phi_a, phi_b = pot_line_doublet_linear_2d(pan_vert[:,j], pan_vert[:,j+1], cpt)
+                phi_a2 = phi_a
+                phi_b2 = phi_b
             end
             A[i,j] += phi_a
             A[i,j+1] += phi_b
+
+            A_pot_out[i,j] += phi_a2
+            A_pot_out[i,j+1] += phi_b2
         end
         # trailing edge
         A[i,nvert+1] += pot_line_doublet_2d(pan_vert[:,1], [1e3;0], cpt)
+        A_pot_out[i,nvert+1] = A[i,nvert+1]
     end
 
     # Set RHS
@@ -76,10 +83,38 @@ function airfoil_doublet_linear_dirichlet(pan_vert::Matrix{<:Real}, aoa::Real)
     # Solve linear system
     vert_mu = A\RHS
 
+    # Compute full potential at each collocation point
+    pot_cpt = zeros(npan)
+    for i = 1:npan
+        pot_cpt[i] = dot(A_pot_out[i,:], vert_mu) + dot(u_vec, pan_cpt[:,i])
+    end
+
     # Velocity at collocation points
     vel_cpt = zeros(npan)
     for i = 1:npan
         vel_cpt[i] = (vert_mu[i+1] - vert_mu[i])/pan_len[i]
+    end
+
+    # Velocity along the surface of airfoil is differentiation of total potential
+    vel_vec = zeros(npan-1)
+    for i = 1:npan-1
+        # finite difference in panel tangent direction
+        l = dist2D(pan_cpt[:,i], pan_cpt[:,i+1])
+        vel_vec[i] = (pot_cpt[i+1] - pot_cpt[i])/l
+    end
+
+    display(vel_vec)
+
+    # Velocity at collocation points
+    vel_cpt = zeros(npan)
+    for i = 1:npan
+        if i == 1
+            vel_cpt[i] = vel_vec[i]
+        elseif i == npan
+            vel_cpt[i] = vel_vec[i-1]
+        else
+            vel_cpt[i] = (vel_vec[i-1] + vel_vec[i])/2
+        end
     end
 
     # pressure at panels
