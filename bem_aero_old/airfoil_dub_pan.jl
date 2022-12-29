@@ -76,8 +76,6 @@ A[end, end] = 1
 A[end, end-1] = -1
 RHS[end] = 0
 
-display(A)
-
 # remove one panel
 remIdx = Int(round(size(pan_pts,1)/2))
 num_pan = num_pan -1
@@ -128,7 +126,7 @@ for i in 1:num_pan
 end
 
 cp = 1 .- (pan_vels[:,1].^2 + pan_vels[:,2].^2) ./ U.^2
-cp = 1 .- vel_cpt.^2.0./U.^2
+# cp = 1 .- vel_cpt.^2.0./U.^2
 cpPlot = plot(c_pts[:,1], cp, yflip=true)
 
 ps = cp.*0.5.*rho.*U.^2

@@ -41,7 +41,7 @@ function airfoil_doublet_linear_dirichlet(pan_vert::Matrix{<:Real}, aoa::Real)
             A_pot_out[i,j] += phi_a_out
             A_pot_out[i,j+1] += phi_b_out
         end
-        # trailing edge
+        # wake panel
         A[i,nvert+1] += pot_line_doublet_2d(pan_vert[:,1], [1e3;0], pan_cpt[:,i])
         A_pot_out[i,nvert+1] = A[i,nvert+1]
     end

@@ -37,7 +37,7 @@ function airfoil_sourcedoublet_dirichlet(pan_vert::Matrix{<:Real}, aoa::Real; co
             end
             B[i,j] = pot_line_source_2d(pan_vert[:,j], pan_vert[:,j+1],  pan_cpt[:,i])
         end
-        # trailing edge influence
+        # wake panel
         te = pot_line_doublet_2d(pan_vert[:,1], [1e3;0.0] , pan_cpt[:,i])
         # kutta condition
         A[i,1] -= te
