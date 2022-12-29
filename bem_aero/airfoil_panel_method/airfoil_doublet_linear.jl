@@ -7,7 +7,6 @@ function airfoil_doublet_linear_dirichlet(pan_vert::Matrix{<:Real}, aoa::Real)
     pan_norm = calc_panel_2d_normals(pan_vert) # panel normals
     pan_tan = calc_panel_2d_tangents(pan_vert) # panel tangents
     pan_len = calc_panel_2d_lengths(pan_vert)
-    display(pan_len)
 
     # Freestream
     U = 1
@@ -25,31 +24,25 @@ function airfoil_doublet_linear_dirichlet(pan_vert::Matrix{<:Real}, aoa::Real)
     A_pot_out = zeros(nvert+1, nvert+1) # Influence coefficeint for potential just outside airfoil
     RHS = zeros(nvert+1)
 
-    pt_add = (pan_cpt[:,1] .+ pan_cpt[:,npan])./2
     # Influence coefficients
-    for i = 1:npan+1
-        if i == npan+1
-            cpt = pt_add
-        else
-            cpt = pan_cpt[:,i]
-        end
+    for i = 1:npan
         for j = 1:npan
             if i == j
                 phi_a, phi_b = pot_line_doublet_linear_2d_self(pan_vert[:,j], pan_vert[:,j+1])
-                phi_a2, phi_b2 = pot_line_doublet_linear_2d_self(pan_vert[:,j], pan_vert[:,j+1], false)
+                phi_a_out, phi_b_out = pot_line_doublet_linear_2d_self(pan_vert[:,j], pan_vert[:,j+1], false)
             else
-                phi_a, phi_b = pot_line_doublet_linear_2d(pan_vert[:,j], pan_vert[:,j+1], cpt)
-                phi_a2 = phi_a
-                phi_b2 = phi_b
+                phi_a, phi_b = pot_line_doublet_linear_2d(pan_vert[:,j], pan_vert[:,j+1], pan_cpt[:,i])
+                phi_a_out = phi_a
+                phi_b_out = phi_b
             end
             A[i,j] += phi_a
             A[i,j+1] += phi_b
 
-            A_pot_out[i,j] += phi_a2
-            A_pot_out[i,j+1] += phi_b2
+            A_pot_out[i,j] += phi_a_out
+            A_pot_out[i,j+1] += phi_b_out
         end
         # trailing edge
-        A[i,nvert+1] += pot_line_doublet_2d(pan_vert[:,1], [1e3;0], cpt)
+        A[i,nvert+1] += pot_line_doublet_2d(pan_vert[:,1], [1e3;0], pan_cpt[:,i])
         A_pot_out[i,nvert+1] = A[i,nvert+1]
     end
 
@@ -57,29 +50,20 @@ function airfoil_doublet_linear_dirichlet(pan_vert::Matrix{<:Real}, aoa::Real)
     for i = 1:npan
         RHS[i] = -dot(u_vec, pan_cpt[:,i]) # potential due to freestream
     end
-    RHS[npan+1] = -dot(u_vec, pt_add)
 
     # Kutta condition
-    # A[nvert,1] = 1
-    # A[nvert,nvert] = -1
-    # A[nvert,nvert+1] = 1
+    A[nvert,1] = 1
+    A[nvert,nvert] = -1
+    A[nvert,nvert+1] = 1
 
-    # A[nvert+1,1] = -1
-    # A[nvert+1,2] = 1
-    # A[nvert+1,nvert-1] = 1
-    # A[nvert+1,nvert] = -1
-
-    # RHS[nvert+1] = 0
-    # RHS[nvert+1] = 0
-
-    A[nvert+1,1] = 1
+    A[nvert+1,1] = -1
+    A[nvert+1,2] = 1
+    A[nvert+1,nvert-1] = 1
     A[nvert+1,nvert] = -1
-    A[nvert+1,nvert+1] = 1
+
+    RHS[nvert+1] = 0
     RHS[nvert+1] = 0
 
-    display(A)
-    display(RHS)
-    
     # Solve linear system
     vert_mu = A\RHS
 
@@ -87,12 +71,6 @@ function airfoil_doublet_linear_dirichlet(pan_vert::Matrix{<:Real}, aoa::Real)
     pot_cpt = zeros(npan)
     for i = 1:npan
         pot_cpt[i] = dot(A_pot_out[i,:], vert_mu) + dot(u_vec, pan_cpt[:,i])
-    end
-
-    # Velocity at collocation points
-    vel_cpt = zeros(npan)
-    for i = 1:npan
-        vel_cpt[i] = (vert_mu[i+1] - vert_mu[i])/pan_len[i]
     end
 
     # Velocity along the surface of airfoil is differentiation of total potential
@@ -103,9 +81,7 @@ function airfoil_doublet_linear_dirichlet(pan_vert::Matrix{<:Real}, aoa::Real)
         vel_vec[i] = (pot_cpt[i+1] - pot_cpt[i])/l
     end
 
-    display(vel_vec)
-
-    # Velocity at collocation points
+    #Velocity at collocation points
     vel_cpt = zeros(npan)
     for i = 1:npan
         if i == 1
