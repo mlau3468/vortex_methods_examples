@@ -97,8 +97,6 @@ function pot_line_vortex_linear_2d(p1::AbstractVector{<:Real}, p2::AbstractVecto
 
     r1 = dist2D(p1, p)
     r2 = dist2D(p2, p)
-    r1_2 = r1^2
-    r2_2 = r2^2
     theta1 = atan(z,x)
     theta2 = atan(z, x-x2)
 
