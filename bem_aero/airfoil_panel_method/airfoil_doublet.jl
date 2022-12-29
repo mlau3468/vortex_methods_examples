@@ -60,7 +60,7 @@ function airfoil_doublet_dirichlet(pan_vert::Matrix{<:Real}, aoa::Real; compute_
     for i = 1:npan
         pot_cpt_in[i] = dot(A[i,:], pan_mu) + dot(u_vec, pan_cpt[:,i])
     end
-    pot_freestream = zeros(npan) # potential on boundary collocation points
+    pot_freestream = zeros(npan) # freestream potential on boundary collocation points
     for i = 1:npan
         pot_freestream[i] = dot(u_vec, pan_cpt[:,i])
     end

@@ -45,6 +45,8 @@ function airfoil_sourcedoublet_dirichlet(pan_vert::Matrix{<:Real}, aoa::Real; co
     end
 
     # Source strengths
+    # Source strengths selected such that the internal velocity potential is equal to the 
+    # freestream velocity potential
     pan_source = zeros(npan)
     for i = 1:npan
         pan_source[i] = dot(calc_line_norm_2d(pan_vert[:,i], pan_vert[:,i+1]), u_vec)
@@ -67,7 +69,7 @@ function airfoil_sourcedoublet_dirichlet(pan_vert::Matrix{<:Real}, aoa::Real; co
     for i = 1:npan
         pot_cpt_in[i] = dot(A[i,:], pan_mu) + dot(B[i,:], pan_source) + dot(u_vec, pan_cpt[:,i])
     end
-    pot_freestream = zeros(npan) # potential on boundary collocation points
+    pot_freestream = zeros(npan) # freestream potential on boundary collocation points
     for i = 1:npan
         pot_freestream[i] = dot(u_vec, pan_cpt[:,i])
     end
