@@ -59,9 +59,17 @@ function airfoil_sourcedoublet_dirichlet(pan_vert::Matrix{<:Real}, aoa::Real; co
     pan_mu = A\RHS
 
     # Compute full potential at each collocation point
-    pot_cpt = zeros(npan)
+    pot_cpt_out = zeros(npan)  # potential on outside of surface
     for i = 1:npan
-        pot_cpt[i] = dot(A_pot_out[i,:], pan_mu) + dot(B[i,:], pan_source) + dot(u_vec, pan_cpt[:,i])
+        pot_cpt_out[i] = dot(A_pot_out[i,:], pan_mu) + dot(B[i,:], pan_source) + dot(u_vec, pan_cpt[:,i])
+    end
+    pot_cpt_in = zeros(npan) # potential on inside of surface
+    for i = 1:npan
+        pot_cpt_in[i] = dot(A[i,:], pan_mu) + dot(B[i,:], pan_source) + dot(u_vec, pan_cpt[:,i])
+    end
+    pot_freestream = zeros(npan) # potential on boundary collocation points
+    for i = 1:npan
+        pot_freestream[i] = dot(u_vec, pan_cpt[:,i])
     end
 
     # Velocity along the surface of airfoil is differentiation of potential
@@ -72,7 +80,7 @@ function airfoil_sourcedoublet_dirichlet(pan_vert::Matrix{<:Real}, aoa::Real; co
         # finite difference in panel tangent direction
         l = dist2D(pan_cpt[:,i], pan_cpt[:,i+1])
         if compute_full_potential
-            vel_vec[i] = (pot_cpt[i+1] - pot_cpt[i])/l
+            vel_vec[i] = (pot_cpt_out[i+1] - pot_cpt_out[i])/l
         else
             vel_vec[i] = (pan_mu[i+1] - pan_mu[i])/l + dot(u_vec, pan_tan[:,i])
         end
@@ -107,6 +115,6 @@ function airfoil_sourcedoublet_dirichlet(pan_vert::Matrix{<:Real}, aoa::Real; co
     lift = sum(pan_force[2,:])
     cl = lift/0.5/rho/U^2/chord
 
-    result = (cl=cl, pan_cp=pan_cp, pan_pres=pan_pres, vel_cpt=vel_cpt, pan_mu=pan_mu, pan_source=pan_source, pan_cpt=pan_cpt)
+    result = (cl=cl, pan_cp=pan_cp, pan_pres=pan_pres, vel_cpt=vel_cpt, pan_mu=pan_mu, pan_source=pan_source, pan_cpt=pan_cpt, pot_cpt_out=pot_cpt_out, pot_cpt_in=pot_cpt_in, pot_freestream=pot_freestream)
     return result
 end
