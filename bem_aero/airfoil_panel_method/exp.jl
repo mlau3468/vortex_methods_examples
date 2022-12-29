@@ -173,7 +173,7 @@ function airfoil_vortex_linear_dirichlet2(pan_vert::Matrix{<:Real}, aoa::Real)
     A[nvert+1,nvert-1] = 1
     A[nvert+1,nvert] = -1
 
-    RHS[nvert+1] = 0
+    RHS[nvert] = 0
     RHS[nvert+1] = 0
 
     # Solve linear system
