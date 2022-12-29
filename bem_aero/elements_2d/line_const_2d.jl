@@ -251,9 +251,32 @@ function pot_line_vortex_2d_self(p1::AbstractVector{<:Real}, p2::AbstractVector{
     return phi
 end
 
-function pot_line_vortex_2d_int(p1::AbstractVector{<:Real}, p2::AbstractVector{<:Real}, p::AbstractVector{<:Real})
+function pot_line_vortex_2d_int(p1::AbstractVector{<:Real}, p2::AbstractVector{<:Real}, p::AbstractVector{<:Real}, use_line_coords::Bool=true)
     # Potential induced by unit strength vortex line by numerical integration
     # Potential is expressed in local element frame
+
+    if use_line_coords
+        # Compute potential in local line coordinate frame. Note that when coordinate frames are rotated, 
+        # the potential field is offset by a constant
+        # This step can be sometimes skipped depending on code implementation
+        # Express field point in local panel frame
+
+        # line local tangent and normal vectors
+        pan_tan = calc_line_tan_2d(p1,p2)
+        pan_norm = calc_line_norm_2d(p1,p2)
+
+        x = dot(p.-p1, pan_tan)
+        z = dot(p.-p1, pan_norm)
+
+        # Express panel points in local panel frame
+        x1 = 0
+        x2 = dist2D(p1, p2)
+
+        p1 = [x1;0]
+        p2 = [x2;0]
+        p = [x;z]
+    end
+
     n = 5
     vec = p2.-p1 # line between the points
     len = dist2D(p1,p2)
