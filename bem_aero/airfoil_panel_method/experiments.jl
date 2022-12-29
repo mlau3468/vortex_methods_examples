@@ -55,8 +55,8 @@ function airfoil_vortex_linear_dirichlet(pan_vert::Matrix{<:Real}, aoa::Real; nu
     for i = 1:npan
         pot_freestream[i] = dot(u_vec, pan_cpt[:,i])
     end
-    display(vert_gam_res)
-    display(pot_cpt_out)
+    # display(vert_gam_res)
+    # display(pot_cpt_out)
     # quit()
 
     # Allocate influence matrices
@@ -108,9 +108,29 @@ function airfoil_vortex_linear_dirichlet(pan_vert::Matrix{<:Real}, aoa::Real; nu
     for i = 1:npan
         pot_cpt_in[i] = dot(A[i,:], vert_gam) + dot(u_vec, pan_cpt[:,i])
     end
+
+    # check computation
+    pot_cpt_in2 = zeros(npan) # potential on inside of surface
+    for i = 1:npan
+        for j = 1:npan
+            if i == j
+                phia, phib = pot_line_vortex_linear_2d_self(pan_vert[:,j], pan_vert[:,j+1], pan_cpt[:,i])
+            else
+                phia, phib = pot_line_vortex_linear_2d(pan_vert[:,j], pan_vert[:,j+1], pan_cpt[:,i])
+            end
+            pot_cpt_in2[i] += vert_gam[j]*phia + vert_gam[j+1]*phib
+        end
+        pot_cpt_in2[i] += dot(u_vec, pan_cpt[:,i])
+    end
+
+    display(pot_cpt_in)
+    display(pot_cpt_in2)
+
+    quit()
+
     # display(pot_cpt_out)
     # quit()
-    pot_cpt = pot_cpt_out
+    # pot_cpt = pot_cpt_out
 
     # Velocity along the surface of airfoil is differentiation of total potential
     vel_vec = zeros(npan-1)
