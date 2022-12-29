@@ -3,6 +3,8 @@ function airfoil_vortex_linear_neumann(pan_vert::Matrix{<:Real}, aoa::Real; num_
     nvert = size(pan_vert, 2)
     npan = nvert - 1
 
+    use_ad = true
+
     # Compute panel properties
     pan_cpt = calc_panel_2d_collocation_points(pan_vert) # collocation points
     pan_norm = calc_panel_2d_normals(pan_vert) # panel normals
@@ -35,7 +37,11 @@ function airfoil_vortex_linear_neumann(pan_vert::Matrix{<:Real}, aoa::Real; num_
                 if num_integrate
                     uw_a, uw_b = vel_line_vortex_linear_2d_int(pan_vert[:,j], pan_vert[:,j+1], pan_cpt[:,i])
                 else
-                    uw_a, uw_b = vel_line_vortex_linear_2d(pan_vert[:,j], pan_vert[:,j+1], pan_cpt[:,i])
+                    if !use_ad
+                        uw_a, uw_b = vel_line_vortex_linear_2d(pan_vert[:,j], pan_vert[:,j+1], pan_cpt[:,i])
+                    else
+                        uw_a, uw_b = vel_line_vortex_linear_2d_ad(pan_vert[:,j], pan_vert[:,j+1], pan_cpt[:,i])
+                    end
                 end
             end
             A[i,j] += dot(uw_a, pan_norm[:,i])

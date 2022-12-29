@@ -21,8 +21,43 @@ function airfoil_vortex_linear_dirichlet(pan_vert::Matrix{<:Real}, aoa::Real; nu
     u_vec[1] = cos(alf)
     u_vec[2] = sin(alf)
 
-    # res1 = airfoil_vortex_linear_neumann(pan_vert, aoa)
-    # vert_gam_res = res1.vert_gam
+    res1 = airfoil_vortex_linear_neumann(pan_vert, aoa)
+    vert_gam_res = res1.vert_gam
+
+    # Compute full potential at each collocation point
+    pot_cpt_out = zeros(npan) # potential on outside of surface
+    for i = 1:npan
+        for j = 1:npan
+            if i == j
+                phia, phib = pot_line_vortex_linear_2d_self(pan_vert[:,j], pan_vert[:,j+1], pan_cpt[:,i], false)
+            else
+                phia, phib = pot_line_vortex_linear_2d(pan_vert[:,j], pan_vert[:,j+1], pan_cpt[:,i])
+            end
+            pot_cpt_out[i] += vert_gam_res[j]*phia + vert_gam_res[j+1]*phib
+        end
+        pot_cpt_out[i] += dot(u_vec, pan_cpt[:,i])
+    end
+
+    pot_cpt_in = zeros(npan) # potential on inside of surface
+    for i = 1:npan
+        for j = 1:npan
+            if i == j
+                phia, phib = pot_line_vortex_linear_2d_self(pan_vert[:,j], pan_vert[:,j+1], pan_cpt[:,i])
+            else
+                phia, phib = pot_line_vortex_linear_2d(pan_vert[:,j], pan_vert[:,j+1], pan_cpt[:,i])
+            end
+            pot_cpt_in[i] += vert_gam_res[j]*phia + vert_gam_res[j+1]*phib
+        end
+        pot_cpt_in[i] += dot(u_vec, pan_cpt[:,i])
+    end
+
+    pot_freestream = zeros(npan) # freestream potential on boundary collocation points
+    for i = 1:npan
+        pot_freestream[i] = dot(u_vec, pan_cpt[:,i])
+    end
+    display(vert_gam_res)
+    display(pot_cpt_out)
+    # quit()
 
     # Allocate influence matrices
     A = zeros(nvert, nvert)
@@ -35,6 +70,10 @@ function airfoil_vortex_linear_dirichlet(pan_vert::Matrix{<:Real}, aoa::Real; nu
             if i == j 
                 phia, phib = pot_line_vortex_linear_2d_self(pan_vert[:,j], pan_vert[:,j+1], pan_cpt[:,i])
                 phia_out, phib_out = pot_line_vortex_linear_2d_self(pan_vert[:,j], pan_vert[:,j+1], pan_cpt[:,i], false)
+                # phia = -phia
+                # phib = -phib
+                # phia_out = -phia_out
+                # phib_out = -phib_out
             else
                 phia, phib = pot_line_vortex_linear_2d(pan_vert[:,j], pan_vert[:,j+1], pan_cpt[:,i])
                 phia_out = phia
@@ -44,7 +83,7 @@ function airfoil_vortex_linear_dirichlet(pan_vert::Matrix{<:Real}, aoa::Real; nu
             A[i,j] += phia
             A[i,j+1] += phib
             A_pot_out[i,j] += phia_out
-            A_pot_out[i,j] += phib_out
+            A_pot_out[i,j+1] += phib_out
         end
     end
 
@@ -61,18 +100,28 @@ function airfoil_vortex_linear_dirichlet(pan_vert::Matrix{<:Real}, aoa::Real; nu
     vert_gam = A\RHS
     
     # Compute full potential at each collocation point
-    pot_cpt = zeros(npan)
+    pot_cpt_out = zeros(npan)
     for i = 1:npan
-        pot_cpt[i] = dot(A_pot_out[i,:], vert_gam) + dot(u_vec, pan_cpt[:,i])
+        pot_cpt_out[i] = dot(A_pot_out[i,:], vert_gam) + dot(u_vec, pan_cpt[:,i])
     end
+    pot_cpt_in = zeros(npan)
+    for i = 1:npan
+        pot_cpt_in[i] = dot(A[i,:], vert_gam) + dot(u_vec, pan_cpt[:,i])
+    end
+    # display(pot_cpt_out)
+    # quit()
+    pot_cpt = pot_cpt_out
 
     # Velocity along the surface of airfoil is differentiation of total potential
     vel_vec = zeros(npan-1)
     for i = 1:npan-1
         # finite difference in panel tangent direction
         l = dist2D(pan_cpt[:,i], pan_cpt[:,i+1])
-        vel_vec[i] = (pot_cpt[i+1] - pot_cpt[i])/l
+        vel_vec[i] = (pot_cpt_out[i+1] - pot_cpt_out[i])/l
     end
+
+    display(vel_vec)
+    quit()
 
     #Velocity at collocation points
     vel_cpt = zeros(npan)

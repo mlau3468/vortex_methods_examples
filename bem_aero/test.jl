@@ -31,6 +31,9 @@ phia2, phib2 = pot_line_vortex_linear_2d_int([0;0], [1;1], [-2.0;2.0])
 phia, phib = pot_line_vortex_linear_2d([0;0], [1;0], [0.5;0])
 phia2, phib2 = pot_line_vortex_linear_2d_self([0;0], [1;0], [0.5;0])
 
+vela, velb = vel_line_vortex_linear_2d([2.0;1.0], [3.0;-1.0], [4.0;4.0])
+vela2, velb2 = vel_line_vortex_linear_2d_ad([2.0;1.0], [3.0;-1.0], [4.0;4.0])
+
 # phi1 = pot_line_source_2d([1.0;-2.0], [3.0;-1.0], [-4.0;4.0])
 # phi2 = pot_line_source_2d_int([1.0;-2.0], [3.0;-1.0], [-4.0;4.0])
 
@@ -42,5 +45,5 @@ phia2, phib2 = pot_line_vortex_linear_2d_self([0;0], [1;0], [0.5;0])
 
 # phia, phib = pot_line_vortex_linear_2d([1;1], [2;2], [1;1])
 # phia2, phib2 = pot_line_vortex_linear_2d_self([1;0], [2;2], [1;1])
-
-
+# vela, velb = vel_line_vortex_linear_2d_self([0;0], [1;0], [0.5;0])
+# vela2, velb2 = vel_line_vortex_linear_2d_self_ad([0;0], [1;0], [0.5;0])
