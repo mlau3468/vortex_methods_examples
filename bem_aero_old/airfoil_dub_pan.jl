@@ -1,4 +1,5 @@
 include("airfoil_util.jl")
+using LinearAlgebra
 
 function constDubPan(mu, p1, p2, p)
     #mu = doublet strength
@@ -51,6 +52,7 @@ rho = 1.225
 # Initialize solver matrix
 num_pan = size(pan_pts,1) -1
 A = zeros(num_pan+1, num_pan+1)
+B = zeros(num_pan+1, num_pan+1)
 RHS = zeros(num_pan+1)
 u_vec = U .* [cosd(alpha), sind(alpha)]
 
@@ -64,6 +66,7 @@ for i in 1:num_pan
             uw = constDubPan(1, pan_pts[j,1:2], pan_pts[j,3:4], c_pts[i, :])
         end
         A[i,j] = uw'norms[i,:]
+        B[i,j] = uw'tangents[i,:]
      end
 end
 
@@ -82,6 +85,7 @@ keep_idx = [1:remIdx-1; remIdx+1:num_pan+2]
 
 RHS = RHS[keep_idx]
 A = A[keep_idx, keep_idx]
+B = B[keep_idx, keep_idx]
 c_pts = c_pts[keep_idx[1:end-1], :]
 norms = norms[keep_idx[1:end-1],:]
 tangents = tangents[keep_idx[1:end-1],:]
@@ -91,10 +95,16 @@ dists = dists[keep_idx[1:end-1]]
 
 mu = A\RHS
 
+vel_cpt = zeros(num_pan)
+for i = 1:num_pan
+    vel_cpt[i] = dot(B[i,:], mu) + dot(u_vec, tangents[i,:])
+end
+
 pan_vels = zeros(num_pan, 2)
 # velocities at each panel
 for i in 1:num_pan
     pan_vels[i,:] = u_vec
+    # pan_vels[i,:] = dot(u_vec, )
     # perterbation velocity of panel on itself
     if i == 1  # First panel
         v_pan = 0.5*(mu[i+1]-mu[i])/ptDist(c_pts[i,:], c_pts[i+1,:])
@@ -118,6 +128,7 @@ for i in 1:num_pan
 end
 
 cp = 1 .- (pan_vels[:,1].^2 + pan_vels[:,2].^2) ./ U.^2
+cp = 1 .- vel_cpt.^2.0./U.^2
 cpPlot = plot(c_pts[:,1], cp, yflip=true)
 
 ps = cp.*0.5.*rho.*U.^2
