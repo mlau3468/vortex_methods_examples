@@ -111,7 +111,7 @@ function vel_line_vortex_linear_2d_int(p1::AbstractVector{<:Real}, p2::AbstractV
     n = 5
     vec = p2.-p1 # line between the points
     len = dist2D(p1,p2)
-    # ts is coordinate between 0-1 along vec, is also 
+    # ts is coordinate between 0-1 along vec
     ts, weights, scale = quadrature_transform(0, 1, n)
     vela = zeros(eltype(p),2)
     velb = zeros(eltype(p),2)
@@ -121,7 +121,7 @@ function vel_line_vortex_linear_2d_int(p1::AbstractVector{<:Real}, p2::AbstractV
 
         gamb = ts[i]
         velb .+= val.*weights[i]*(gamb)
-        
+
         gama = 1-ts[i]
         vela .+= val.*weights[i]*(gama)
     end
