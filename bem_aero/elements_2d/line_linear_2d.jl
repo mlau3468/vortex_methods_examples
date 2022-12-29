@@ -100,8 +100,9 @@ function pot_line_vortex_linear_2d(p1::AbstractVector{<:Real}, p2::AbstractVecto
     theta1 = atan(z,x)
     theta2 = atan(z, x-x2)
 
-    term1 = -1/(2*pi)*((x-x1)*theta1 - (x-x2)*theta2 + z/2*log(r1_2/r2_2))
-    term2 = -1/(2*pi)*(x*z/2*log(r1^2/r2^2) + z/2*(x1-x2) + (x^2-x1^2-z^2)/2*theta1 - (x^2-x2^2-z^2)/2*theta2)
+    # superposition unit constant and unit ramp
+    term1 = -1/(2*pi)*((x-x1)*theta1 - (x-x2)*theta2 + z/2*log(r1_2/r2_2)) # constant part
+    term2 = -1/(2*pi)*(x*z/2*log(r1^2/r2^2) + z/2*(x1-x2) + (x^2-x1^2-z^2)/2*theta1 - (x^2-x2^2-z^2)/2*theta2) # ramp part
 
     phia = term1 - 1/(x2-x1)*term2
     phib = 1/(x2-x1)*term2
