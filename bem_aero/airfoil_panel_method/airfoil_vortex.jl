@@ -33,8 +33,7 @@ function airfoil_vortex_linear_neumann(pan_vert::Matrix{<:Real}, aoa::Real; num_
                 uw_a, uw_b = vel_line_vortex_linear_midpoint_2d(pan_vert[:,j], pan_vert[:,j+1], false)
             else
                 if num_integrate
-                    uw_a = vel_line_vortex_linear_2d_int(pan_vert[:,j+1], pan_vert[:,j], pan_cpt[:,i])
-                    uw_b = vel_line_vortex_linear_2d_int(pan_vert[:,j], pan_vert[:,j+1], pan_cpt[:,i])
+                    uw_a, uw_b = vel_line_vortex_linear_2d_int(pan_vert[:,j], pan_vert[:,j+1], pan_cpt[:,i])
                 else
                     uw_a, uw_b = vel_line_vortex_linear_2d(pan_vert[:,j], pan_vert[:,j+1], pan_cpt[:,i])
                 end
