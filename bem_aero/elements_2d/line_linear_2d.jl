@@ -18,10 +18,10 @@ function pot_line_doublet_linear_2d(p1::AbstractVector{<:Real}, p2::AbstractVect
     theta1 = atan(z,x)
     theta2 = atan(z, x-x2)
 
-    # phi_a = -1/(2*pi) * (theta2 - theta1 - 1/(x2-x1) * (x*(theta2-theta1) + z/2*log(r2^2/r1^2)))
-    # phi_b = -1/(2*pi*(x2-x1)) * (x*(theta2-theta1) + z/2*log(r2^2/r1^2))
-    phi_a = 1/(2*pi) * (x/x2*(theta2-theta1) + z/x2*log(r2/r1) - (theta2-theta1))
-    phi_b = -1/(2*pi) * (x/x2*(theta2-theta1) + z/x2*log(r2/r1))
+    phi_a = -1/(2*pi) * (theta2 - theta1 - 1/(x2-x1) * (x*(theta2-theta1) + z/2*log(r2^2/r1^2)))
+    phi_b = -1/(2*pi*(x2-x1)) * (x*(theta2-theta1) + z/2*log(r2^2/r1^2))
+    # phi_a = 1/(2*pi) * (x/x2*(theta2-theta1) + z/x2*log(r2/r1) - (theta2-theta1))
+    # phi_b = -1/(2*pi) * (x/x2*(theta2-theta1) + z/x2*log(r2/r1))
     return phi_a, phi_b
 end
 
@@ -41,6 +41,27 @@ function pot_line_doublet_linear_2d_self(p1::AbstractVector{<:Real}, p2::Abstrac
     else
         return phi_a, phi_b
     end
+end
+
+function pot_line_doublet_linear_2d_int(p1::AbstractVector{<:Real}, p2::AbstractVector{<:Real}, p::AbstractVector{<:Real})
+    # Potential induced by linear strength doublet line by numerical integration
+    # First output is influence of unit trength at second node
+    # Second output is influence of unit trength at second node
+    n = 5
+    vec = p2.-p1 # line between the points
+    len = dist2D(p1,p2)
+    # ts is coordinate between 0-1 along vec
+    ts, weights, scale = quadrature_transform(0, 1, n)
+    phia = zero(eltype(p))
+    phib = zero(eltype(p))
+    for i = 1:n
+        p0 = p1 .+ vec.*ts[i]
+        gamb = ts[i]
+        phib += pot_point_doublet_2d(p0, p, vec)*weights[i]*gamb
+        gama = (1-ts[i])
+        phia += pot_point_doublet_2d(p0, p, vec)*weights[i]*gama
+    end
+    return phia,scale*len, phib*scale*len
 end
 
 function vel_line_vortex_linear_2d(p1::AbstractVector{<:Real}, p2::AbstractVector{<:Real}, p::AbstractVector{<:Real})
