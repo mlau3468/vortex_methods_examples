@@ -18,10 +18,10 @@ function pot_line_doublet_linear_2d(p1::AbstractVector{<:Real}, p2::AbstractVect
     theta1 = atan(z,x)
     theta2 = atan(z, x-x2)
 
-    phi_a = -1/(2*pi) * (theta2 - theta1 - 1/(x2-x1) * (x*(theta2-theta1) + z/2*log(r2^2/r1^2)))
-    phi_b = -1/(2*pi*(x2-x1)) * (x*(theta2-theta1) + z/2*log(r2^2/r1^2))
-    # phi_a = 1/(2*pi) * (x/x2*(theta2-theta1) + z/x2*log(r2/r1) - (theta2-theta1))
-    # phi_b = -1/(2*pi) * (x/x2*(theta2-theta1) + z/x2*log(r2/r1))
+    # phi_a = -1/(2*pi) * (theta2 - theta1 - 1/(x2-x1) * (x*(theta2-theta1) + z/2*log(r2^2/r1^2)))
+    # phi_b = -1/(2*pi*(x2-x1)) * (x*(theta2-theta1) + z/2*log(r2^2/r1^2))
+    phi_a = 1/(2*pi) * (x/x2*(theta2-theta1) + z/x2*log(r2/r1) - (theta2-theta1))
+    phi_b = -1/(2*pi) * (x/x2*(theta2-theta1) + z/x2*log(r2/r1))
     return phi_a, phi_b
 end
 
