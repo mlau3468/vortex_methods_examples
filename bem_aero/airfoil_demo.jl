@@ -16,20 +16,21 @@ result5 = airfoil_vortex_linear_neumann(pan_vert, aoa)
 result6 = airfoil_vortex_linear_neumann(pan_vert, aoa, num_integrate=true)
 
 
-cp_plot = plot(yflip=true, legend=:bottomright)
-plot!(cp_plot, result1.pan_cpt[1,:], result1.pan_cp, label="constant source+doublet")
-plot!(cp_plot, result2.pan_cpt[1,:], result2.pan_cp, label="constant doublet (dirichlet)")
-plot!(cp_plot, result3.pan_cpt[1,:], result3.pan_cp, label="constant doublet (neumann)")
+cp_plot_const = plot(yflip=true, legend=:bottomright)
+plot!(cp_plot_const, result1.pan_cpt[1,:], result1.pan_cp, label="source+doublet (dirichlet)")
+plot!(cp_plot_const, result2.pan_cpt[1,:], result2.pan_cp, label="doublet (dirichlet)")
+plot!(cp_plot_const, result3.pan_cpt[1,:], result3.pan_cp, label="doublet (neumann)")
+xlabel!(cp_plot_const, "x")
+ylabel!(cp_plot_const, "cp")
+title!(cp_plot_const, "Constant Elements")
 
-plot!(cp_plot, result4.pan_cpt[1,:], result4.pan_cp, label="linear doublet")
-plot!(cp_plot, result5.pan_cpt[1,:], result5.pan_cp, label="linear vortex")
-plot!(cp_plot, result6.pan_cpt[1,:], result6.pan_cp, label="linear vortex quadrature")
+cp_plot_lin= plot(yflip=true, legend=:bottomright)
+plot!(cp_plot_lin, result4.pan_cpt[1,:], result4.pan_cp, label="doublet (dirichlet)")
+plot!(cp_plot_lin, result5.pan_cpt[1,:], result5.pan_cp, label="vortex (neumann)")
+plot!(cp_plot_lin, result6.pan_cpt[1,:], result6.pan_cp, label="vortex (neumann, quadrature)")
+xlabel!(cp_plot_lin, "x")
+ylabel!(cp_plot_lin, "cp")
+title!(cp_plot_lin, "Linear Elements")
 
-
-xlabel!(cp_plot, "x")
-ylabel!(cp_plot, "cp")
-# ylims!(cp_plot, (-2.0, 2.0))
-
-display(cp_plot)
-
-# plot(pan_vert[1,:], result5.vert_mu[1:end-1])
+display(cp_plot_const)
+display(cp_plot_lin)
