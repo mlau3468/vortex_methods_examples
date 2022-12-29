@@ -131,7 +131,7 @@ function airfoil_doublet_neumann(pan_vert::Matrix{<:Real}, aoa::Real)
     for i = 1:npan
         for j = 1:npan
             if i == j
-                vel = vel_line_doublet_2d_midpoint(pan_vert[:,j], pan_vert[:,j+1], false) # velocity on outside, approach from panel local bottom
+                vel = vel_line_doublet_2d_self(pan_vert[:,j], pan_vert[:,j+1], pan_cpt[:,i], false) # velocity on outside, approach from panel local bottom
             else
                 vel = vel_line_doublet_2d(pan_vert[:,j], pan_vert[:,j+1], pan_cpt[:,i])
             end

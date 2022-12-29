@@ -164,7 +164,7 @@ function vel_line_doublet_2d(p1::AbstractVector{<:Real}, p2::AbstractVector{<:Re
     return vel_global
 end
 
-function vel_line_doublet_2d_midpoint(p1::AbstractVector{<:Real}, p2::AbstractVector{<:Real}, limit_plus::Bool=true)
+function vel_line_doublet_2d_self(p1::AbstractVector{<:Real}, p2::AbstractVector{<:Real}, p::AbstractVector{<:Real}, limit_plus::Bool=true)
     # Velocity induced by unit strength doublet line at its midpoint
     # Velocity expressed in global frame
     # Limit is taken approaching from the positive local y direction by default
@@ -176,10 +176,12 @@ function vel_line_doublet_2d_midpoint(p1::AbstractVector{<:Real}, p2::AbstractVe
     # Express panel points in local panel frame
     x1 = 0
     x2 = dist2D(p1, p2)
+    # x is field point projected onto the local unit vector
+    x = dot(p.-p1, pan_tan)
 
     # Velcoity in local frame
     upanel = 0
-    wpanel = -1/pi*2/(x2-x1)
+    wpanel = -1/(2*pi)*(1/(x-x1) - 1/(x-x2))
     if !limit_plus # approach from bottom instead
         wpanel = -wpanel
     end
