@@ -28,7 +28,7 @@ function airfoil_doublet_linear_dirichlet(pan_vert::Matrix{<:Real}, aoa::Real)
     for i = 1:npan
         for j = 1:npan
             if i == j
-                phi_a, phi_b = pot_line_doublet_linear_2d_self(pan_vert[:,j], pan_vert[:,j+1])
+                phi_a, phi_b = pot_line_doublet_linear_2d_self(pan_vert[:,j], pan_vert[:,j+1], pan_cpt[:,i])
                 phi_a_out, phi_b_out = pot_line_doublet_linear_2d_self(pan_vert[:,j], pan_vert[:,j+1], false)
             else
                 phi_a, phi_b = pot_line_doublet_linear_2d(pan_vert[:,j], pan_vert[:,j+1], pan_cpt[:,i])

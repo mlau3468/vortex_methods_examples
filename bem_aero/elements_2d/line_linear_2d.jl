@@ -28,7 +28,7 @@ function pot_line_doublet_linear_2d(p1::AbstractVector{<:Real}, p2::AbstractVect
     return phi_a, phi_b
 end
 
-function pot_line_doublet_linear_2d_self(p1::AbstractVector{<:Real}, p2::AbstractVector{<:Real}, limit_plus::Bool=true)
+function pot_line_doublet_linear_2d_self(p1::AbstractVector{<:Real}, p2::AbstractVector{<:Real}, p::AbstractVector{<:Real}, limit_plus::Bool=true)
     # Potential induced by linear strength doublet line on itself approached from above
     # Potential is expressed in local element frame
     # First output is influence of unit strength at second node
@@ -37,7 +37,9 @@ function pot_line_doublet_linear_2d_self(p1::AbstractVector{<:Real}, p2::Abstrac
     # Express panel points in local panel frame
     x1 = 0
     x2 = dist2D(p1, p2)
-    x = x2/2
+    # x is field point projected onto the local unit vector
+    unit_vec = calc_line_tan_2d(p1, p2)
+    x = dot(p.-p1, unit_vec)
 
     phi_a = 0.5*(x/x2-1)
     phi_b = -0.5*(x/x2)
@@ -108,6 +110,29 @@ function pot_line_vortex_linear_2d(p1::AbstractVector{<:Real}, p2::AbstractVecto
     phib = 1/(x2-x1)*term2
 
     return phia, phib
+end
+
+function pot_line_vortex_linear_2d_self(p1::AbstractVector{<:Real}, p2::AbstractVector{<:Real}, p::AbstractVector{<:Real}, limit_plus::Bool=true)
+    # Potential induced by linear strength vortex line on itself approached from above
+    # Potential is expressed in local element frame
+    # First output is influence of unit strength at second node
+    # Second output is influence of unit strength at second node
+
+    # Express panel points in local panel frame
+    x1 = 0
+    x2 = dist2D(p1, p2)
+    x = x2/2
+
+
+
+    phia = term1 - 1/(x2-x1)*term2
+    phib = 1/(x2-x1)*term2
+
+    if !limit_plus
+        return -phi_a, -phi_b
+    else
+        return phi_a, phi_b
+    end
 end
 
 function pot_line_vortex_linear_2d_int(p1::AbstractVector{<:Real}, p2::AbstractVector{<:Real}, p::AbstractVector{<:Real}, use_line_coords::Bool=false)
