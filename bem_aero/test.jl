@@ -42,3 +42,15 @@ phi2 = pot_line_vortex_2d_int([1.0;-2.0], [3.0;-1.0], [-4.0;4.0])
 
 # phia, phib = pot_line_vortex_linear_2d([1;1], [2;2], [1;1])
 # phia2, phib2 = pot_line_vortex_linear_2d_self([1;0], [2;2], [1;1])
+
+p1 = [1.0;-2.0]
+p2 = [3.0;-1.0]
+p = [-3.0;4.0]
+function test_func(p)
+    phia, phib  = pot_line_vortex_linear_2d(p1, p2, p)
+    return phib
+end
+
+vela, velb = vel_line_vortex_linear_2d(p1, p2, p)
+vela2, velb2 = vel_line_vortex_linear_2d_ad(p1, p2, p)
+

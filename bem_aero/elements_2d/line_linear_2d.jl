@@ -279,3 +279,25 @@ function vel_line_vortex_linear_2d_int(p1::AbstractVector{<:Real}, p2::AbstractV
     end
     return vela.*scale.*len, velb.*scale.*len
 end
+
+function vel_line_vortex_linear_2d_ad(p1::AbstractVector{<:Real}, p2::AbstractVector{<:Real}, p::AbstractVector{<:Real})
+    # Velocity induced by linear strength vortex line by autodifferentation of potential function
+    # Velocity expressed in global frame
+    # First output is influence of unit strength at second node
+    # Second output is influence of unit strength at second node
+
+    function f_phia(x)
+        phia, phib  = pot_line_vortex_linear_2d(p1, p2, x)
+        return phia
+    end
+
+    function f_phib(x)
+        phia, phib  = pot_line_vortex_linear_2d(p1, p2, x)
+        return phib
+    end
+
+    vela = ForwardDiff.gradient(f_phia, p)
+    velb = ForwardDiff.gradient(f_phib, p)
+
+    return vela, velb
+end
