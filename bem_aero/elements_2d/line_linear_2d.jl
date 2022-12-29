@@ -56,12 +56,15 @@ function pot_line_doublet_linear_2d_int(p1::AbstractVector{<:Real}, p2::Abstract
     phib = zero(eltype(p))
     for i = 1:n
         p0 = p1 .+ vec.*ts[i]
+        pot_point = pot_point_doublet_2d(p0, p, vec)
+
         gamb = ts[i]
-        phib += pot_point_doublet_2d(p0, p, vec)*weights[i]*gamb
+        phib += pot_point*weights[i]*gamb
+
         gama = (1-ts[i])
-        phia += pot_point_doublet_2d(p0, p, vec)*weights[i]*gama
+        phia += pot_point*weights[i]*gama
     end
-    return phia,scale*len, phib*scale*len
+    return phia*scale*len, phib*scale*len
 end
 
 function vel_line_vortex_linear_2d(p1::AbstractVector{<:Real}, p2::AbstractVector{<:Real}, p::AbstractVector{<:Real})
@@ -138,13 +141,13 @@ function vel_line_vortex_linear_2d_int(p1::AbstractVector{<:Real}, p2::AbstractV
     velb = zeros(eltype(p),2)
     for i = 1:n
         p0 = p1 .+ vec.*ts[i]
-        val = vel_point_vortex_2d(p0, p)
+        vel_point = vel_point_vortex_2d(p0, p)
 
         gamb = ts[i]
-        velb .+= val.*weights[i]*(gamb)
+        velb .+= vel_point.*weights[i]*(gamb)
 
         gama = 1-ts[i]
-        vela .+= val.*weights[i]*(gama)
+        vela .+= vel_point.*weights[i]*(gama)
     end
     return vela.*scale.*len, velb.*scale.*len
 end
