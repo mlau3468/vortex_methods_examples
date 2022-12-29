@@ -136,7 +136,7 @@ function pot_line_vortex_linear_2d_int(p1::AbstractVector{<:Real}, p2::AbstractV
         p = [x;z]
     end
 
-    n = 30
+    n = 5
     vec = p2.-p1 # line between the points
     len = dist2D(p1,p2)
     # ts is coordinate between 0-1 along vec

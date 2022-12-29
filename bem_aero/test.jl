@@ -28,5 +28,5 @@ phia2, phib2 = pot_line_vortex_linear_2d_int([0;0], [1;1], [-2.0;2.0])
 
 # quit()
 
-phia, phib = pot_line_vortex_linear_2d([1.0;2.0], [3.0;-1.0], [-4.0;4.0])
-phia2, phib2 = pot_line_vortex_linear_2d_int([1.0;2.0], [3.0;-1.0], [-4.0;4.0], true)
+phia, phib = pot_line_vortex_linear_2d([1.0;-2.0], [3.0;-1.0], [-4.0;4.0])
+phia2, phib2 = pot_line_vortex_linear_2d_int([1.0;-2.0], [3.0;-1.0], [-4.0;4.0], true)
