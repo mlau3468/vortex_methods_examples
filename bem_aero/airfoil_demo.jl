@@ -21,6 +21,7 @@ plot!(cp_plot, result4.pan_cpt[1,:], result4.pan_cp, label="linear vortex quadra
 plot!(cp_plot, result5.pan_cpt[1,:], result5.pan_cp, label="linear doublet")
 xlabel!(cp_plot, "x")
 ylabel!(cp_plot, "cp")
+ylims!(cp_plot, (-2.0, 2.0))
 
 display(cp_plot)
 
