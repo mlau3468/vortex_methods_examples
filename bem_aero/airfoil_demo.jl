@@ -2,8 +2,8 @@ include("singularity_elements.jl")
 using PAGE
 using Plots
 
-pan_vert = naca4(0.00, 0.0, 0.12, nchord=100, spacetype="cos", cosine_weight=1.0)
-aoa = 2
+pan_vert = naca4(0.00, 0.0, 0.12, nchord=50, spacetype="cos", cosine_weight=1.0)
+aoa = 0
 
 result = airfoil_sourcedoublet_dirichlet(pan_vert, aoa)
 result = airfoil_sourcedoublet_dirichlet(pan_vert, aoa, compute_full_potential=true)
@@ -21,3 +21,7 @@ plot!(cp_plot, result4.pan_cpt[1,:], result4.pan_cp, label="linear vortex quadra
 plot!(cp_plot, result5.pan_cpt[1,:], result5.pan_cp, label="linear doublet")
 xlabel!(cp_plot, "x")
 ylabel!(cp_plot, "cp")
+
+display(cp_plot)
+
+# plot(pan_vert[1,:], result5.vert_mu[1:end-1])

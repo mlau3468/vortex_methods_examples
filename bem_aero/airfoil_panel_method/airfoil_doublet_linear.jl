@@ -7,6 +7,7 @@ function airfoil_doublet_linear_dirichlet(pan_vert::Matrix{<:Real}, aoa::Real)
     pan_norm = calc_panel_2d_normals(pan_vert) # panel normals
     pan_tan = calc_panel_2d_tangents(pan_vert) # panel tangents
     pan_len = calc_panel_2d_lengths(pan_vert)
+    display(pan_len)
 
     # Freestream
     U = 1
