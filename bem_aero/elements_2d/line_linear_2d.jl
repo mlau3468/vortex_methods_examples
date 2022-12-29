@@ -1,3 +1,46 @@
+function pot_line_doublet_linear_2d(p1::AbstractVector{<:Real}, p2::AbstractVector{<:Real}, p::AbstractVector{<:Real})
+    # Potential induced by linear strength doublet line
+
+    # line local tangent and normal vectors
+    pan_tan = calc_line_tan_2d(p1,p2)
+    pan_norm = calc_line_norm_2d(p1,p2)
+    
+    # Express field point in local panel frame
+    x = dot(p.-p1, pan_tan)
+    z = dot(p.-p1, pan_norm)
+
+    # Express panel points in local panel frame
+    x1 = 0
+    x2 = dist2D(p1, p2)
+
+    r1 = dist2D(p1, p)
+    r2 = dist2D(p2, p)
+    theta1 = atan(z,x)
+    theta2 = atan(z, x-x2)
+
+    phi_a = -1/(2*pi) * (theta2 - theta1 - 1/(x2-x1) * (x*(theta2-theta1) + z/2*log(r2^2/r1^2)))
+    phi_b = -1/(2*pi*(x2-x1)) * (x*(theta2-theta1) + z/2*log(r2^2/r1^2))
+    return phi_a, phi_b
+end
+
+function pot_line_doublet_linear_2d_self(p1::AbstractVector{<:Real}, p2::AbstractVector{<:Real}, limit_plus::Bool=true)
+    # Potential induced by linear strength doublet line on itself approached from above
+
+    # Express panel points in local panel frame
+    x1 = 0
+    x2 = dist2D(p1, p2)
+    x = x2/2
+
+    phi_a = -0.5*(x/x2-1)
+    phi_b = 0.5*(x/x2)
+
+    if !limit_plus
+        return -phi_a, -phi_b
+    else
+        return phi_a, phi_b
+    end
+end
+
 function vel_line_vortex_linear_2d(p1::AbstractVector{<:Real}, p2::AbstractVector{<:Real}, p::AbstractVector{<:Real})
     # Velocity induced by linear strength vortex line
 

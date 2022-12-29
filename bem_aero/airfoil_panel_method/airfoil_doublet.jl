@@ -43,8 +43,8 @@ function airfoil_doublet_dirichlet(pan_vert::Matrix{<:Real}, aoa::Real; compute_
         A[i,npan] += te
     end
 
-     # Set RHS
-     for i = 1:npan
+    # Set RHS
+    for i = 1:npan
         RHS[i] += -dot(u_vec, pan_cpt[:,i]) # potential due to freestream
     end
 
