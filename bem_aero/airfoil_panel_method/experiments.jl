@@ -59,10 +59,7 @@ function airfoil_vortex_linear_dirichlet(pan_vert::Matrix{<:Real}, aoa::Real; nu
     RHS[end] = 0
 
     vert_gam = A\RHS
-    display(A)
-    display(vert_gam)
-    quit()
-
+    
     # Compute full potential at each collocation point
     pot_cpt = zeros(npan)
     for i = 1:npan
@@ -136,14 +133,21 @@ function airfoil_vortex_linear_dirichlet2(pan_vert::Matrix{<:Real}, aoa::Real)
     A_pot_out = zeros(nvert+1, nvert+1) # Influence coefficeint for potential just outside airfoil
     RHS = zeros(nvert+1)
 
+    pt_add = [0.9;0]
     # Influence coefficients
-    for i = 1:npan
+    for i = 1:npan+1
+        if i == npan+1
+            cpt = pt_add
+        else
+            cpt = pan_cpt[:,i]
+        end
+
         for j = 1:npan
             if i == j
-                phi_a, phi_b = pot_line_vortex_linear_2d_self(pan_vert[:,j], pan_vert[:,j+1], pan_cpt[:,i])
-                phi_a_out, phi_b_out = pot_line_vortex_linear_2d_self(pan_vert[:,j], pan_vert[:,j+1], pan_cpt[:,i], false)
+                phi_a, phi_b = pot_line_vortex_linear_2d_self(pan_vert[:,j], pan_vert[:,j+1], cpt)
+                phi_a_out, phi_b_out = pot_line_vortex_linear_2d_self(pan_vert[:,j], pan_vert[:,j+1], cpt, false)
             else
-                phi_a, phi_b = pot_line_vortex_linear_2d(pan_vert[:,j], pan_vert[:,j+1], pan_cpt[:,i])
+                phi_a, phi_b = pot_line_vortex_linear_2d(pan_vert[:,j], pan_vert[:,j+1], cpt)
                 phi_a_out = phi_a
                 phi_b_out = phi_b
             end
@@ -153,8 +157,9 @@ function airfoil_vortex_linear_dirichlet2(pan_vert::Matrix{<:Real}, aoa::Real)
             A_pot_out[i,j] += phi_a_out
             A_pot_out[i,j+1] += phi_b_out
         end
+
         # wake panel
-        A[i,nvert+1] += pot_line_vortex_2d(pan_vert[:,1], [1e3;0], pan_cpt[:,i])
+        A[i,nvert+1] += pot_line_vortex_2d(pan_vert[:,1], [1e3;0], cpt)
         A_pot_out[i,nvert+1] = A[i,nvert+1]
     end
 
@@ -163,17 +168,25 @@ function airfoil_vortex_linear_dirichlet2(pan_vert::Matrix{<:Real}, aoa::Real)
         RHS[i] = -dot(u_vec, pan_cpt[:,i]) # potential due to freestream
     end
 
+    RHS[nvert] = -dot(u_vec, pt_add)
+
     # Kutta condition
-    A[nvert,1] = 1
-    A[nvert,nvert] = -1
-    A[nvert,nvert+1] = 1
+    # A[nvert,1] = 1
+    # A[nvert,nvert] = -1
+    # A[nvert,nvert+1] = 1
 
-    A[nvert+1,1] = -1
-    A[nvert+1,2] = 1
-    A[nvert+1,nvert-1] = 1
+    # A[nvert+1,1] = -1
+    # A[nvert+1,2] = 1
+    # A[nvert+1,nvert-1] = 1
+    # A[nvert+1,nvert] = -1
+
+    # RHS[nvert] = 0
+    # RHS[nvert+1] = 0
+
+    # Kutta condition 2
+    A[nvert+1,1] = 1
     A[nvert+1,nvert] = -1
-
-    RHS[nvert] = 0
+    A[nvert+1,nvert+1] = 1
     RHS[nvert+1] = 0
 
     # Solve linear system

@@ -28,14 +28,14 @@ phia2, phib2 = pot_line_vortex_linear_2d_int([0;0], [1;1], [-2.0;2.0])
 
 # quit()
 
-phia, phib = pot_line_doublet_linear_2d([1.0;-2.0], [3.0;-1.0], [-4.0;4.0])
-phia2, phib2 = pot_line_doublet_linear_2d_int([1.0;-2.0], [3.0;-1.0], [-4.0;4.0])
+phia, phib = pot_line_vortex_linear_2d([0;0], [1;0], [0.5;0])
+phia2, phib2 = pot_line_vortex_linear_2d_self([0;0], [1;0], [0.5;0])
 
-phi1 = pot_line_source_2d([1.0;-2.0], [3.0;-1.0], [-4.0;4.0])
-phi2 = pot_line_source_2d_int([1.0;-2.0], [3.0;-1.0], [-4.0;4.0])
+# phi1 = pot_line_source_2d([1.0;-2.0], [3.0;-1.0], [-4.0;4.0])
+# phi2 = pot_line_source_2d_int([1.0;-2.0], [3.0;-1.0], [-4.0;4.0])
 
-phi1 = pot_line_vortex_2d([1.0;-2.0], [3.0;-1.0], [-4.0;4.0])
-phi2 = pot_line_vortex_2d_int([1.0;-2.0], [3.0;-1.0], [-4.0;4.0])
+# phi1 = pot_line_vortex_2d([1.0;-2.0], [3.0;-1.0], [-4.0;4.0])
+# phi2 = pot_line_vortex_2d_int([1.0;-2.0], [3.0;-1.0], [-4.0;4.0])
 
 # phi = pot_line_vortex_2d([0;0], [2;2], [1;1])
 # phi2 = pot_line_vortex_2d_self([0;0], [2;2], [1;1])
