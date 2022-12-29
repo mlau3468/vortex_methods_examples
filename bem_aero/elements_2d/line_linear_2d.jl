@@ -219,7 +219,7 @@ function vel_line_vortex_linear_2d(p1::AbstractVector{<:Real}, p2::AbstractVecto
     return vel_global_a, vel_global_b
 end
 
-function vel_line_vortex_linear_midpoint_2d(p1::AbstractVector{<:Real}, p2::AbstractVector{<:Real}, limit_plus::Bool=true)
+function vel_line_vortex_linear_2d_self(p1::AbstractVector{<:Real}, p2::AbstractVector{<:Real}, p::AbstractVector{<:Real}, limit_plus::Bool=true)
     # Velocity induced by linear strength vortex line at own midpoint approached from above
     # Velocity expressed in global frame
     # First output is influence of unit strength at second node
@@ -231,7 +231,8 @@ function vel_line_vortex_linear_midpoint_2d(p1::AbstractVector{<:Real}, p2::Abst
     pan_len = dist2D(p1, p2)
 
     x2 = pan_len
-    x = pan_len/2
+    # x is field point projected onto the local unit vector
+    x = dot(p.-p1, pan_tan)
 
     # Velocity in panel local frame
     upanel_a = -0.5*(x-x2)/(x2)
