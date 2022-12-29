@@ -67,6 +67,79 @@ function pot_line_doublet_linear_2d_int(p1::AbstractVector{<:Real}, p2::Abstract
     return phia*scale*len, phib*scale*len
 end
 
+function pot_line_vortex_linear_2d(p1::AbstractVector{<:Real}, p2::AbstractVector{<:Real}, p::AbstractVector{<:Real})
+    # line local tangent and normal vectors
+    pan_tan = calc_line_tan_2d(p1,p2)
+    pan_norm = calc_line_norm_2d(p1,p2)
+    
+    # Express field point in local panel frame
+    x = dot(p.-p1, pan_tan)
+    z = dot(p.-p1, pan_norm)
+
+    # Express panel points in local panel frame
+    x1 = 0
+    x2 = dist2D(p1, p2)
+
+    r1 = dist2D(p1, p)
+    r2 = dist2D(p2, p)
+    r1_2 = r1^2
+    r2_2 = r2^2
+    theta1 = atan(z,x)
+    theta2 = atan(z, x-x2)
+
+    term1 = -1/(2*pi)*((x-x1)*theta1 - (x-x2)*theta2 + z/2*log(r1_2/r2_2))
+    term2 = -1/(2*pi)*(x*z/2*log(r1^2/r2^2) + z/2*(x1-x2) + (x^2-x1^2-z^2)/2*theta1 - (x^2-x2^2-z^2)/2*theta2)
+
+    phia = term1 - 1/(x2-x1)*term2
+    phib = 1/(x2-x1)*term2
+
+    return phia, phib
+end
+
+function pot_line_vortex_linear_2d_int(p1::AbstractVector{<:Real}, p2::AbstractVector{<:Real}, p::AbstractVector{<:Real}, use_line_coords::Bool=false)
+     # Potential induced by linear strength doublet line by numerical integration
+    # First output is influence of unit trength at second node
+    # Second output is influence of unit trength at second node
+    # line local tangent and normal vectors
+    pan_tan = calc_line_tan_2d(p1,p2)
+    pan_norm = calc_line_norm_2d(p1,p2)
+
+    if use_line_coords
+        # Compute potential in local line coordinate frame. Note that when coordinate frames are rotated, 
+        # the potential field is offset by a constant
+        # Express field point in local panel frame
+        x = dot(p.-p1, pan_tan)
+        z = dot(p.-p1, pan_norm)
+
+        # Express panel points in local panel frame
+        x1 = 0
+        x2 = dist2D(p1, p2)
+
+        p1 = [x1;0]
+        p2 = [x2;0]
+        p = [x;z]
+    end
+
+    n = 30
+    vec = p2.-p1 # line between the points
+    len = dist2D(p1,p2)
+    # ts is coordinate between 0-1 along vec
+    ts, weights, scale = quadrature_transform(0, 1, n)
+    phia = zero(eltype(p))
+    phib = zero(eltype(p))
+    for i = 1:n
+        p0 = p1 .+ vec.*ts[i]
+        pot_point = pot_point_vortex_2d(p0, p)
+
+        gamb = ts[i]
+        phib += pot_point*weights[i]*gamb
+
+        gama = (1-ts[i])
+        phia += pot_point*weights[i]*gama
+    end
+    return phia*scale*len, phib*scale*len
+end
+
 function vel_line_vortex_linear_2d(p1::AbstractVector{<:Real}, p2::AbstractVector{<:Real}, p::AbstractVector{<:Real})
     # Velocity induced by linear strength vortex line
 
