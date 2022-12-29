@@ -1,4 +1,4 @@
-include("singularity_elements.jl")
+include("bem_aero.jl")
 using PAGE
 using Plots
 
