@@ -123,16 +123,17 @@ function pot_line_vortex_linear_2d_self(p1::AbstractVector{<:Real}, p2::Abstract
     unit_vec = calc_line_tan_2d(p1, p2)
     x = dot(p.-p1, unit_vec)
 
-    # superposition unit constant and unit ramp
-    term1 = # constant part
+    # superposition unit constant and unit ramp. The below can be mathematically simplified
+    term1 = pot_line_vortex_2d_self(p1, p2, p) # constant part
+    term2 = 1/4*(x^2-x2^2)
 
     phia = term1 - 1/(x2-x1)*term2
     phib = 1/(x2-x1)*term2
 
     if !limit_plus
-        return -phi_a, -phi_b
+        return -phia, -phib
     else
-        return phi_a, phi_b
+        return phia, phib
     end
 end
 
