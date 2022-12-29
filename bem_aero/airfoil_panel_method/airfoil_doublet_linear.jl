@@ -25,38 +25,53 @@ function airfoil_doublet_linear_dirichlet(pan_vert::Matrix{<:Real}, aoa::Real)
     # A_pot_out = zeros(nvert+1, nvert+1) # Influence coefficeint for potential just outside airfoil
     RHS = zeros(nvert+1)
 
+    pt_add = (pan_cpt[:,1] .+ pan_cpt[:,npan])./2
     # Influence coefficients
-    for i = 1:npan
+    for i = 1:npan+1
+        if i == npan+1
+            cpt = pt_add
+        else
+            cpt = pan_cpt[:,i]
+        end
         for j = 1:npan
             if i == j
-                phi_a, phi_b = pot_line_doublet_linear_2d_self(pan_vert[:,j], pan_vert[:,j+1], false)
+                phi_a, phi_b = pot_line_doublet_linear_2d_self(pan_vert[:,j], pan_vert[:,j+1])
             else
-                phi_a, phi_b = pot_line_doublet_linear_2d(pan_vert[:,j], pan_vert[:,j+1], pan_cpt[:,i])
+                phi_a, phi_b = pot_line_doublet_linear_2d(pan_vert[:,j], pan_vert[:,j+1], cpt)
             end
             A[i,j] += phi_a
             A[i,j+1] += phi_b
         end
         # trailing edge
-        A[i,nvert+1] = pot_line_doublet_2d(pan_vert[:,1], [1e3;0], pan_cpt[:,i])
+        A[i,nvert+1] += pot_line_doublet_2d(pan_vert[:,1], [1e3;0], cpt)
     end
 
     # Set RHS
     for i = 1:npan
-        RHS[i] += -dot(u_vec, pan_cpt[:,i]) # potential due to freestream
+        RHS[i] = -dot(u_vec, pan_cpt[:,i]) # potential due to freestream
     end
+    RHS[npan+1] = -dot(u_vec, pt_add)
 
     # Kutta condition
-    A[nvert,1] = 1
-    A[nvert,nvert] = -1
-    A[nvert,nvert+1] = 1
+    # A[nvert,1] = 1
+    # A[nvert,nvert] = -1
+    # A[nvert,nvert+1] = 1
 
-    A[nvert+1,1] = -1
-    A[nvert+1,2] = 1
-    A[nvert+1,nvert-1] = 1
+    # A[nvert+1,1] = -1
+    # A[nvert+1,2] = 1
+    # A[nvert+1,nvert-1] = 1
+    # A[nvert+1,nvert] = -1
+
+    # RHS[nvert+1] = 0
+    # RHS[nvert+1] = 0
+
+    A[nvert+1,1] = 1
     A[nvert+1,nvert] = -1
+    A[nvert+1,nvert+1] = 1
     RHS[nvert+1] = 0
 
     display(A)
+    display(RHS)
     
     # Solve linear system
     vert_mu = A\RHS

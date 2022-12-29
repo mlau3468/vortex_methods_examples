@@ -3,7 +3,7 @@ using PAGE
 using Plots
 
 pan_vert = naca4(0.00, 0.0, 0.12, nchord=50, spacetype="cos", cosine_weight=1.0)
-aoa = 0
+aoa = 2
 
 result = airfoil_sourcedoublet_dirichlet(pan_vert, aoa)
 result = airfoil_sourcedoublet_dirichlet(pan_vert, aoa, compute_full_potential=true)
