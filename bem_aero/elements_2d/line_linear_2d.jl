@@ -106,17 +106,24 @@ end
 
 function vel_line_vortex_linear_2d_int(p1::AbstractVector{<:Real}, p2::AbstractVector{<:Real}, p::AbstractVector{<:Real})
     # Velocity induced by unit linear strength vortex line by numerical integration
-    # strength ramps from 0 to 1
+    # First output is influence of unit trength at second node
+    # Second output is influence of unit trength at second node
     n = 5
     vec = p2.-p1 # line between the points
     len = dist2D(p1,p2)
-    # ts is coordinate between 0-1 along vec
+    # ts is coordinate between 0-1 along vec, is also 
     ts, weights, scale = quadrature_transform(0, 1, n)
-    val = zeros(eltype(p),2)
+    vela = zeros(eltype(p),2)
+    velb = zeros(eltype(p),2)
     for i = 1:n
         p0 = p1 .+ vec.*ts[i]
-        gam = ts[i]
-        val .+= vel_point_vortex_2d(p0, p)*weights[i]*gam
-        end
-    return val.*scale.*len
+        val = vel_point_vortex_2d(p0, p)
+
+        gamb = ts[i]
+        velb .+= val.*weights[i]*(gamb)
+        
+        gama = 1-ts[i]
+        vela .+= val.*weights[i]*(gama)
+    end
+    return vela.*scale.*len, velb.*scale.*len
 end
