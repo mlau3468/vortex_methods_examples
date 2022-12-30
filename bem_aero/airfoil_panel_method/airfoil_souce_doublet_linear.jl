@@ -1,4 +1,5 @@
-function airfoil_doublet_linear_dirichlet(pan_vert::Matrix{<:Real}, aoa::Real)
+
+function airfoil_source_doublet_linear_dirichlet(pan_vert::Matrix{<:Real}, aoa::Real)
     nvert = size(pan_vert,2)
     npan = nvert - 1
 
@@ -20,8 +21,9 @@ function airfoil_doublet_linear_dirichlet(pan_vert::Matrix{<:Real}, aoa::Real)
     u_vec[1] = cos(alf)
     u_vec[2] = sin(alf)
 
-    A = zeros(nvert+1, nvert+1) # Influence coefficent for potential just inside airfoil
-    A_pot_out = zeros(nvert+1, nvert+1) # Influence coefficeint for potential just outside airfoil
+    A = zeros(nvert+1, nvert+1) # Influence coefficents for potential just inside airfoil
+    A_pot_out = zeros(nvert+1, nvert+1) # Influence coefficents for potential just outside airfoil
+    B = zeros(npan, npan) # source panel influence coefficents
     RHS = zeros(nvert+1)
 
     # Influence coefficients
@@ -46,9 +48,24 @@ function airfoil_doublet_linear_dirichlet(pan_vert::Matrix{<:Real}, aoa::Real)
         A_pot_out[i,nvert+1] = A[i,nvert+1]
     end
 
-    # Set RHS
+    # Source panel influence coefficeints
     for i = 1:npan
-        RHS[i] = -dot(u_vec, pan_cpt[:,i]) # potential due to freestream
+        for j = 1:npan
+            B[i,j] = pot_line_source_2d(pan_vert[:,j], pan_vert[:,j+1],  pan_cpt[:,i])
+        end
+    end
+
+    # Source strengths
+    # Source strengths selected such that the internal velocity potential is equal to the 
+    # freestream velocity potential
+    pan_source = zeros(npan)
+    for i = 1:npan
+        pan_source[i] = dot(calc_line_norm_2d(pan_vert[:,i], pan_vert[:,i+1]), u_vec)
+    end
+
+    #Set RHS
+    for i = 1:npan
+        RHS[i] = -dot(B[i,:], pan_source) # source panel
     end
 
     # Kutta condition
@@ -68,9 +85,9 @@ function airfoil_doublet_linear_dirichlet(pan_vert::Matrix{<:Real}, aoa::Real)
     vert_mu = A\RHS
 
     # potential on outside of surface
-    pot_cpt_out = calc_potential_outer(A_pot_out, vert_mu, pan_cpt, u_vec)
+    pot_cpt_out = calc_potential_outer(A_pot_out, B, vert_mu, pan_source, pan_cpt, u_vec)
     # potential on inside of surface
-    pot_cpt_in = calc_potential_inner(A, vert_mu, pan_cpt, u_vec)
+    pot_cpt_in = calc_potential_inner(A, B, vert_mu, pan_source, pan_cpt, u_vec)
     # freestream potential on boundary collocation points
     pot_freestream = calc_potential_freestream(pan_cpt, u_vec)
 
@@ -80,9 +97,9 @@ function airfoil_doublet_linear_dirichlet(pan_vert::Matrix{<:Real}, aoa::Real)
     # The following results in a noisy derivative
     # vel_cpt2 = zeros(npan)
     # for i = 1:npan
-    #     dphia, dphib = d_pot_line_doublet_linear_2d_self(pan_vert[:,i], pan_vert[:,i+1], pan_cpt[:,i], false)
-    #     vel_cpt2[i] = (dphia*vert_mu[i] + dphib*vert_mu[i+1])
-    #     vel_cpt2[i] = (vert_mu[i+1] - vert_mu[i])/pan_len[i]
+    #     # dphia, dphib = d_pot_line_doublet_linear_2d_self(pan_vert[:,i], pan_vert[:,i+1], pan_cpt[:,i], false)
+    #     #vel_cpt2[i] = (dphia*vert_mu[i] + dphib*vert_mu[i+1]) + dot(u_vec, pan_tan[:,i])
+    #     vel_cpt2[i] = (vert_mu[i+1] - vert_mu[i])/pan_len[i] + dot(u_vec, pan_tan[:,i])
     # end
 
     # pressure at panels

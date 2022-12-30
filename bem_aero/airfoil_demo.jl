@@ -12,6 +12,7 @@ result2 = airfoil_doublet_dirichlet(pan_vert, aoa, compute_full_potential=true)
 result3 = airfoil_doublet_neumann(pan_vert, aoa)
 
 result4 = airfoil_doublet_linear_dirichlet(pan_vert, aoa)
+# result4 = airfoil_source_doublet_linear_dirichlet(pan_vert, aoa)
 result5 = airfoil_vortex_linear_neumann(pan_vert, aoa)
 result6 = airfoil_vortex_linear_neumann(pan_vert, aoa, num_integrate=true)
 
