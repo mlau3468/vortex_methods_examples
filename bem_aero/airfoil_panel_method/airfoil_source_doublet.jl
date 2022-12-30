@@ -71,14 +71,17 @@ function airfoil_sourcedoublet_dirichlet(pan_vert::Matrix{<:Real}, aoa::Real; co
     pot_freestream = calc_potential_freestream(pan_cpt, u_vec)
 
     # Velocity along the surface of airfoil is differentiation of potential
-    # note dot(u_vec, pan_tan[:,i]) is needed as this is a pertubation potential formulation
-    # dot(u_vec, pan_tan[:,i]) includes the effect of the gradient of freestream potential function
-    if compute_full_potential
-        vel_cpt = calc_vel_from_potential(pot_cpt_out, pan_cpt)
-    else
-        vel_cpt = calc_vel_from_doublet_strength(pan_mu, pan_cpt)
+    vel_cpt = calc_vel_from_potential(pot_cpt_out, pan_cpt)
+
+    # Alternatively, the velocity can be found by first considering the contribution of the perturbation potential due to the 
+    # doublets, computed by the line below. 
+    use_below = false
+    if use_below
+        vel_cpt = calc_vel_from_const_doublet_panels(pan_mu, pan_cpt)
+        # As the perturbation was performed on top of the freestream potential,
+        # the velocity contirbution due to the freestream potential is added.
         for i = 1:npan
-            vel_cpt[i] += dot(u_vec, pan_tan[:,i])
+            vel_cpt[i] += dot(u_vec, pan_tan[:,i]) # note that the freestream velocity vectors is by definition the derivative of the freestream potential
         end
     end
 

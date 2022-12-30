@@ -50,7 +50,7 @@ function calc_vel_from_potential(pot_cpt_out::Vector{<:Real}, pan_cpt::Matrix{<:
     return vel_cpt
 end
 
-function calc_vel_from_doublet_strength(pan_mu::Vector{<:Real}, pan_cpt::Matrix{<:Real})
+function calc_vel_from_const_doublet_panels(pan_mu::Vector{<:Real}, pan_cpt::Matrix{<:Real})
     npan = size(pan_cpt,2)
     vel_vec = zeros(npan-1)
     for i = 1:npan-1

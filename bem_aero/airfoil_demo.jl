@@ -3,12 +3,10 @@ using PAGE
 using Plots
 
 pan_vert = naca4(0.00, 0.0, 0.12, nchord=100, spacetype="cos", cosine_weight=1.0)
-aoa = 2
+aoa = 0
 
 result1 = airfoil_sourcedoublet_dirichlet(pan_vert, aoa)
-result1 = airfoil_sourcedoublet_dirichlet(pan_vert, aoa, compute_full_potential=true)
 result2 = airfoil_doublet_dirichlet(pan_vert, aoa)
-result2 = airfoil_doublet_dirichlet(pan_vert, aoa, compute_full_potential=true)
 result3 = airfoil_doublet_neumann(pan_vert, aoa)
 
 result4 = airfoil_doublet_linear_dirichlet(pan_vert, aoa)

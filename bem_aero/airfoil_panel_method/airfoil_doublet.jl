@@ -1,6 +1,4 @@
-function airfoil_doublet_dirichlet(pan_vert::Matrix{<:Real}, aoa::Real; compute_full_potential::Bool=false)
-    # set compute_full_potential to true to compute full potential and take derivative to get velocity
-
+function airfoil_doublet_dirichlet(pan_vert::Matrix{<:Real}, aoa::Real)
     npan = size(pan_vert,2) - 1
 
     # Compute panel properties
@@ -61,11 +59,15 @@ function airfoil_doublet_dirichlet(pan_vert::Matrix{<:Real}, aoa::Real; compute_
     # freestream potential on boundary collocation points
     pot_freestream = calc_potential_freestream(pan_cpt, u_vec)
 
-    # Approximate velocity at collocation points
-    if compute_full_potential
-        vel_cpt = calc_vel_from_potential(pot_cpt_out, pan_cpt)
-    else
-        vel_cpt = calc_vel_from_doublet_strength(pan_mu, pan_cpt)
+    # Approximate velocity at collocation points using velocity potential field
+    vel_cpt = calc_vel_from_potential(pot_cpt_out, pan_cpt)
+
+    # Alternatively, the velocity can be found by considering different jumps in potential, as per the textbook.
+    # The potential perturbation due to the doublet is performed over a potential=0 field, so the freestream 
+    # contribution is already baked in.
+    use_below = false
+    if use_below
+        vel_cpt = calc_vel_from_const_doublet_panels(pan_mu, pan_cpt)
     end
 
     # pressure at panels
