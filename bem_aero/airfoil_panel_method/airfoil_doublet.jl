@@ -146,23 +146,23 @@ function airfoil_doublet_neumann(pan_vert::Matrix{<:Real}, aoa::Real)
     pan_tan = pan_tan[:, keep_idx2]
     pan_len = pan_len[keep_idx2]
 
-    pan_gam = A\RHS
+    pan_mu = A\RHS
 
     # Velocity at collocation points
     vel_cpt = zeros(npan)
     for i = 1:npan
-        vel_cpt[i] = dot(B[i,:], pan_gam) + dot(u_vec, pan_tan[:,i])
+        vel_cpt[i] = dot(B[i,:], pan_mu) + dot(u_vec, pan_tan[:,i])
         # add contribution of eq 11.38 pg 288, 0.5*dmu/dl. Tangent velocity on itself by
         # reconstructing change in potential along airfoil surface despite having constant strength elements
         if i == 1
             l = dist2D(pan_cpt[:,i], pan_cpt[:,i+1])
-            vel_cpt[i] += 0.5*(pan_gam[i+1] - pan_gam[i])/l
+            vel_cpt[i] += 0.5*(pan_mu[i+1] - pan_mu[i])/l
         elseif i == npan
             l = dist2D(pan_cpt[:,i-1], pan_cpt[:,i])
-            vel_cpt[i] += 0.5*(pan_gam[i] - pan_gam[i-1])/l
+            vel_cpt[i] += 0.5*(pan_mu[i] - pan_mu[i-1])/l
         else
             l = dist2D(pan_cpt[:,i-1], pan_cpt[:,i+1])
-            vel_cpt[i] += 0.5*(pan_gam[i+1] - pan_gam[i-1])/l
+            vel_cpt[i] += 0.5*(pan_mu[i+1] - pan_mu[i-1])/l
         end
     end
 
@@ -179,6 +179,41 @@ function airfoil_doublet_neumann(pan_vert::Matrix{<:Real}, aoa::Real)
     lift = sum(pan_force[2,:])
     cl = lift/0.5/rho/U^2/chord
 
-    result = (cl=cl, pan_cp=pan_cp, pan_pres=pan_pres, vel_cpt=vel_cpt, pan_gam=pan_gam, pan_cpt=pan_cpt)
+    result = (cl=cl, pan_cp=pan_cp, pan_pres=pan_pres, vel_cpt=vel_cpt, pan_gam=pan_mu, pan_cpt=pan_cpt)
+
+
+    # A = zeros(npan, npan) # Influence coefficent for potential just inside airfoil
+    # A_pot_out = zeros(npan, npan) # Influence coefficeint for potential just outside airfoil
+    # RHS = zeros(npan)
+
+    # # Influence coefficients of doublet
+    # for i = 1:npan
+    #     for j = 1:npan
+    #         if i == j
+    #             A[i,j] = pot_line_doublet_2d_self() # limit approaching from inside airfoil
+    #             A_pot_out[i,j] = pot_line_doublet_2d_self(false) # limit approaching from outside airfoil
+    #         else
+    #             A[i,j] = pot_line_doublet_2d(pan_vert[:,j], pan_vert[:,j+1], pan_cpt[:,i])
+    #             A_pot_out[i,j] = A[i,j]
+    #         end
+    #     end
+    #     # trailing edge influence
+    #     te = pot_line_doublet_2d(pan_vert[:,1], [1e3;0.0], pan_cpt[:,i])
+    #     # kutta condition
+    #     A[i,1] -= te
+    #     A[i,npan] += te
+    # end
+
+    # # potential on outside of surface
+    # display(A_pot_out)
+    # display(pan_mu)
+    # pot_cpt_out = calc_potential_outer(A_pot_out, pan_mu, pan_cpt, u_vec)
+    # # potential on inside of surface
+    # pot_cpt_in = calc_potential_inner(A, pan_mu, pan_cpt, u_vec)
+    # # freestream potential on boundary collocation points
+    # pot_freestream = calc_potential_freestream(pan_cpt, u_vec)
+
+    # quit()
+
     return result
 end
