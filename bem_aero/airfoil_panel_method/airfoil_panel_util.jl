@@ -37,3 +37,69 @@ function calc_panel_2d_lengths(pan_vert::Matrix{<:Real})
     end
     return pan_len
 end
+
+function calc_vel_from_potential(pot_cpt_out::Vector{<:Real}, pan_cpt::Matrix{<:Real})
+    npan = size(pan_cpt,2)
+    vel_vec = zeros(npan-1)
+    for i = 1:npan-1
+        # finite difference in panel tangent direction
+        l = dist2D(pan_cpt[:,i], pan_cpt[:,i+1])
+        vel_vec[i] = (pot_cpt_out[i+1] - pot_cpt_out[i])/l
+    end
+    vel_cpt = rebuild_vel_cpt(vel_vec)
+    return vel_cpt
+end
+
+function calc_vel_from_doublet_strength(pan_mu::Vector{<:Real}, pan_cpt::Matrix{<:Real})
+    npan = length(pan_mu)
+    vel_vec = zeros(npan-1)
+    for i = 1:npan-1
+        # finite difference in panel tangent direction
+        l = dist2D(pan_cpt[:,i], pan_cpt[:,i+1])
+        vel_vec[i] = (pan_mu[i+1] - pan_mu[i])/l
+    end
+    vel_cpt = rebuild_vel_cpt(vel_vec)
+    return vel_cpt
+end
+
+function rebuild_vel_cpt(vel_vec::Vector{<:Real})
+    npan = length(vel_vec) + 1
+    vel_cpt = zeros(npan)
+    for i = 1:npan
+        if i == 1
+            vel_cpt[i] = vel_vec[i]
+        elseif i == npan
+            vel_cpt[i] = vel_vec[i-1]
+        else
+            vel_cpt[i] = (vel_vec[i-1] + vel_vec[i])/2
+        end
+    end
+    return vel_cpt
+end
+
+function calc_pan_pressure(vel_cpt::Vector{<:Real}, rho::Real, p0::Real)
+    npan = length(vel_cpt)
+    pan_pres = zeros(npan)
+    for i = 1:npan
+        pan_pres[i] = p0-0.5*rho*vel_cpt[i]^2
+    end
+    return pan_pres
+end
+
+function calc_pan_cp(pan_pres::Vector{<:Real}, rho::Real, Uinf::Real)
+    npan = length(pan_pres)
+    pan_cp = zeros(npan)
+    for i = 1:npan
+        pan_cp[i] = pan_pres[i]/(0.5*rho*Uinf^2)
+    end
+    return pan_cp
+end
+
+function calc_pan_force(pan_pres::Vector{<:Real}, pan_len::Vector{<:Real}, pan_norm::Matrix{<:Real})
+    npan = length(pan_pres)
+    pan_force = zeros(2, npan)
+    for i = 1:npan
+        pan_force[:,i] .= -pan_pres[i]*pan_len[i] .* pan_norm[:,i]
+    end
+    return pan_force
+end
