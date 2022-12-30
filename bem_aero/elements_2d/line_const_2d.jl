@@ -70,6 +70,36 @@ function vel_line_source_2d(p1::AbstractVector{<:Real}, p2::AbstractVector{<:Rea
     return vel_global
 end
 
+function vel_line_source_2d_self(p1::AbstractVector{<:Real}, p2::AbstractVector{<:Real}, p::AbstractVector{<:Real}, limit_plus::Bool=true)
+    # Velocity induced by unit strength source line on itself approached from the bottom
+    # Velocity expressed in global frame
+    # pg 234 eq 10.23, 10.24
+    
+    # line local tangent and normal vectors
+    pan_tan = calc_line_tan_2d(p1,p2)
+    pan_norm = calc_line_norm_2d(p1,p2)
+
+    # Express field point in local panel frame
+    x = dot(p.-p1, pan_tan)
+    z = dot(p.-p1, pan_norm)
+
+    # Express panel points in local panel frame
+    x1 = 0
+    x2 = dist2D(p1, p2)
+
+    # Velocity in the panel local frame
+    upanel = 1/(2*pi)*log((x-x1)/abs(x-x2))
+    wpanel = 1/2
+    if !limit_plus # approach from bottom instead
+        upanel = -upanel
+        wpanel = -wpanel
+    end
+
+    # Velocity in global frame
+    vel_global = upanel.*pan_tan .+ wpanel.*pan_norm
+    return vel_global
+end
+
 function vel_line_source_2d_int(p1::AbstractVector{<:Real}, p2::AbstractVector{<:Real}, p::AbstractVector{<:Real})
     # Velocity induced by unit strength source line by numerical integration
     # Velocity expressed in global frame
