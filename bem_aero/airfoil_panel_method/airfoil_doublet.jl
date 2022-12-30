@@ -21,9 +21,9 @@ function airfoil_doublet_dirichlet(pan_vert::Matrix{<:Real}, aoa::Real; compute_
     u_vec[1] = cos(alf)
     u_vec[2] = sin(alf)
 
-    A = zeros(npan, npan) # Influence coefficent for potential just inside airfoil
-    A_pot_out = zeros(npan, npan) # Influence coefficeint for potential just outside airfoil
-    RHS = zeros(npan)
+    A = zeros(npan+1, npan+1) # Influence coefficent for potential just inside airfoil
+    A_pot_out = zeros(npan+1, npan+1) # Influence coefficeint for potential just outside airfoil
+    RHS = zeros(npan+1)
 
     # Influence coefficients of doublet
     for i = 1:npan
@@ -37,16 +37,19 @@ function airfoil_doublet_dirichlet(pan_vert::Matrix{<:Real}, aoa::Real; compute_
             end
         end
         # trailing edge influence
-        te = pot_line_doublet_2d(pan_vert[:,1], [1e3;0.0], pan_cpt[:,i])
-        # kutta condition
-        A[i,1] -= te
-        A[i,npan] += te
+        A[i,npan+1] = pot_line_doublet_2d(pan_vert[:,1], [1e3;0.0], pan_cpt[:,i])
     end
 
     # Set RHS
     for i = 1:npan
         RHS[i] += -dot(u_vec, pan_cpt[:,i]) # potential due to freestream
     end
+
+    # Kutta condition
+    A[npan+1,1] = 1
+    A[npan+1,npan] = -1
+    A[npan+1,npan+1] = 1
+    RHS[npan+1] = 0
 
     # Solve linear system
     pan_mu = A\RHS
