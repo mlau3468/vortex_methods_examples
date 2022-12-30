@@ -105,7 +105,7 @@ function calc_pan_force(pan_pres::Vector{<:Real}, pan_len::Vector{<:Real}, pan_n
 end
 
 function calc_potential_inner(A_pot_in::Matrix{<:Real}, pan_strength::Vector{<:Real}, pan_cpt::Matrix{<:Real}, u_vec::Vector{<:Real})
-    npan = length(pan_strength)
+    npan = size(pan_cpt,2)
     pot_cpt_in = zeros(npan) # potential on inside of surface
     for i = 1:npan
         pot_cpt_in[i] = dot(A_pot_in[i,:], pan_strength) + dot(u_vec, pan_cpt[:,i])
@@ -114,7 +114,7 @@ function calc_potential_inner(A_pot_in::Matrix{<:Real}, pan_strength::Vector{<:R
 end
 
 function calc_potential_inner(A_pot_in::Matrix{<:Real}, B_pot_in::Matrix{<:Real}, pan_strength::Vector{<:Real}, pan_source::Vector{<:Real}, pan_cpt::Matrix{<:Real}, u_vec::Vector{<:Real})
-    npan = length(pan_strength)
+    npan = size(pan_cpt,2)
     pot_cpt_in = zeros(npan) # potential on inside of surface
     for i = 1:npan
         pot_cpt_in[i] = dot(A_pot_in[i,:], pan_strength) + dot(B_pot_in[i,:], pan_source) + dot(u_vec, pan_cpt[:,i])
@@ -123,7 +123,7 @@ function calc_potential_inner(A_pot_in::Matrix{<:Real}, B_pot_in::Matrix{<:Real}
 end
 
 function calc_potential_outer(A_pot_out::Matrix{<:Real}, pan_strength::Vector{<:Real}, pan_cpt::Matrix{<:Real}, u_vec::Vector{<:Real})
-    npan = length(pan_strength)
+    npan = size(pan_cpt,2)
     pot_cpt_out = zeros(npan) # potential on outside of surface
     for i = 1:npan
         pot_cpt_out[i] = dot(A_pot_out[i,:], pan_strength) + dot(u_vec, pan_cpt[:,i])
@@ -132,7 +132,7 @@ function calc_potential_outer(A_pot_out::Matrix{<:Real}, pan_strength::Vector{<:
 end
 
 function calc_potential_outer(A_pot_out::Matrix{<:Real}, B_pot_out::Matrix{<:Real}, pan_strength::Vector{<:Real}, pan_source::Vector{<:Real}, pan_cpt::Matrix{<:Real}, u_vec::Vector{<:Real})
-    npan = length(pan_strength)
+    npan = size(pan_cpt,2)
     pot_cpt_out = zeros(npan) # potential on outside of surface
     for i = 1:npan
         pot_cpt_out[i] = dot(A_pot_out[i,:], pan_strength) + dot(B_pot_out[i,:], pan_source) + dot(u_vec, pan_cpt[:,i])

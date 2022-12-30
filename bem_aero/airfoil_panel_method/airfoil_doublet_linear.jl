@@ -67,19 +67,12 @@ function airfoil_doublet_linear_dirichlet(pan_vert::Matrix{<:Real}, aoa::Real)
     # Solve linear system
     vert_mu = A\RHS
 
-    # Compute full potential at each collocation point
-    pot_cpt_out = zeros(npan) # potential on outside of surface
-    for i = 1:npan
-        pot_cpt_out[i] = dot(A_pot_out[i,:], vert_mu) + dot(u_vec, pan_cpt[:,i])
-    end
-    pot_cpt_in = zeros(npan) # potential on inside of surface
-    for i = 1:npan
-        pot_cpt_in[i] = dot(A[i,:], vert_mu) + dot(u_vec, pan_cpt[:,i])
-    end
-    pot_freestream = zeros(npan) # freestream potential on boundary collocation points
-    for i = 1:npan
-        pot_freestream[i] = dot(u_vec, pan_cpt[:,i])
-    end
+    # potential on outside of surface
+    pot_cpt_out = calc_potential_outer(A_pot_out, vert_mu, pan_cpt, u_vec)
+    # potential on inside of surface
+    pot_cpt_in = calc_potential_inner(A, vert_mu, pan_cpt, u_vec)
+    # freestream potential on boundary collocation points
+    pot_freestream = calc_potential_freestream(pan_cpt, u_vec)
 
     # Velocity along the surface of airfoil is differentiation of total potential
     vel_cpt = calc_vel_from_potential(pot_cpt_out, pan_cpt)
