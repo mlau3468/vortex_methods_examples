@@ -183,40 +183,5 @@ function airfoil_doublet_neumann(pan_vert::Matrix{<:Real}, aoa::Real)
     cl = lift/0.5/rho/U^2/chord
 
     result = (cl=cl, pan_cp=pan_cp, pan_pres=pan_pres, vel_cpt=vel_cpt, pan_gam=pan_mu, pan_cpt=pan_cpt)
-
-
-    # A = zeros(npan, npan) # Influence coefficent for potential just inside airfoil
-    # A_pot_out = zeros(npan, npan) # Influence coefficeint for potential just outside airfoil
-    # RHS = zeros(npan)
-
-    # # Influence coefficients of doublet
-    # for i = 1:npan
-    #     for j = 1:npan
-    #         if i == j
-    #             A[i,j] = pot_line_doublet_2d_self() # limit approaching from inside airfoil
-    #             A_pot_out[i,j] = pot_line_doublet_2d_self(false) # limit approaching from outside airfoil
-    #         else
-    #             A[i,j] = pot_line_doublet_2d(pan_vert[:,j], pan_vert[:,j+1], pan_cpt[:,i])
-    #             A_pot_out[i,j] = A[i,j]
-    #         end
-    #     end
-    #     # trailing edge influence
-    #     te = pot_line_doublet_2d(pan_vert[:,1], [1e3;0.0], pan_cpt[:,i])
-    #     # kutta condition
-    #     A[i,1] -= te
-    #     A[i,npan] += te
-    # end
-
-    # # potential on outside of surface
-    # display(A_pot_out)
-    # display(pan_mu)
-    # pot_cpt_out = calc_potential_outer(A_pot_out, pan_mu, pan_cpt, u_vec)
-    # # potential on inside of surface
-    # pot_cpt_in = calc_potential_inner(A, pan_mu, pan_cpt, u_vec)
-    # # freestream potential on boundary collocation points
-    # pot_freestream = calc_potential_freestream(pan_cpt, u_vec)
-
-    # quit()
-
     return result
 end
