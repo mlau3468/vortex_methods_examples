@@ -77,42 +77,24 @@ function airfoil_sourcedoublet_dirichlet(pan_vert::Matrix{<:Real}, aoa::Real; co
     # Velocity along the surface of airfoil is differentiation of potential
     # note dot(u_vec, pan_tan[:,i]) is needed as this is a pertubation potential formulation
     # dot(u_vec, pan_tan[:,i]) includes the effect of the gradient of freestream potential function
-    vel_vec = zeros(npan-1)
-    for i = 1:npan-1
-        # finite difference in panel tangent direction
-        l = dist2D(pan_cpt[:,i], pan_cpt[:,i+1])
-        if compute_full_potential
-            vel_vec[i] = (pot_cpt_out[i+1] - pot_cpt_out[i])/l
-        else
-            vel_vec[i] = (pan_mu[i+1] - pan_mu[i])/l + dot(u_vec, pan_tan[:,i])
-        end
-    end
-
-    # Velocity at collocation points
-    vel_cpt = zeros(npan)
-    for i = 1:npan
-        if i == 1
-            vel_cpt[i] = vel_vec[i]
-        elseif i == npan
-            vel_cpt[i] = vel_vec[i-1]
-        else
-            vel_cpt[i] = (vel_vec[i-1] + vel_vec[i])/2
+    if compute_full_potential
+        vel_cpt = calc_vel_from_potential(pot_cpt_out, pan_cpt)
+    else
+        vel_cpt = calc_vel_from_doublet_strength(pan_mu, pan_cpt)
+        for i = 1:npan
+            vel_cpt[i] += dot(u_vec, pan_tan[:,i])
         end
     end
 
     # pressure at panels
-    pan_pres = zeros(npan)
-    pan_cp = zeros(npan)
-    for i = 1:npan
-        pan_pres[i] = p0-0.5*rho*vel_cpt[i]^2
-        pan_cp[i] = pan_pres[i]/(0.5*rho*U^2)
-    end
+    pan_pres = calc_pan_pressure(vel_cpt, rho, p0)
+    pan_cp = calc_pan_cp(pan_pres, rho, U)
 
     # force at panels
-    pan_force = zeros(2, npan)
-    for i = 1:npan
-        pan_force[:,i] .= -pan_pres[i]*pan_len[i] .* pan_norm[:,i]
-    end
+    pan_force = calc_pan_force(pan_pres, pan_len, pan_norm)
+
+    lift = sum(pan_force[2,:])
+    cl = lift/0.5/rho/U^2/chord
 
     lift = sum(pan_force[2,:])
     cl = lift/0.5/rho/U^2/chord
