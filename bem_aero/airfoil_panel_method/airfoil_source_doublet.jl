@@ -20,10 +20,10 @@ function airfoil_sourcedoublet_dirichlet(pan_vert::Matrix{<:Real}, aoa::Real; co
     u_vec[1] = cos(alf)
     u_vec[2] = sin(alf)
 
-    A = zeros(npan, npan) # Influence coefficent for potential just inside airfoil
-    A_pot_out = zeros(npan, npan) # Influence coefficeint for potential just outside airfoil
+    A = zeros(npan+1, npan+1) # Influence coefficent for potential just inside airfoil
+    A_pot_out = zeros(npan+1, npan+1) # Influence coefficeint for potential just outside airfoil
     B = zeros(npan, npan)
-    RHS = zeros(npan)
+    RHS = zeros(npan+1)
 
     # Influence coefficients of doublet and sources
     for i = 1:npan
@@ -37,11 +37,8 @@ function airfoil_sourcedoublet_dirichlet(pan_vert::Matrix{<:Real}, aoa::Real; co
             end
             B[i,j] = pot_line_source_2d(pan_vert[:,j], pan_vert[:,j+1],  pan_cpt[:,i])
         end
-        # wake panel
-        te = pot_line_doublet_2d(pan_vert[:,1], [1e3;0.0] , pan_cpt[:,i])
-        # kutta condition
-        A[i,1] -= te
-        A[i,npan] += te
+        # trailing edge influence
+        A[i,npan+1] = pot_line_doublet_2d(pan_vert[:,1], [1e3;0.0], pan_cpt[:,i])
     end
 
     # Source strengths
@@ -56,6 +53,12 @@ function airfoil_sourcedoublet_dirichlet(pan_vert::Matrix{<:Real}, aoa::Real; co
     for i = 1:npan
         RHS[i] = -dot(B[i,:], pan_source) # source panel
     end
+
+    # Kutta condition
+    A[npan+1,1] = 1
+    A[npan+1,npan] = -1
+    A[npan+1,npan+1] = 1
+    RHS[npan+1] = 0
 
     # Solve linear system
     pan_mu = A\RHS
