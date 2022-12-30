@@ -71,18 +71,11 @@ function airfoil_vortex_linear_neumann(pan_vert::Matrix{<:Real}, aoa::Real; num_
     end
 
     # pressure at panels
-    pan_pres = zeros(npan)
-    pan_cp = zeros(npan)
-    for i = 1:npan
-        pan_pres[i] = p0-0.5*rho*vel_cpt[i]^2
-        pan_cp[i] = pan_pres[i]/(0.5*rho*U^2)
-    end
+    pan_pres = calc_pan_pressure(vel_cpt, rho, p0)
+    pan_cp = calc_pan_cp(pan_pres, rho, U)
 
     # force at panels
-    pan_force = zeros(2,npan)
-    for i = 1:npan
-        pan_force[:,i] .= -pan_pres[i]*pan_len[i] .* pan_norm[:,i]
-    end
+    pan_force = calc_pan_force(pan_pres, pan_len, pan_norm)
 
     lift = sum(pan_force[2,:])
     cl = lift/0.5/rho/U^2/chord
