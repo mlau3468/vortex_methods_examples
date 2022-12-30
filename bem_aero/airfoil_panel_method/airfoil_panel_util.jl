@@ -103,3 +103,48 @@ function calc_pan_force(pan_pres::Vector{<:Real}, pan_len::Vector{<:Real}, pan_n
     end
     return pan_force
 end
+
+function calc_potential_inner(A_pot_in::Matrix{<:Real}, pan_strength::Vector{<:Real}, pan_cpt::Matrix{<:Real}, u_vec::Vector{<:Real})
+    npan = length(pan_strength)
+    pot_cpt_in = zeros(npan) # potential on inside of surface
+    for i = 1:npan
+        pot_cpt_in[i] = dot(A_pot_in[i,:], pan_strength) + dot(u_vec, pan_cpt[:,i])
+    end
+    return pot_cpt_in
+end
+
+function calc_potential_inner(A_pot_in::Matrix{<:Real}, B_pot_in::Matrix{<:Real}, pan_strength::Vector{<:Real}, pan_source::Vector{<:Real}, pan_cpt::Matrix{<:Real}, u_vec::Vector{<:Real})
+    npan = length(pan_strength)
+    pot_cpt_in = zeros(npan) # potential on inside of surface
+    for i = 1:npan
+        pot_cpt_in[i] = dot(A_pot_in[i,:], pan_strength) + dot(B_pot_in[i,:], pan_source) + dot(u_vec, pan_cpt[:,i])
+    end
+    return pot_cpt_in
+end
+
+function calc_potential_outer(A_pot_out::Matrix{<:Real}, pan_strength::Vector{<:Real}, pan_cpt::Matrix{<:Real}, u_vec::Vector{<:Real})
+    npan = length(pan_strength)
+    pot_cpt_out = zeros(npan) # potential on outside of surface
+    for i = 1:npan
+        pot_cpt_out[i] = dot(A_pot_out[i,:], pan_strength) + dot(u_vec, pan_cpt[:,i])
+    end
+    return pot_cpt_out
+end
+
+function calc_potential_outer(A_pot_out::Matrix{<:Real}, B_pot_out::Matrix{<:Real}, pan_strength::Vector{<:Real}, pan_source::Vector{<:Real}, pan_cpt::Matrix{<:Real}, u_vec::Vector{<:Real})
+    npan = length(pan_strength)
+    pot_cpt_out = zeros(npan) # potential on outside of surface
+    for i = 1:npan
+        pot_cpt_out[i] = dot(A_pot_out[i,:], pan_strength) + dot(B_pot_out[i,:], pan_source) + dot(u_vec, pan_cpt[:,i])
+    end
+    return pot_cpt_out
+end
+
+function calc_potential_freestream(pan_cpt::Matrix{<:Real}, u_vec::Vector{<:Real})
+    npan = size(pan_cpt,2)
+    pot_freestream = zeros(npan) # freestream potential on boundary collocation points
+    for i = 1:npan
+        pot_freestream[i] = dot(u_vec, pan_cpt[:,i])
+    end
+    return pot_freestream
+end
