@@ -16,7 +16,7 @@ result4 = airfoil_doublet_linear_dirichlet(pan_vert, aoa)
 result5 = airfoil_vortex_linear_neumann(pan_vert, aoa)
 result6 = airfoil_vortex_linear_neumann(pan_vert, aoa, num_integrate=true)
 
-# result7 = airfoil_vortex_linear_neumann_pot(pan_vert, aoa)
+# result7 = airfoil_vortex_linear_dirichlet2(pan_vert, aoa)
 
 cp_plot_const = plot(yflip=true, legend=:bottomright)
 plot!(cp_plot_const, result1.pan_cpt[1,:], result1.pan_cp, label="source+doublet (dirichlet)")
