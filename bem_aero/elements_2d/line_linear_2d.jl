@@ -51,6 +51,24 @@ function pot_line_doublet_linear_2d_self(p1::AbstractVector{<:Real}, p2::Abstrac
     end
 end
 
+function d_pot_line_doublet_linear_2d_self(p1::AbstractVector{<:Real}, p2::AbstractVector{<:Real}, p::AbstractVector{<:Real}, limit_plus::Bool=true)
+    # Express panel points in local panel frame
+    x1 = 0
+    x2 = dist2D(p1, p2)
+    # x is field point projected onto the local unit vector
+    unit_vec = calc_line_tan_2d(p1, p2)
+    x = dot(p.-p1, unit_vec)
+
+    dphi_a = 0.5/x2
+    dphi_b = -0.5/x2
+
+    if !limit_plus
+        return -dphi_a, -dphi_b
+    else
+        return dphi_a, dphi_b
+    end
+end
+
 function pot_line_doublet_linear_2d_int(p1::AbstractVector{<:Real}, p2::AbstractVector{<:Real}, p::AbstractVector{<:Real})
     # Potential induced by linear strength doublet line by numerical integration
     # Potential is expressed in local element frame
@@ -124,17 +142,16 @@ function pot_line_vortex_linear_2d_self(p1::AbstractVector{<:Real}, p2::Abstract
     x = dot(p.-p1, unit_vec)
 
     # superposition unit constant and unit ramp. The below can be mathematically simplified
-    term1 = pot_line_vortex_2d_self(p1, p2, p) # constant part
+    term1 = pot_line_vortex_2d_self(p1, p2, p, limit_plus) # constant part
     term2 = 1/4*(x^2-x2^2)
+    if !limit_plus
+        term2 = -term2
+    end
 
     phia = term1 - 1/(x2-x1)*term2
     phib = 1/(x2-x1)*term2
 
-    if !limit_plus
-        return -phia, -phib
-    else
-        return phia, phib
-    end
+    return phia, phib
 end
 
 function pot_line_vortex_linear_2d_int(p1::AbstractVector{<:Real}, p2::AbstractVector{<:Real}, p::AbstractVector{<:Real}, use_line_coords::Bool=true)

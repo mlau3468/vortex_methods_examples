@@ -77,6 +77,14 @@ function airfoil_doublet_linear_dirichlet(pan_vert::Matrix{<:Real}, aoa::Real)
     # Velocity along the surface of airfoil is differentiation of total potential
     vel_cpt = calc_vel_from_potential(pot_cpt_out, pan_cpt)
 
+    # The following results in a nosy derivative
+    # vel_cpt2 = zeros(npan)
+    # for i = 1:npan
+    #     dphia, dphib = d_pot_line_doublet_linear_2d_self(pan_vert[:,i], pan_vert[:,i+1], pan_cpt[:,i], false)
+    #     vel_cpt2[i] = (dphia*vert_mu[i] + dphib*vert_mu[i+1])
+    #     vel_cpt2[i] = (vert_mu[i+1] - vert_mu[i])/pan_len[i]
+    # end
+
     # pressure at panels
     pan_pres = calc_pan_pressure(vel_cpt, rho, p0)
     pan_cp = calc_pan_cp(pan_pres, rho, U)
