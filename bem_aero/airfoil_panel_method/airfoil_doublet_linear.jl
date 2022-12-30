@@ -81,9 +81,10 @@ function airfoil_doublet_linear_dirichlet(pan_vert::Matrix{<:Real}, aoa::Real)
     # vel_cpt2 = zeros(npan)
     # for i = 1:npan
     #     dphia, dphib = d_pot_line_doublet_linear_2d_self(pan_vert[:,i], pan_vert[:,i+1], pan_cpt[:,i], false)
-    #     vel_cpt2[i] = (dphia*vert_mu[i] + dphib*vert_mu[i+1])
-    #     vel_cpt2[i] = (vert_mu[i+1] - vert_mu[i])/pan_len[i]
+    #     vel_cpt2[i] = (dphia*vert_mu[i] + dphib*vert_mu[i+1])*2
+        # vel_cpt2[i] = (vert_mu[i+1] - vert_mu[i])/pan_len[i]
     # end
+    # vel_cpt = vel_cpt2
 
     # pressure at panels
     pan_pres = calc_pan_pressure(vel_cpt, rho, p0)
